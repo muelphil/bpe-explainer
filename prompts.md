@@ -45,3 +45,9 @@ The following adjustments still need to be implemented:
 * during the animation of the token merge, the background color of the 2 tokens that are being merged should be transitioning to the background color of the new resulting token, before it is replaced by the new resulting token.
 * make sure that there is a modular token -> token background color function, that takes a token (string) and creates a deterministic color. You already implemented this, but tokens that have similar ids (id 15 and 16) should still have distinguished colors. Right now, tokens that are close have nearly the same color. Please  use some hashing prime color magic.
 * when displaying text in tokens, replace spaces (" ") by "▁"
+
+---
+
+I have reviewed the implementation. There are a lot of areas that require improvement and update. Lets start with the side panel. It is cluttered. The idea is that the 3 panels (Frequency, Vocabulary and Steps) are collapsible in this side view and all of them together take up 100% of the height (minus the control panel with previous, play, next at the very bottom). If one is collapsed, the others can take up more width. The panels should use up the space, there sould not be a margin or gap. The panel headers need significantly different color, establishing them as headers. The headers need to display the core information (how many token, highest frequency pair, ...) regardless of whether the panel is collapsed or not -- with the goal that they provide the most vital information. More importantly, currently after uncollapsing the information in the detail view of the panel is not restored/ not displayed any longer.
+
+Please fix all of these issues.

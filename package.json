@@ -16,6 +16,7 @@
     "format": "prettier --write --experimental-cli src/"
   },
   "dependencies": {
+    "lucide-vue-next": "^0.460.0",
     "vue": "beta"
   },
   "devDependencies": {
@@ -27,6 +28,7 @@
     "@vue/eslint-config-typescript": "^14.6.0",
     "@vue/test-utils": "^2.4.6",
     "@vue/tsconfig": "^0.8.1",
+    "autoprefixer": "^10.4.24",
     "eslint": "^9.39.2",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-oxlint": "~1.46.0",
@@ -35,7 +37,9 @@
     "jsdom": "^28.1.0",
     "npm-run-all2": "^8.0.4",
     "oxlint": "~1.47.0",
+    "postcss": "^8.5.6",
     "prettier": "3.8.1",
+    "tailwindcss": "^3.4.19",
     "typescript": "~5.9.3",
     "vite": "beta",
     "vite-plugin-vue-devtools": "^8.0.6",
