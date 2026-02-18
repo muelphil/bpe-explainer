@@ -87,6 +87,7 @@ async function mergeTokens() {
   const newContent = tokens.value[idx1].content + tokens.value[idx2].content
   const newColor = getTokenColor(newContent)
   
+  // Start merge animation (keep selection for wrapper, but visually hide it)
   mergingIndices.value = [idx1, idx2]
   mergingColor.value = newColor
 
@@ -155,6 +156,7 @@ const isMergingRight = (index: number) => mergingIndices.value[1] === index
           <span
             v-if="isSelectionStart(index)"
             class="selection-wrapper"
+            :class="{ merging: mergingIndices.length > 0 }"
           >
             <span
               class="token-wrapper"
@@ -319,6 +321,12 @@ const isMergingRight = (index: number) => mergingIndices.value[1] === index
   background: rgba(255, 99, 71, 0.2);
   border: 1px solid rgba(255, 99, 71, 0.5);
   border-radius: 6px;
+  transition: background 0.2s ease, border 0.2s ease;
+}
+
+.selection-wrapper.merging {
+  background: transparent;
+  border: 1px solid transparent;
 }
 
 .token-wrapper {
