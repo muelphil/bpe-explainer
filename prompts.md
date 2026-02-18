@@ -88,8 +88,23 @@ background: var(--light-primary);
 
 ---
 
+Next, we need to fix the steps and their visualization.
+The steps need to highlight what they are doing in the main token view, similar to what happens when the user hovers token pairs or tokens in the control panels.
+For the Select most frequent pair step, the most frequent pair needs to be highlighted.
+For the Merge step, the newly merged token needs to be highlighted.
+If the user hovers tokens or token pairs in the vocabulary or frequency control panel, this should "pause" highlighting by the step, highlighting the user selection instead, and resume when the user no longer hovers tokens/ token pairs in the control panel
+
+---
+
+We next need to extend the settings by a new setting: Merging restrictions -- either None or LLM.
+LLM merging restrictions change the way tokens are "allowed" to be joined, specifically, in LLM vocabulary generation, space tokens may only be joined to the right, so the spaces may not be the second token in a token pair that is to be joined.
+Please implement this setting by adding it to the settings. This should be taken into consideration in the computation of token pairs and frequencies, restricting what token pairs are possible based on this option.
+
+---
+
 TODOS:
-* merge animation
-* token ids correction
 * Step visualization
-* 
+* Control panel fix for flex
+* Vocabulary use the same token-container/token visualization as in MainTokenView.vue
+* merging restrictions ala LLM in settings
+

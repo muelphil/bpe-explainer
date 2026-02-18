@@ -275,7 +275,8 @@ export class BPEService {
         description: `Select most frequent pair: "${pair[0]}" + "${pair[1]}" (frequency: ${mostFrequent.frequency})`,
         selectedPair: pair,
         tokensSnapshot: this.cloneTokens(workingTokens),
-        vocabularySnapshot: this.cloneVocabulary(workingVocab)
+        vocabularySnapshot: this.cloneVocabulary(workingVocab),
+        highlightPair: pair // Highlight the selected pair
       })
       stepNumber++
 
@@ -332,7 +333,8 @@ export class BPEService {
         description: `Merged "${pair[0]}" + "${pair[1]}" → "${newContent}"`,
         addedToken: newVocabEntry,
         tokensSnapshot: this.cloneTokens(newTokens),
-        vocabularySnapshot: this.cloneVocabulary(workingVocab)
+        vocabularySnapshot: this.cloneVocabulary(workingVocab),
+        highlightTokenContent: newContent // Highlight the newly merged token
       })
       stepNumber++
 

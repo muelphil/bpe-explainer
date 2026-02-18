@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { useBPE } from './composables/useBPE'
 import MainTokenView from './components/MainTokenView.vue'
 import SettingsModal from './components/SettingsModal.vue'
@@ -10,12 +10,37 @@ import ControlPanel from './components/ControlPanel.vue'
 import InitializationPanel from './components/InitializationPanel.vue'
 import type { BPESettings } from './services/types'
 
-const { initialize, goToStep, state, settings } = useBPE()
+const { initialize, goToStep, state, settings, currentStepData } = useBPE()
 
 const isSettingsOpen = ref(false)
 const hoveredPair = ref<[string, string] | null>(null)
 const hoveredTokenContent = ref<string | null>(null)
 const isInitialized = ref(false)
+
+// Computed properties for highlighting - user hover takes priority, then step highlighting
+const effectiveHoveredPair = computed(() => {
+  // User hover takes priority
+  if (hoveredPair.value) return hoveredPair.value
+
+  // If no user hover, use step highlighting
+  if (currentStepData.value?.highlightPair) {
+    return currentStepData.value.highlightPair
+  }
+
+  return null
+})
+
+const effectiveHoveredTokenContent = computed(() => {
+  // User hover takes priority
+  if (hoveredTokenContent.value) return hoveredTokenContent.value
+
+  // If no user hover, use step highlighting
+  if (currentStepData.value?.highlightTokenContent) {
+    return currentStepData.value.highlightTokenContent
+  }
+
+  return null
+})
 
 const handleInitialize = (trainingData: string) => {
   initialize(trainingData)
@@ -67,8 +92,8 @@ watch(() => settings.value.darkMode, (darkMode) => {
       />
       <MainTokenView
         v-else
-        :hoveredPair="hoveredPair"
-        :hoveredTokenContent="hoveredTokenContent"
+        :hoveredPair="effectiveHoveredPair"
+        :hoveredTokenContent="effectiveHoveredTokenContent"
         @openSettings="handleOpenSettings"
       />
     </div>

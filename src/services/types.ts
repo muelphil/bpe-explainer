@@ -26,6 +26,8 @@ export interface Step {
   addedToken?: VocabEntry
   tokensSnapshot: Token[]
   vocabularySnapshot: VocabEntry[]
+  highlightPair?: [string, string] // Pair to highlight for this step (select/merge)
+  highlightTokenContent?: string // Token content to highlight (for merged result)
 }
 
 export interface BPESettings {
