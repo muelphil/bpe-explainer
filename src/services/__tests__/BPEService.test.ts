@@ -99,4 +99,136 @@ describe('BPEService', () => {
       expect(afterMerge).toBe(2)
     })
   })
+
+  describe('LLM Merging Restrictions', () => {
+    describe('None mode', () => {
+      it('should allow all pairs including newlines with non-newlines', () => {
+        const trainingData = 'a\nb c\nd'
+        service.initialize(trainingData, { mergingRestriction: 'none' })
+
+        const frequencies = service.calculateFrequencies()
+        const pairStrings = frequencies.map(f => f.pair.join('|'))
+
+        // Should allow mixing newlines with other tokens
+        expect(pairStrings).toContain('a|\n')
+        expect(pairStrings).toContain('\n|b')
+      })
+    })
+
+    describe('LLM mode - newline restrictions', () => {
+      it('should ONLY allow newlines to join with other newlines', () => {
+        const trainingData = 'a\n\nb'
+        service.initialize(trainingData, { mergingRestriction: 'llm' })
+
+        const frequencies = service.calculateFrequencies()
+        const pairStrings = frequencies.map(f => f.pair.join('|'))
+
+        // Newline + newline should be allowed
+        expect(pairStrings).toContain('\n|\n')
+
+        // Newline should NOT be joinable with anything else
+        const newlineWithNonNewline = frequencies.filter(f => 
+          (f.pair[0].includes('\n') && f.pair[1] !== '\n') ||
+          (f.pair[1].includes('\n') && f.pair[0] !== '\n')
+        )
+        expect(newlineWithNonNewline).toHaveLength(0)
+      })
+
+      it('should NOT allow space + newline', () => {
+        const trainingData = 'a \nb'
+        service.initialize(trainingData, { mergingRestriction: 'llm' })
+
+        const frequencies = service.calculateFrequencies()
+        const pairStrings = frequencies.map(f => f.pair.join('|'))
+
+        // Space + newline should NOT be allowed in LLM mode
+        expect(pairStrings).not.toContain(' |\n')
+      })
+
+      it('should NOT allow newline + space', () => {
+        const trainingData = 'a\n b'
+        service.initialize(trainingData, { mergingRestriction: 'llm' })
+
+        const frequencies = service.calculateFrequencies()
+        const pairStrings = frequencies.map(f => f.pair.join('|'))
+
+        // Newline + space should NOT be allowed in LLM mode
+        expect(pairStrings).not.toContain('\n| ')
+      })
+
+      it('should allow spaces to join with other spaces (but not newlines)', () => {
+        const trainingData = 'a  b'
+        service.initialize(trainingData, { mergingRestriction: 'llm' })
+
+        const frequencies = service.calculateFrequencies()
+        const pairStrings = frequencies.map(f => f.pair.join('|'))
+
+        // Space + space should be allowed
+        expect(pairStrings).toContain(' | ')
+      })
+
+      it('should not allow merged tokens containing newlines to join with anything except pure newlines', () => {
+        const tokens = [
+          { id: 1, content: '\n\n', color: '#000', skipAnimation: true },
+          { id: 2, content: '\n', color: '#000', skipAnimation: true },
+          { id: 3, content: 'a', color: '#000', skipAnimation: true }
+        ]
+        
+        service.initialize('dummy', { mergingRestriction: 'llm' })
+        service.getState().tokens = tokens
+        
+        const frequencies = service.calculateFrequencies()
+        const pairStrings = frequencies.map(f => f.pair.join('|'))
+
+        // \n\n + \n should be allowed (both are pure newlines)
+        expect(pairStrings).toContain('\n\n|\n')
+
+        // \n + a should NOT be allowed
+        expect(pairStrings).not.toContain('\n|a')
+      })
+
+      it('should allow spaces and alphanumeric but not spaces and newlines', () => {
+        const trainingData = 'hello world\ntest'
+        service.initialize(trainingData, { mergingRestriction: 'llm' })
+
+        const frequencies = service.calculateFrequencies()
+
+        for (const freq of frequencies) {
+          const [left, right] = freq.pair
+          
+          // If either contains newline, both must be pure newlines
+          if (left.includes('\n') || right.includes('\n')) {
+            expect(left === '\n' && right === '\n').toBe(true)
+          }
+        }
+      })
+    })
+
+    describe('LLM mode - punctuation and symbol restrictions', () => {
+      it('should not allow joining with punctuation', () => {
+        const trainingData = 'hello. world, test'
+        service.initialize(trainingData, { mergingRestriction: 'llm' })
+
+        const frequencies = service.calculateFrequencies()
+
+        for (const freq of frequencies) {
+          const right = freq.pair[1]
+          const left = freq.pair[0]
+          
+          // Skip if both are whitespace (non-newline)
+          if (/^\s+$/.test(left) && /^\s+$/.test(right) && !left.includes('\n') && !right.includes('\n')) {
+            continue
+          }
+          
+          // Skip if both are newlines
+          if (left === '\n' && right === '\n') {
+            continue
+          }
+          
+          // Right token must start with alphanumeric
+          expect(/^[a-zA-Z0-9]/.test(right)).toBe(true)
+        }
+      })
+    })
+  })
 })

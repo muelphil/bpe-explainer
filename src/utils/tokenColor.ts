@@ -44,8 +44,16 @@ export function getTokenColor(content: string): string {
 }
 
 /**
- * Display token content, replacing spaces with visible character
+ * Display token content with special characters visualized
+ * - Spaces shown as underscore (▁)
+ * - Newlines shown as \n
+ * - Tabs shown as \t
+ * - Carriage returns shown as \r
  */
 export function displayTokenContent(content: string): string {
-  return content.replace(/ /g, '▁')
+  return content
+    .replace(/ /g, '▁')      // Space as underscore
+    .replace(/\n/g, '\\n')   // Newline as \n
+    .replace(/\t/g, '\\t')   // Tab as \t
+    .replace(/\r/g, '\\r')   // Carriage return as \r
 }

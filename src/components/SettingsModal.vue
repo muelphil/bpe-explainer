@@ -164,6 +164,40 @@ const handleCancel = () => {
                 </div>
               </label>
             </div>
+
+            <!-- Merging Restrictions -->
+            <div class="space-y-2">
+              <label class="block text-sm font-medium text-slate-900 dark:text-slate-100">
+                Merging Restrictions
+              </label>
+              <div class="space-y-2">
+                <label class="flex items-center space-x-3 cursor-pointer">
+                  <input
+                    v-model="localSettings.mergingRestriction"
+                    type="radio"
+                    value="none"
+                    class="w-4 h-4 text-primary-500 focus:ring-primary-500"
+                  />
+                  <span class="text-sm text-slate-700 dark:text-slate-300">
+                    None - Any pairs can merge
+                  </span>
+                </label>
+                <label class="flex items-center space-x-3 cursor-pointer">
+                  <input
+                    v-model="localSettings.mergingRestriction"
+                    type="radio"
+                    value="llm"
+                    class="w-4 h-4 text-primary-500 focus:ring-primary-500"
+                  />
+                  <span class="text-sm text-slate-700 dark:text-slate-300">
+                    LLM - Spaces can only join to the right
+                  </span>
+                </label>
+              </div>
+              <p class="text-xs text-slate-500">
+                LLM mode: letters with letters, numbers with numbers, symbols with symbols - all stay separate
+              </p>
+            </div>
           </div>
 
           <!-- Footer -->

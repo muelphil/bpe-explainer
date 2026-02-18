@@ -1,6 +1,7 @@
 import { reactive } from 'vue'
 import type { BPEState, BPESettings, Token, VocabEntry, PairFrequency, Step } from './types'
 import { getTokenColor } from '../utils/tokenColor'
+import { canMergePair } from './mergeRestrictions'
 
 export class BPEService {
   private state: BPEState
@@ -20,7 +21,8 @@ export class BPEService {
         breakCondition: 'maxVocabSize',
         maxVocabSize: 256,
         playSpeed: 500,
-        darkMode: false
+        darkMode: false,
+        mergingRestriction: 'llm' // LLM mode is now the default
       },
       frequencies: [],
       compressionRatio: 1,
@@ -134,6 +136,12 @@ export class BPEService {
     for (let i = 0; i < this.state.tokens.length - 1; i++) {
       const token1 = this.state.tokens[i].content
       const token2 = this.state.tokens[i + 1].content
+      
+      // Check if this pair can be merged based on current restriction mode
+      if (!canMergePair(token1, token2, this.state.settings.mergingRestriction)) {
+        continue
+      }
+      
       const pairKey = `${token1}|${token2}`
 
       if (frequencyMap.has(pairKey)) {
@@ -353,6 +361,12 @@ export class BPEService {
     for (let i = 0; i < tokens.length - 1; i++) {
       const token1 = tokens[i].content
       const token2 = tokens[i + 1].content
+      
+      // Check if this pair can be merged based on current restriction mode
+      if (!canMergePair(token1, token2, this.state.settings.mergingRestriction)) {
+        continue
+      }
+      
       const pairKey = `${token1}|${token2}`
 
       if (frequencyMap.has(pairKey)) {

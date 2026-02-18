@@ -36,6 +36,7 @@ export interface BPESettings {
   maxVocabSize: number
   playSpeed: number // milliseconds
   darkMode: boolean
+  mergingRestriction: 'none' | 'llm' // 'llm' = spaces can only be joined to the right
 }
 
 export interface BPEState {

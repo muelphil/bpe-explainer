@@ -104,7 +104,13 @@ Please implement this setting by adding it to the settings. This should be taken
 
 TODOS:
 * Step visualization
+  * should use tokens classes,
 * Control panel fix for flex
 * Vocabulary use the same token-container/token visualization as in MainTokenView.vue
 * merging restrictions ala LLM in settings
+* compression rate info in vocabulary
+* "LLM - Spaces can only join to the right" option being default
+* settings persisted in localStorage
+* dark mode using variables
+* dark mode token fix
 
