@@ -4,7 +4,6 @@ import { ChevronDown } from 'lucide-vue-next'
 
 defineProps<{
   title: string
-  collapsedContent?: string
 }>()
 
 const isExpanded = ref(true)
@@ -15,45 +14,33 @@ const toggle = () => {
 </script>
 
 <template>
-  <div class="border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden bg-white dark:bg-slate-800">
-    <!-- Header (always visible, clickable) -->
+  <div class="flex flex-col overflow-hidden bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 last:border-b-0">
+    <!-- Header (always visible, clickable) - Distinct color -->
     <button
       @click="toggle"
-      class="w-full px-4 py-3 flex items-center justify-between bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+      class="w-full px-4 py-3 flex items-center justify-between bg-primary-600 dark:bg-primary-700 hover:bg-primary-500 dark:hover:bg-primary-600 transition-colors flex-shrink-0"
     >
-      <div class="flex-1 text-left">
-        <h3 class="font-semibold text-slate-900 dark:text-slate-100">{{ title }}</h3>
-        <p v-if="!isExpanded && collapsedContent" class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-          {{ collapsedContent }}
-        </p>
-      </div>
+      <h3 class="font-semibold text-white">{{ title }}</h3>
       <ChevronDown
         :size="18"
-        class="text-slate-500 dark:text-slate-400 transition-transform"
+        class="text-white transition-transform flex-shrink-0"
         :class="{ 'rotate-180': isExpanded }"
       />
     </button>
 
-    <!-- Content (expandable) -->
-    <Transition
-      name="expand"
-      @enter="(el: any) => el.style.height = '0'"
-      @enter-active="(el: any) => el.style.height = el.scrollHeight + 'px'"
-      @leave-active="(el: any) => el.style.height = '0'"
+    <!-- Critical Info (always visible, not collapsible) -->
+    <div class="px-4 py-3 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 flex-shrink-0">
+      <slot name="critical" />
+    </div>
+
+    <!-- Collapsible Details -->
+    <div
+      v-show="isExpanded"
+      class="flex-1 overflow-y-auto"
     >
-      <div v-show="isExpanded" class="overflow-hidden transition-all duration-300">
-        <div class="p-4">
-          <slot />
-        </div>
+      <div class="p-4">
+        <slot name="details" />
       </div>
-    </Transition>
+    </div>
   </div>
 </template>
-
-<style scoped>
-.expand-enter-active,
-.expand-leave-active {
-  transition: height 0.3s ease;
-  overflow: hidden;
-}
-</style>

@@ -83,21 +83,21 @@ function selectToken(index: number) {
 
 function selectRandomPairs() {
   if (mergingIndices.value.length > 0 || tokens.value.length < 2) return
-  
+
   // Get all valid pairs (adjacent tokens)
   const validPairs: [number, number][] = []
   for (let i = 0; i < tokens.value.length - 1; i++) {
     validPairs.push([i, i + 1])
   }
-  
+
   // Shuffle and select 2-3 random non-overlapping pairs
   const numPairs = Math.min(2 + Math.floor(Math.random() * 2), Math.floor(validPairs.length / 2))
   const selectedPairs: [number, number][] = []
   const usedIndices = new Set<number>()
-  
+
   // Shuffle pairs
   const shuffled = [...validPairs].sort(() => Math.random() - 0.5)
-  
+
   for (const pair of shuffled) {
     if (selectedPairs.length >= numPairs) break
     const [idx1, idx2] = pair
@@ -107,7 +107,7 @@ function selectRandomPairs() {
       usedIndices.add(idx2)
     }
   }
-  
+
   // Flatten pairs into selectedIndices
   selectedIndices.value = selectedPairs.flat().sort((a, b) => a - b)
 }
@@ -118,14 +118,14 @@ function unselectAll() {
 
 function canMerge(): boolean {
   if (selectedIndices.value.length < 2 || selectedIndices.value.length % 2 !== 0) return false
-  
+
   // Check that all pairs are adjacent
   for (let i = 0; i < selectedIndices.value.length; i += 2) {
     const idx1 = selectedIndices.value[i]
     const idx2 = selectedIndices.value[i + 1]
     if (idx2 !== idx1 + 1) return false
   }
-  
+
   return true
 }
 
@@ -137,7 +137,7 @@ async function mergeTokens() {
   for (let i = 0; i < selectedIndices.value.length; i += 2) {
     pairs.push([selectedIndices.value[i], selectedIndices.value[i + 1]])
   }
-  
+
   // Calculate new colors for all pairs
   const mergeData = pairs.map(([idx1, idx2]) => {
     const newContent = tokens.value[idx1].content + tokens.value[idx2].content
@@ -147,11 +147,11 @@ async function mergeTokens() {
       color: getTokenColor(newContent)
     }
   })
-  
+
   // Start merge animation for all pairs
   mergingIndices.value = pairs.flat()
   mergingColor.value = '' // We'll handle multiple colors in the template
-  
+
   await new Promise(resolve => setTimeout(resolve, 400))
 
   // Merge all pairs (process in reverse order to maintain indices)
@@ -164,14 +164,14 @@ async function mergeTokens() {
       color,
       skipAnimation: true
     }
-    
+
     newTokens = [
       ...newTokens.slice(0, idx1),
       newToken,
       ...newTokens.slice(idx2 + 1)
     ]
   }
-  
+
   tokens.value = newTokens
   selectedIndices.value = []
   mergingIndices.value = []
@@ -180,7 +180,7 @@ async function mergeTokens() {
 
 function getMergingColor(index: number): string {
   if (!mergingIndices.value.includes(index)) return ''
-  
+
   // Find which pair this index belongs to
   for (let i = 0; i < selectedIndices.value.length; i += 2) {
     const idx1 = selectedIndices.value[i]
@@ -190,7 +190,7 @@ function getMergingColor(index: number): string {
       return getTokenColor(newContent)
     }
   }
-  
+
   return ''
 }
 
@@ -200,23 +200,23 @@ function displayTokenContent(content: string): string {
 
 const isSelectionStart = (index: number) => {
   if (selectedIndices.value.length === 0) return false
-  
+
   // Check if this index starts any pair
   for (let i = 0; i < selectedIndices.value.length; i += 2) {
     if (selectedIndices.value[i] === index) return true
   }
-  
+
   return false
 }
 
 const isSelectionEnd = (index: number) => {
   if (selectedIndices.value.length === 0) return false
-  
+
   // Check if this index ends any pair
   for (let i = 1; i < selectedIndices.value.length; i += 2) {
     if (selectedIndices.value[i] === index) return true
   }
-  
+
   return false
 }
 
@@ -430,7 +430,7 @@ const isMergingRight = (index: number) => {
 
 .token-container {
   font-size: 1.125rem;
-  line-height: 2;
+  //line-height: 2;
   display: flex;
   flex-wrap: wrap;
   gap: 0;
@@ -457,6 +457,7 @@ const isMergingRight = (index: number) => {
   display: inline-block;
   cursor: pointer;
   transition: all 0.3s ease;
+  font-size: 0.875rem;
 }
 
 .token {

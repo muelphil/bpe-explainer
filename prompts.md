@@ -51,3 +51,45 @@ The following adjustments still need to be implemented:
 I have reviewed the implementation. There are a lot of areas that require improvement and update. Lets start with the side panel. It is cluttered. The idea is that the 3 panels (Frequency, Vocabulary and Steps) are collapsible in this side view and all of them together take up 100% of the height (minus the control panel with previous, play, next at the very bottom). If one is collapsed, the others can take up more width. The panels should use up the space, there sould not be a margin or gap. The panel headers need significantly different color, establishing them as headers. The headers need to display the core information (how many token, highest frequency pair, ...) regardless of whether the panel is collapsed or not -- with the goal that they provide the most vital information. More importantly, currently after uncollapsing the information in the detail view of the panel is not restored/ not displayed any longer.
 
 Please fix all of these issues.
+
+
+---
+
+There still are a lot of issues on the sidebar.
+Please refactor the following things:
+* each of the panels should have the critical information they carry (top frequency token pair, vocabulary size & last added, current step) as the info UNDER the token header. Collapsing the panel should only hide all other information in the panel, not this critical first information. This way, the critical info will automatically have the same styling as in the panel.
+* The steps panel needs to have its content updated. Steps and Progress sections need to take up 100% of the space. Steps section needs to use up the remaining space while the progress section is flex: 0 0;
+* When advancing the steps, it should scroll the current step into view, so the user always sees the current step.
+
+---
+
+This is not exactly what I wanted.
+* Vocabulary is okay
+* Frequency shows the top token twice -- it shows the critical info top token pair at the top and then the top token pair again at the top of the list. The goal was that when collapsing, it would only show the first entry of the list of the frequency descending list. The list should be formatted accordingly so that it corresponds to what is currently the critical information: less padding, no number in the beginning, but the frequency bar at the end 
+* Equally, the Steps when collapsed should not show the current step as additionally rendered information in different style, but simply display only the current step from the list of steps, not the other steps or the progress.
+
+---
+
+We next need to update some things regarding the visualization.
+Please:
+* make the tokens all have the same background color, but leave the code for the random color assignment, should I later decide to revert this.
+* When the user hovers tokens in the vocabulary and the tokens in the token view are highlighted, they should simply assume a primary color, no wrapper with a border.
+* When the user hovers a token pair in the frequency tab, the token pair needs to be highlighted -- this means both tokens need to be highlighted in the primary highlighting color and the token wrappers need to be applied stylings for left and right token:
+.highlight-left {
+  border-radius: 6px 0 0 6px;
+  background: var(--light-primary);
+  }
+
+.highlight-right {
+border-radius: 0 6px 6px 0;
+background: var(--light-primary);
+}
+
+
+---
+
+TODOS:
+* merge animation
+* token ids correction
+* Step visualization
+* 

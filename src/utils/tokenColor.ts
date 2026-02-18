@@ -1,37 +1,50 @@
 /**
- * Hash function to generate consistent colors with better distribution
- * Uses djb2 algorithm with bit mixing for better distribution
+ * djb2 hash function with bit mixing for better distribution
  */
-export function hashString(str: string): number {
+function hashString(str: string): number {
   let hash = 5381
   for (let i = 0; i < str.length; i++) {
     const char = str.charCodeAt(i)
-    hash = ((hash << 5) + hash) + char // hash * 33 + char
+    // djb2 algorithm with bit mixing
+    hash = ((hash << 5) + hash) ^ char
+    // Additional mixing to improve distribution
+    hash = hash >>> 0 // Convert to unsigned 32-bit integer
+    hash = (hash * 0x9e3779b9) >>> 0 // Golden ratio multiplication
   }
-  // Mix the bits more to avoid similar adjacent values
-  hash = hash ^ (hash >>> 16)
-  hash = hash * 0x21f0aaad
-  hash = hash ^ (hash >>> 15)
-  hash = hash * 0x735a2d97
-  hash = hash ^ (hash >>> 15)
-  return Math.abs(hash)
+  return hash
 }
 
 /**
- * Generate a consistent color for a token based on its content
- * Uses golden ratio for better color distribution
+ * Generate a deterministic color for a token using hashing
+ * Uses golden ratio (137.508 degrees) for hue distribution to ensure distinct colors
+ * 
+ * Set USE_RANDOM_COLORS to true to enable colorful tokens
  */
+const USE_RANDOM_COLORS = false // Set to true to enable random colors
+
 export function getTokenColor(content: string): string {
+  if (!USE_RANDOM_COLORS) {
+    // Uniform color for all tokens
+    return 'rgb(203, 213, 225)' // slate-300
+  }
+  
+  // Random color based on content hash
   const hash = hashString(content)
-  // Use golden ratio for better color distribution
-  const hue = (hash * 137.508) % 360
-  const saturation = 55 + (hash % 30)
-  const lightness = 70 + (hash % 20)
+  
+  // Use golden ratio (137.508 degrees) for hue distribution
+  // This ensures maximum distinction between similar token IDs
+  const goldenRatioConjugate = 0.618033988749895
+  const hue = (hash * goldenRatioConjugate * 360) % 360
+  
+  // Use consistent saturation and lightness for readability
+  const saturation = 65
+  const lightness = 75
+  
   return `hsl(${hue}, ${saturation}%, ${lightness}%)`
 }
 
 /**
- * Display token content with special character visualization
+ * Display token content, replacing spaces with visible character
  */
 export function displayTokenContent(content: string): string {
   return content.replace(/ /g, '▁')

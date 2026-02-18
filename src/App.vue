@@ -5,7 +5,6 @@ import MainTokenView from './components/MainTokenView.vue'
 import SettingsModal from './components/SettingsModal.vue'
 import FrequencyPanel from './components/FrequencyPanel.vue'
 import VocabularyPanel from './components/VocabularyPanel.vue'
-import CompressionPanel from './components/CompressionPanel.vue'
 import StepPanel from './components/StepPanel.vue'
 import ControlPanel from './components/ControlPanel.vue'
 import InitializationPanel from './components/InitializationPanel.vue'
@@ -75,14 +74,15 @@ watch(() => settings.value.darkMode, (darkMode) => {
     </div>
 
     <!-- Right Side: Control Panels -->
-    <div class="w-96 flex flex-col bg-white dark:bg-slate-800 overflow-hidden">
-      <div class="flex-1 overflow-y-auto p-4 space-y-4">
+    <div class="w-96 flex flex-col bg-white dark:bg-slate-800 overflow-hidden" v-if="isInitialized">
+      <!-- Panels stack vertically with no gaps, filling available height -->
+      <div class="flex-1 flex flex-col overflow-hidden">
         <FrequencyPanel @hoverPair="handlePairHover" />
         <VocabularyPanel @hoverToken="handleTokenHover" />
-        <CompressionPanel />
         <StepPanel @goToStep="handleGoToStep" />
       </div>
 
+      <!-- Control panel at bottom -->
       <ControlPanel />
     </div>
 
