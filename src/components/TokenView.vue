@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 
 interface Token {
   id: number
@@ -15,7 +15,14 @@ const selectedIndices = ref<number[]>([])
 const mergingIndices = ref<number[]>([])
 const mergingColor = ref<string>('')
 const animationDuration = ref(600)
+const textEditor = ref<HTMLElement | null>(null)
 let nextTokenId = 0
+
+onMounted(() => {
+  if (textEditor.value) {
+    textEditor.value.innerText = textContent.value
+  }
+})
 
 // Hash function to generate consistent colors with better distribution
 function hashString(str: string): number {
@@ -74,41 +81,117 @@ function selectToken(index: number) {
   }
 }
 
+function selectRandomPairs() {
+  if (mergingIndices.value.length > 0 || tokens.value.length < 2) return
+  
+  // Get all valid pairs (adjacent tokens)
+  const validPairs: [number, number][] = []
+  for (let i = 0; i < tokens.value.length - 1; i++) {
+    validPairs.push([i, i + 1])
+  }
+  
+  // Shuffle and select 2-3 random non-overlapping pairs
+  const numPairs = Math.min(2 + Math.floor(Math.random() * 2), Math.floor(validPairs.length / 2))
+  const selectedPairs: [number, number][] = []
+  const usedIndices = new Set<number>()
+  
+  // Shuffle pairs
+  const shuffled = [...validPairs].sort(() => Math.random() - 0.5)
+  
+  for (const pair of shuffled) {
+    if (selectedPairs.length >= numPairs) break
+    const [idx1, idx2] = pair
+    if (!usedIndices.has(idx1) && !usedIndices.has(idx2)) {
+      selectedPairs.push(pair)
+      usedIndices.add(idx1)
+      usedIndices.add(idx2)
+    }
+  }
+  
+  // Flatten pairs into selectedIndices
+  selectedIndices.value = selectedPairs.flat().sort((a, b) => a - b)
+}
+
+function unselectAll() {
+  selectedIndices.value = []
+}
+
 function canMerge(): boolean {
-  if (selectedIndices.value.length !== 2) return false
-  const [idx1, idx2] = selectedIndices.value
-  return idx2 === idx1 + 1
+  if (selectedIndices.value.length < 2 || selectedIndices.value.length % 2 !== 0) return false
+  
+  // Check that all pairs are adjacent
+  for (let i = 0; i < selectedIndices.value.length; i += 2) {
+    const idx1 = selectedIndices.value[i]
+    const idx2 = selectedIndices.value[i + 1]
+    if (idx2 !== idx1 + 1) return false
+  }
+  
+  return true
 }
 
 async function mergeTokens() {
   if (!canMerge()) return
 
-  const [idx1, idx2] = selectedIndices.value
-  const newContent = tokens.value[idx1].content + tokens.value[idx2].content
-  const newColor = getTokenColor(newContent)
+  // Extract all pairs to merge
+  const pairs: [number, number][] = []
+  for (let i = 0; i < selectedIndices.value.length; i += 2) {
+    pairs.push([selectedIndices.value[i], selectedIndices.value[i + 1]])
+  }
   
-  // Start merge animation (keep selection for wrapper, but visually hide it)
-  mergingIndices.value = [idx1, idx2]
-  mergingColor.value = newColor
-
+  // Calculate new colors for all pairs
+  const mergeData = pairs.map(([idx1, idx2]) => {
+    const newContent = tokens.value[idx1].content + tokens.value[idx2].content
+    return {
+      indices: [idx1, idx2],
+      content: newContent,
+      color: getTokenColor(newContent)
+    }
+  })
+  
+  // Start merge animation for all pairs
+  mergingIndices.value = pairs.flat()
+  mergingColor.value = '' // We'll handle multiple colors in the template
+  
   await new Promise(resolve => setTimeout(resolve, 400))
 
-  const newToken: Token = {
-    id: nextTokenId++,
-    content: newContent,
-    color: newColor,
-    skipAnimation: true
+  // Merge all pairs (process in reverse order to maintain indices)
+  let newTokens = [...tokens.value]
+  for (let i = mergeData.length - 1; i >= 0; i--) {
+    const { indices: [idx1, idx2], content, color } = mergeData[i]
+    const newToken: Token = {
+      id: nextTokenId++,
+      content,
+      color,
+      skipAnimation: true
+    }
+    
+    newTokens = [
+      ...newTokens.slice(0, idx1),
+      newToken,
+      ...newTokens.slice(idx2 + 1)
+    ]
   }
-
-  tokens.value = [
-    ...tokens.value.slice(0, idx1),
-    newToken,
-    ...tokens.value.slice(idx2 + 1)
-  ]
-
+  
+  tokens.value = newTokens
   selectedIndices.value = []
   mergingIndices.value = []
   mergingColor.value = ''
+}
+
+function getMergingColor(index: number): string {
+  if (!mergingIndices.value.includes(index)) return ''
+  
+  // Find which pair this index belongs to
+  for (let i = 0; i < selectedIndices.value.length; i += 2) {
+    const idx1 = selectedIndices.value[i]
+    const idx2 = selectedIndices.value[i + 1]
+    if (index === idx1 || index === idx2) {
+      const newContent = tokens.value[idx1].content + tokens.value[idx2].content
+      return getTokenColor(newContent)
+    }
+  }
+  
+  return ''
 }
 
 function displayTokenContent(content: string): string {
@@ -117,26 +200,58 @@ function displayTokenContent(content: string): string {
 
 const isSelectionStart = (index: number) => {
   if (selectedIndices.value.length === 0) return false
-  return selectedIndices.value[0] === index
+  
+  // Check if this index starts any pair
+  for (let i = 0; i < selectedIndices.value.length; i += 2) {
+    if (selectedIndices.value[i] === index) return true
+  }
+  
+  return false
 }
 
 const isSelectionEnd = (index: number) => {
-  if (selectedIndices.value.length !== 2) return false
-  return selectedIndices.value[1] === index
+  if (selectedIndices.value.length === 0) return false
+  
+  // Check if this index ends any pair
+  for (let i = 1; i < selectedIndices.value.length; i += 2) {
+    if (selectedIndices.value[i] === index) return true
+  }
+  
+  return false
 }
 
 const isInSelection = (index: number) => {
-  if (selectedIndices.value.length === 0) return false
-  const [start, end] = selectedIndices.value.length === 1
-    ? [selectedIndices.value[0], selectedIndices.value[0]]
-    : selectedIndices.value
-  return index >= start && index <= end
+  return selectedIndices.value.includes(index)
+}
+
+const getSelectionPairEnd = (startIndex: number) => {
+  // Find the pair end for this start index
+  for (let i = 0; i < selectedIndices.value.length; i += 2) {
+    if (selectedIndices.value[i] === startIndex) {
+      return selectedIndices.value[i + 1]
+    }
+  }
+  return startIndex
 }
 
 const isTokenSelected = (index: number) => selectedIndices.value.includes(index)
 const isTokenMerging = (index: number) => mergingIndices.value.includes(index)
-const isMergingLeft = (index: number) => mergingIndices.value[0] === index
-const isMergingRight = (index: number) => mergingIndices.value[1] === index
+
+const isMergingLeft = (index: number) => {
+  // Check if this index is the left token of any merging pair
+  for (let i = 0; i < mergingIndices.value.length; i += 2) {
+    if (mergingIndices.value[i] === index) return true
+  }
+  return false
+}
+
+const isMergingRight = (index: number) => {
+  // Check if this index is the right token of any merging pair
+  for (let i = 1; i < mergingIndices.value.length; i += 2) {
+    if (mergingIndices.value[i] === index) return true
+  }
+  return false
+}
 </script>
 
 <template>
@@ -148,7 +263,7 @@ const isMergingRight = (index: number) => mergingIndices.value[1] === index
         class="text-editor"
         contenteditable
         @input="(e) => textContent = (e.target as HTMLElement).innerText"
-        v-text="textContent"
+        ref="textEditor"
       ></div>
 
       <div v-else class="token-container">
@@ -172,7 +287,7 @@ const isMergingRight = (index: number) => mergingIndices.value[1] === index
                 class="token"
                 :class="{ 'skip-animation': token.skipAnimation }"
                 :style="{
-                  backgroundColor: isTokenMerging(index) ? mergingColor : token.color,
+                  backgroundColor: getMergingColor(index) || token.color,
                   animationDuration: `${animationDuration}ms`
                 }"
               >
@@ -181,26 +296,26 @@ const isMergingRight = (index: number) => mergingIndices.value[1] === index
               </span>
             </span>
             <span
-              v-if="selectedIndices.length === 2"
+              v-if="getSelectionPairEnd(index) !== index && tokens[getSelectionPairEnd(index)]"
               class="token-wrapper"
               :class="{
-                selected: isTokenSelected(index + 1),
-                merging: isTokenMerging(index + 1),
-                'merging-left': isMergingLeft(index + 1),
-                'merging-right': isMergingRight(index + 1)
+                selected: isTokenSelected(getSelectionPairEnd(index)),
+                merging: isTokenMerging(getSelectionPairEnd(index)),
+                'merging-left': isMergingLeft(getSelectionPairEnd(index)),
+                'merging-right': isMergingRight(getSelectionPairEnd(index))
               }"
-              @click="selectToken(index + 1)"
+              @click="selectToken(getSelectionPairEnd(index))"
             >
               <span
                 class="token"
-                :class="{ 'skip-animation': tokens[index + 1].skipAnimation }"
+                :class="{ 'skip-animation': tokens[getSelectionPairEnd(index)].skipAnimation }"
                 :style="{
-                  backgroundColor: isTokenMerging(index + 1) ? mergingColor : tokens[index + 1].color,
+                  backgroundColor: getMergingColor(getSelectionPairEnd(index)) || tokens[getSelectionPairEnd(index)].color,
                   animationDuration: `${animationDuration}ms`
                 }"
               >
-                <span class="token-content">{{ displayTokenContent(tokens[index + 1].content) }}</span>
-                <span class="token-id">{{ tokens[index + 1].id }}</span>
+                <span class="token-content">{{ displayTokenContent(tokens[getSelectionPairEnd(index)].content) }}</span>
+                <span class="token-id">{{ tokens[getSelectionPairEnd(index)].id }}</span>
               </span>
             </span>
           </span>
@@ -219,7 +334,7 @@ const isMergingRight = (index: number) => mergingIndices.value[1] === index
               class="token"
               :class="{ 'skip-animation': token.skipAnimation }"
               :style="{
-                backgroundColor: isTokenMerging(index) ? mergingColor : token.color,
+                backgroundColor: getMergingColor(index) || token.color,
                 animationDuration: `${animationDuration}ms`
               }"
             >
@@ -242,6 +357,20 @@ const isMergingRight = (index: number) => mergingIndices.value[1] === index
       </button>
 
       <template v-else>
+        <button
+          @click="selectRandomPairs"
+          :disabled="tokens.length < 2 || mergingIndices.length > 0"
+          class="btn btn-secondary"
+        >
+          Select 2-3 Random Pairs
+        </button>
+        <button
+          @click="unselectAll"
+          :disabled="selectedIndices.length === 0"
+          class="btn btn-secondary"
+        >
+          Unselect
+        </button>
         <button
           @click="mergeTokens"
           :disabled="!canMerge()"
@@ -293,16 +422,10 @@ const isMergingRight = (index: number) => mergingIndices.value[1] === index
   font-size: 1.125rem;
   line-height: 2;
   padding: 1rem;
-  border: 2px solid #dee2e6;
-  border-radius: 8px;
-  background: white;
+  background: transparent;
   min-height: 200px;
   outline: none;
-  transition: border-color 0.2s;
-}
-
-.text-editor:focus {
-  border-color: #4a90e2;
+  cursor: text;
 }
 
 .token-container {
