@@ -93,12 +93,36 @@ export class BPEService {
    * Tokenize training data into initial tokens
    */
   private tokenizeTrainingData(trainingData: string): void {
-    this.state.tokens = trainingData.split('').map(char => ({
-      id: this.nextTokenId++,
-      content: char,
-      color: getTokenColor(char),
-      skipAnimation: true
-    }))
+    this.state.tokens = trainingData.split('').map(char => {
+      // Find the vocabulary entry for this character
+      const vocabEntry = this.state.vocabulary.find(v => v.content === char)
+      if (!vocabEntry) {
+        throw new Error(`Character "${char}" not found in vocabulary`)
+      }
+      return {
+        id: vocabEntry.id, // Use vocabulary ID, not sequential position
+        content: char,
+        color: vocabEntry.color,
+        skipAnimation: true
+      }
+    })
+  }
+
+  /**
+   * Get vocabulary entry by content, creating if needed
+   */
+  private getOrCreateVocabEntry(content: string, step: number): VocabEntry {
+    let entry = this.state.vocabulary.find(v => v.content === content)
+    if (!entry) {
+      entry = {
+        id: this.nextVocabId++,
+        content: content,
+        color: getTokenColor(content),
+        addedAtStep: step
+      }
+      this.state.vocabulary.push(entry)
+    }
+    return entry
   }
 
   /**
@@ -145,14 +169,8 @@ export class BPEService {
     const [token1, token2] = pair
     const newContent = token1 + token2
     
-    // Add to vocabulary
-    const newVocabEntry: VocabEntry = {
-      id: this.nextVocabId++,
-      content: newContent,
-      color: getTokenColor(newContent),
-      addedAtStep: this.state.currentStep + 1
-    }
-    this.state.vocabulary.push(newVocabEntry)
+    // Get or create vocabulary entry
+    const newVocabEntry = this.getOrCreateVocabEntry(newContent, this.state.currentStep + 1)
 
     // Replace all occurrences in tokens array
     const newTokens: Token[] = []
@@ -166,14 +184,24 @@ export class BPEService {
       ) {
         // Merge this pair
         newTokens.push({
-          id: this.nextTokenId++,
+          id: newVocabEntry.id, // Use vocabulary ID
           content: newContent,
-          color: getTokenColor(newContent),
+          color: newVocabEntry.color,
           skipAnimation: true
         })
         i += 2 // Skip both tokens
       } else {
-        newTokens.push(this.state.tokens[i])
+        // Ensure existing token uses vocabulary ID
+        const currentToken = this.state.tokens[i]
+        const vocabEntry = this.state.vocabulary.find(v => v.content === currentToken.content)
+        if (vocabEntry && currentToken) {
+          newTokens.push({
+            ...currentToken,
+            id: vocabEntry.id
+          })
+        } else if (currentToken) {
+          newTokens.push(currentToken)
+        }
         i++
       }
     }
@@ -253,13 +281,18 @@ export class BPEService {
 
       // Merge step
       const newContent = pair[0] + pair[1]
-      const newVocabEntry: VocabEntry = {
-        id: this.nextVocabId++,
-        content: newContent,
-        color: getTokenColor(newContent),
-        addedAtStep: stepNumber
+      
+      // Get or create vocabulary entry
+      let newVocabEntry = workingVocab.find(v => v.content === newContent)
+      if (!newVocabEntry) {
+        newVocabEntry = {
+          id: this.nextVocabId++,
+          content: newContent,
+          color: getTokenColor(newContent),
+          addedAtStep: stepNumber
+        }
+        workingVocab.push(newVocabEntry)
       }
-      workingVocab.push(newVocabEntry)
 
       // Perform merge on working tokens
       const newTokens: Token[] = []
@@ -271,14 +304,24 @@ export class BPEService {
           workingTokens[i + 1].content === pair[1]
         ) {
           newTokens.push({
-            id: this.nextTokenId++,
+            id: newVocabEntry.id, // Use vocabulary ID
             content: newContent,
-            color: getTokenColor(newContent),
+            color: newVocabEntry.color,
             skipAnimation: true
           })
           i += 2
         } else {
-          newTokens.push(workingTokens[i])
+          // Ensure token uses vocabulary ID
+          const currentToken = workingTokens[i]
+          const vocabEntry = workingVocab.find(v => v.content === currentToken.content)
+          if (vocabEntry && currentToken) {
+            newTokens.push({
+              ...currentToken,
+              id: vocabEntry.id
+            })
+          } else if (currentToken) {
+            newTokens.push(currentToken)
+          }
           i++
         }
       }
