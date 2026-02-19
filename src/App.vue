@@ -1,13 +1,12 @@
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
 import { useBPE } from './composables/useBPE'
-import MainTokenView from './components/MainTokenView.vue'
+import MainView from './components/MainView.vue'
 import SettingsModal from './components/SettingsModal.vue'
 import FrequencyPanel from './components/FrequencyPanel.vue'
 import VocabularyPanel from './components/VocabularyPanel.vue'
 import StepPanel from './components/StepPanel.vue'
 import ControlPanel from './components/ControlPanel.vue'
-import InitializationPanel from './components/InitializationPanel.vue'
 import type { BPESettings } from './services/types'
 
 const { initialize, goToStep, state, settings, currentStepData } = useBPE()
@@ -15,7 +14,8 @@ const { initialize, goToStep, state, settings, currentStepData } = useBPE()
 const isSettingsOpen = ref(false)
 const hoveredPair = ref<[string, string] | null>(null)
 const hoveredTokenContent = ref<string | null>(null)
-const isInitialized = ref(false)
+const showSidebars = ref(false)
+const showControlPanel = ref(false)
 
 // Computed properties for highlighting - user hover takes priority, then step highlighting
 const effectiveHoveredPair = computed(() => {
@@ -42,11 +42,6 @@ const effectiveHoveredTokenContent = computed(() => {
   return null
 })
 
-const handleInitialize = (trainingData: string) => {
-  initialize(trainingData)
-  isInitialized.value = true
-}
-
 const handleOpenSettings = () => {
   isSettingsOpen.value = true
 }
@@ -72,6 +67,11 @@ const handleGoToStep = (stepNumber: number) => {
   goToStep(stepNumber)
 }
 
+const handleModeChange = (mode: { showSidebars: boolean, showControlPanel: boolean }) => {
+  showSidebars.value = mode.showSidebars
+  showControlPanel.value = mode.showControlPanel
+}
+
 // Apply dark mode
 watch(() => settings.value.darkMode, (darkMode) => {
   if (darkMode) {
@@ -83,24 +83,24 @@ watch(() => settings.value.darkMode, (darkMode) => {
 </script>
 
 <template>
-  <div class="h-screen w-screen flex bg-slate-50 dark:bg-slate-900 overflow-hidden">
-    <!-- Left Side: Main Token View -->
-    <div class="flex-1 flex flex-col border-r border-slate-200 dark:border-slate-700">
-      <InitializationPanel
-        v-if="!isInitialized"
-        @initialize="handleInitialize"
-      />
-      <MainTokenView
-        v-else
-        :hoveredPair="effectiveHoveredPair"
-        :hoveredTokenContent="effectiveHoveredTokenContent"
+  <div class="h-screen w-screen bg-slate-50 dark:bg-slate-900 overflow-hidden flex">
+    <!-- Main View -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+      <MainView
+        :hoveredPair="hoveredPair"
+        :hoveredTokenContent="hoveredTokenContent"
+        :effectiveHoveredPair="effectiveHoveredPair"
+        :effectiveHoveredTokenContent="effectiveHoveredTokenContent"
         @openSettings="handleOpenSettings"
+        @hoverPair="handlePairHover"
+        @hoverToken="handleTokenHover"
+        @goToStep="handleGoToStep"
+        @modeChange="handleModeChange"
       />
     </div>
 
-    <!-- Right Side: Control Panels -->
-    <div class="w-96 flex flex-col bg-white dark:bg-slate-800 overflow-hidden" v-if="isInitialized">
-      <!-- Panels stack vertically with no gaps, filling available height -->
+    <!-- Right Sidebars (shown in training and validation modes) -->
+    <div v-if="showSidebars" class="w-96 flex flex-col overflow-hidden border-l border-slate-200 dark:border-slate-700">
       <div class="flex-1 flex flex-col overflow-hidden">
         <FrequencyPanel 
           :hoveredPair="effectiveHoveredPair"
@@ -113,8 +113,8 @@ watch(() => settings.value.darkMode, (darkMode) => {
         <StepPanel @goToStep="handleGoToStep" />
       </div>
 
-      <!-- Control panel at bottom -->
-      <ControlPanel />
+      <!-- Control panel at bottom (only in training mode) -->
+      <ControlPanel v-if="showControlPanel" />
     </div>
 
     <!-- Settings Modal -->

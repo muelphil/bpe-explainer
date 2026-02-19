@@ -131,5 +131,33 @@ Lets fix some bugs first:
 
 ---
 
-Let's improve the App. Currently, there is sort of welcome screen, that lets the user define the training data ()
+Let's improve the App. Currently, there is an Initialization screen, that lets the user define the training data (InitializationPanel.vue). I would like to restructure this.
 
+# MainView
+Instead of showing the Initialization Panel first, directly show the app, but in an initial state, with a new MainView.vue component, that wraps the following 3 other views and conditionally shows them based on the state.
+In this initial state ("training-data-definition"), the control side bars (Vocabulary, Frequency, Steps) are hidden. The MainView has a big "Byte-Pair Encoding Visualizer" heading (no subheading) at the top, see current InitializationPanel. Underneath there are 3 buttons: "Training Data", "Training" and "Validation". In the initial state, "Training" and "Validation" are disabled and "Training Data" is selected. When Training Data is finished, go to Training and activate Validation. Validation can be selected after training data is specified. Selecting Training Data again will go back to that step, disabling Training and Validation again.
+
+# Training Data Definition
+There should be a message along the lines "Define your Training Data or use one of the presets". Then, there should be PRESETS followed by several smaller buttons with preset options: Lorem Ipsum and 2 more random training data defaults. Lorem Ipsum should be selected by default, highlighting the button and showing the Lorem Ipsum text as training data. Let me specify them in a separate .ts file (trainingPresets.ts). Underneath, there should be a contenteditable div, which shows the training data. At the very bottom of the screen there should be a "Start Training" Button, which will then replace the Training Data Definition with the MainTokenView.
+
+# Training
+This should show the MainTokenView, renamed to TrainingView, as it is currently implemented
+
+# Validation
+The validation should show a split screen with the top being a content ediable div and the bottom being a tokenized representation fo the tops content. If the tokenization fails (vocabulary is not sufficient to tokenize) it should display error tokens for characters that result in this error. The 2 sections should have the headlines "Input" and "Tokenized Input (Compression Rate: XYZ%)".
+
+
+---
+
+
+This is not exactly what I wanted:
+* The control sidebar should still use up the entire height and be displayed next to the MainView.
+* The Training Data, Training and Validation Headers should be much smaller
+* The MainView and Child views thereof should not use different background colors for different sections, just the default background color for everthing, not so many borders and hierarchy
+* Skip the separation line under Input header and Tokenized Input header in validation 
+* Training Data should not have a subheader, Training Data input should not have a border
+* Start Training button should be at the very bottom
+* 
+---
+
+Please next improve the step visualization. Replace "Select" title with "Select most frequent pair". In the content of merge and select steps, use small token display without token ids to display what is done in the step. Orient yourself on the Vocabulary display, with select most frequent pair basically showing the same as the most frequent pair display in the frequencies section under the step title and Merge step displaying token1 + token2 → token3 similar to the frequency display but with the resulting title on the right. 

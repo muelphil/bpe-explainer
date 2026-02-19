@@ -122,6 +122,19 @@
   right: 3px;
 }
 
+/* Hide token ID when no-id class is present */
+.token.no-id {
+  padding-bottom: 2px;
+}
+
+.token.small.no-id {
+  padding-bottom: 2px;
+}
+
+.token.no-id .token-id {
+  display: none;
+}
+
 /* Single token highlight (vocabulary hover) */
 .highlight-single .token {
   background-color: var(--primary) !important;
@@ -141,4 +154,18 @@
 .highlight-left .token,
 .highlight-right .token {
   background-color: var(--primary) !important;
+}
+
+/* Error token styling */
+.token-error .token {
+  background-color: #fee2e2 !important;
+  color: #991b1b !important;
+  border: 2px solid #ef4444 !important;
+  font-weight: 600;
+}
+
+.dark .token-error .token {
+  background-color: rgba(220, 38, 38, 0.2) !important;
+  color: #fca5a5 !important;
+  border-color: #dc2626 !important;
 }

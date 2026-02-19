@@ -265,10 +265,12 @@ export class BPEService {
           (mostFrequent === null || mostFrequent.frequency === 1))
 
       if (shouldStop || mostFrequent === null) {
+        const compressionRatio = this.state.trainingData.length / workingTokens.length
+        const compressionPercentage = ((1 - 1 / compressionRatio) * 100).toFixed(1)
         steps.push({
           stepNumber,
           type: 'complete',
-          description: 'Algorithm complete',
+          description: `Algorithm complete (Compression Rate: ${compressionPercentage}%)`,
           tokensSnapshot: this.cloneTokens(workingTokens),
           vocabularySnapshot: this.cloneVocabulary(workingVocab)
         })
@@ -339,6 +341,7 @@ export class BPEService {
         stepNumber,
         type: 'merge',
         description: `Merged "${pair[0]}" + "${pair[1]}" → "${newContent}"`,
+        selectedPair: pair,
         addedToken: newVocabEntry,
         tokensSnapshot: this.cloneTokens(newTokens),
         vocabularySnapshot: this.cloneVocabulary(workingVocab),
@@ -529,6 +532,63 @@ export class BPEService {
    */
   private cloneVocabulary(vocab: VocabEntry[]): VocabEntry[] {
     return vocab.map(v => ({...v}))
+  }
+
+  /**
+   * Tokenize arbitrary input text using current vocabulary
+   * Returns tokens or error markers for untokenizable characters
+   */
+  tokenizeInput(input: string): { tokens: Token[], hasErrors: boolean, compressionRatio: number } {
+    if (!input) {
+      return { tokens: [], hasErrors: false, compressionRatio: 1 }
+    }
+
+    const tokens: Token[] = []
+    let hasErrors = false
+    let position = 0
+
+    // Greedy tokenization: try to match longest possible tokens from vocabulary
+    while (position < input.length) {
+      let matched = false
+      
+      // Try to find longest matching vocabulary entry starting at current position
+      // Sort vocabulary by length (longest first) for greedy matching
+      const sortedVocab = [...this.state.vocabulary].sort((a, b) => b.content.length - a.content.length)
+      
+      for (const vocabEntry of sortedVocab) {
+        if (input.substring(position, position + vocabEntry.content.length) === vocabEntry.content) {
+          // Found a match
+          tokens.push({
+            id: vocabEntry.id,
+            content: vocabEntry.content,
+            color: vocabEntry.color,
+            skipAnimation: true
+          })
+          position += vocabEntry.content.length
+          matched = true
+          break
+        }
+      }
+
+      if (!matched) {
+        // Character not in vocabulary - add error token
+        const char = input[position]
+        if (char) {
+          tokens.push({
+            id: -1, // Error marker
+            content: char,
+            color: '#ef4444', // Red color for errors
+            skipAnimation: true
+          })
+        }
+        position++
+        hasErrors = true
+      }
+    }
+
+    const compressionRatio = input.length / tokens.length
+
+    return { tokens, hasErrors, compressionRatio }
   }
 }
 

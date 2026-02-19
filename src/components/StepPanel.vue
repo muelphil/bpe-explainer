@@ -3,6 +3,7 @@ import { computed, ref, watch, nextTick } from 'vue'
 import CollapsiblePanel from './CollapsiblePanel.vue'
 import { useBPE } from '../composables/useBPE'
 import { Check, Circle } from 'lucide-vue-next'
+import { displayTokenContent, getTokenColor } from '../utils/tokenColor'
 
 const emit = defineEmits<{
   goToStep: [stepNumber: number]
@@ -28,7 +29,7 @@ const getStepIcon = (stepNumber: number) => {
 const getStepTypeLabel = (type: string) => {
   const labels: Record<string, string> = {
     tokenize: 'Initialize',
-    select: 'Select',
+    select: 'Select most frequent pair',
     merge: 'Merge',
     complete: 'Complete'
   }
@@ -85,7 +86,42 @@ watch(currentStep, async () => {
                 #{{ currentStepItem.stepNumber }}
               </span>
             </div>
-            <p class="text-sm text-slate-700 dark:text-slate-300">
+            
+            <!-- Token Visualization for Select and Merge steps -->
+            <div v-if="currentStepItem.type === 'select' && currentStepItem.selectedPair" class="mb-2">
+              <div style="display:flex; gap: 2px; align-items: center;">
+                <span
+                  class="token small no-id"
+                  :style="{ backgroundColor: getTokenColor(currentStepItem.selectedPair[0]) }"
+                >{{ displayTokenContent(currentStepItem.selectedPair[0]) }}</span>
+                <span class="text-slate-400 dark:text-slate-500 text-xs">+</span>
+                <span
+                  class="token small no-id"
+                  :style="{ backgroundColor: getTokenColor(currentStepItem.selectedPair[1]) }"
+                >{{ displayTokenContent(currentStepItem.selectedPair[1]) }}</span>
+              </div>
+            </div>
+            
+            <div v-else-if="currentStepItem.type === 'merge' && currentStepItem.selectedPair && currentStepItem.addedToken" class="mb-2">
+              <div style="display:flex; gap: 4px; align-items: center;">
+                <span
+                  class="token small no-id"
+                  :style="{ backgroundColor: getTokenColor(currentStepItem.selectedPair[0]) }"
+                >{{ displayTokenContent(currentStepItem.selectedPair[0]) }}</span>
+                <span class="text-slate-400 dark:text-slate-500 text-xs">+</span>
+                <span
+                  class="token small no-id"
+                  :style="{ backgroundColor: getTokenColor(currentStepItem.selectedPair[1]) }"
+                >{{ displayTokenContent(currentStepItem.selectedPair[1]) }}</span>
+                <span class="text-slate-400 dark:text-slate-500 text-xs">→</span>
+                <span
+                  class="token small no-id"
+                  :style="{ backgroundColor: currentStepItem.addedToken.color }"
+                >{{ displayTokenContent(currentStepItem.addedToken.content) }}</span>
+              </div>
+            </div>
+            
+            <p v-else class="text-sm text-slate-700 dark:text-slate-300">
               {{ currentStepItem.description }}
             </p>
           </div>
@@ -153,7 +189,42 @@ watch(currentStep, async () => {
                     #{{ step.stepNumber }}
                   </span>
                 </div>
-                <p class="text-sm text-slate-700 dark:text-slate-300">
+                
+                <!-- Token Visualization for Select and Merge steps -->
+                <div v-if="step.type === 'select' && step.selectedPair" class="mb-1">
+                  <div style="display:flex; gap: 2px; align-items: center;">
+                    <span
+                      class="token small no-id"
+                      :style="{ backgroundColor: getTokenColor(step.selectedPair[0]) }"
+                    >{{ displayTokenContent(step.selectedPair[0]) }}</span>
+                    <span class="text-slate-400 dark:text-slate-500 text-xs">+</span>
+                    <span
+                      class="token small no-id"
+                      :style="{ backgroundColor: getTokenColor(step.selectedPair[1]) }"
+                    >{{ displayTokenContent(step.selectedPair[1]) }}</span>
+                  </div>
+                </div>
+                
+                <div v-else-if="step.type === 'merge' && step.selectedPair && step.addedToken" class="mb-1">
+                  <div style="display:flex; gap: 4px; align-items: center;">
+                    <span
+                      class="token small no-id"
+                      :style="{ backgroundColor: getTokenColor(step.selectedPair[0]) }"
+                    >{{ displayTokenContent(step.selectedPair[0]) }}</span>
+                    <span class="text-slate-400 dark:text-slate-500 text-xs">+</span>
+                    <span
+                      class="token small no-id"
+                      :style="{ backgroundColor: getTokenColor(step.selectedPair[1]) }"
+                    >{{ displayTokenContent(step.selectedPair[1]) }}</span>
+                    <span class="text-slate-400 dark:text-slate-500 text-xs">→</span>
+                    <span
+                      class="token small no-id"
+                      :style="{ backgroundColor: step.addedToken.color }"
+                    >{{ displayTokenContent(step.addedToken.content) }}</span>
+                  </div>
+                </div>
+                
+                <p v-else class="text-sm text-slate-700 dark:text-slate-300">
                   {{ step.description }}
                 </p>
               </div>
