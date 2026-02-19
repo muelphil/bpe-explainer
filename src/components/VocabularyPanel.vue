@@ -76,7 +76,7 @@ const isTokenHighlighted = (tokenContent: string, hoveredTokenContent: string | 
         >
           <span
             class="token relative group cursor-pointer transition-all hover:scale-110 hover:z-10 hover:shadow-lg"
-            :style="{ backgroundColor: token.color }"
+            :style="token.color ? { backgroundColor: token.color } : {}"
           >
             <span class="token-content">{{ displayTokenContent(token.content) }}</span>
             <span class="token-id">{{ token.id }}</span>

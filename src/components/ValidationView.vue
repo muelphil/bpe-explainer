@@ -102,7 +102,7 @@ const compressionPercentage = computed(() => {
             >
               <span
                 class="token"
-                :style="token.id !== -1 ? { backgroundColor: token.color } : {}"
+                :style="token.id !== -1 && token.color ? { backgroundColor: token.color } : {}"
               >
                 {{ displayTokenContent(token.content) }}
                 <span class="token-id">{{ token.id === -1 ? '?' : token.id }}</span>

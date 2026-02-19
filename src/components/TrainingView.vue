@@ -59,7 +59,7 @@ const isPairRight = (index: number, hoveredPair: [string, string] | null): boole
         >
           <span
             class="token"
-            :style="{backgroundColor: token.color}"
+            :style="token.color ? {backgroundColor: token.color} : {}"
           >{{ displayTokenContent(token.content) }}<span class="token-id">{{ token.id }}</span>
           </span>
         </span>

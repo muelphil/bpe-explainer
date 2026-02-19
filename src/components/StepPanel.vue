@@ -119,7 +119,7 @@ watch(currentStep, async () => {
                 <span class="text-slate-400 dark:text-slate-500 text-xs">→</span>
                 <span
                   class="token small no-id"
-                  :style="{ backgroundColor: currentStepItem.addedToken.color }"
+                  :style="currentStepItem.addedToken.color ? { backgroundColor: currentStepItem.addedToken.color } : {}"
                 >{{ displayTokenContent(currentStepItem.addedToken.content) }}</span>
               </div>
             </div>
@@ -221,7 +221,7 @@ watch(currentStep, async () => {
                     <span class="text-slate-400 dark:text-slate-500 text-xs">→</span>
                     <span
                       class="token small no-id"
-                      :style="{ backgroundColor: step.addedToken.color }"
+                      :style="step.addedToken.color ? { backgroundColor: step.addedToken.color } : {}"
                     >{{ displayTokenContent(step.addedToken.content) }}</span>
                   </div>
                 </div>

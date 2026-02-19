@@ -66,7 +66,8 @@ const isPairHighlighted = (pair: [string, string], hoveredPair: [string, string]
 
     <!-- Details (collapsible) - Remaining items -->
     <template #details>
-      <div class="space-y-2">
+<!--      <div class="space-y-2">-->
+      <div>
         <div
           v-for="(freq, index) in remainingFrequencies"
           :key="`${freq.pair[0]}-${freq.pair[1]}`"
