@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import { Settings } from 'lucide-vue-next'
-import { useBPE } from '../composables/useBPE'
-import { displayTokenContent } from '../utils/tokenColor'
+import {computed} from 'vue'
+import {Settings} from 'lucide-vue-next'
+import {useBPE} from '../composables/useBPE'
+import {displayTokenContent} from '../utils/tokenColor'
 
 defineProps<{
   hoveredPair: [string, string] | null
@@ -13,10 +13,12 @@ const emit = defineEmits<{
   openSettings: []
 }>()
 
-const { tokens } = useBPE()
+const {tokens} = useBPE()
 
 // Check if a token should be highlighted (single token from vocabulary)
-const isTokenHighlightedSingle = (token: { content: string }, hoveredTokenContent: string | null): boolean => {
+const isTokenHighlightedSingle = (token: {
+  content: string
+}, hoveredTokenContent: string | null): boolean => {
   return hoveredTokenContent !== null && token.content === hoveredTokenContent
 }
 
@@ -62,12 +64,8 @@ const isPairRight = (index: number, hoveredPair: [string, string] | null): boole
         >
           <span
             class="token"
-            :style="{
-              backgroundColor: token.color
-            }"
-          >
-            <span class="token-content">{{ displayTokenContent(token.content) }}</span>
-            <span class="token-id">{{ token.id }}</span>
+            :style="{backgroundColor: token.color}"
+          >{{ displayTokenContent(token.content) }}<span class="token-id">{{ token.id }}</span>
           </span>
         </span>
       </div>
@@ -79,99 +77,9 @@ const isPairRight = (index: number, hoveredPair: [string, string] | null): boole
       class="absolute bottom-4 right-4 p-3 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-full shadow-lg transition-colors"
       title="Settings"
     >
-      <Settings :size="20" class="text-slate-700 dark:text-slate-300" />
+      <Settings :size="20" class="text-slate-700 dark:text-slate-300"/>
     </button>
   </div>
 </template>
 
-<style scoped>
-:root {
-  --light-primary: rgb(147, 197, 253); /* primary-300 */
-  --primary: rgb(96, 165, 250); /* primary-400 */
-}
 
-.dark {
-  --light-primary: rgb(96, 165, 250); /* primary-400 */
-  --primary: rgb(59, 130, 246); /* primary-500 */
-}
-
-.token-container {
-  font-size: 1.125rem;
-  //line-height: 2.5;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0; /* No gap between wrappers - seamless */
-  align-items: center;
-}
-
-.token-wrapper {
-  position: relative;
-  display: inline-block;
-  padding: 2px; /* Padding on wrapper creates visual spacing */
-  transition: all 0.2s ease;
-  font-size: 0.875rem;
-  margin: 1px 0;
-}
-
-.token {
-  position: relative;
-  display: inline-block;
-  padding: 2px 8px 14px 8px;
-  border-radius: 4px;
-  font-family: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, monospace;
-  font-size: 0.875rem;
-  white-space: pre;
-  transition: all 0.2s ease;
-}
-
-.token-content {
-  font-weight: 500;
-}
-
-.token-id {
-  position: absolute;
-  bottom: 2px;
-  right: 4px;
-  font-size: 0.5rem;
-  /*  font-size: 0.625rem; */
-  color: rgb(100, 116, 139); /* slate-500 */
-  font-weight: 600;
-}
-
-.dark .token-id {
-  color: rgb(148, 163, 184); /* slate-400 */
-}
-
-/* Single token highlight (vocabulary hover) - token changes to primary color */
-.highlight-single .token {
-  background-color: var(--primary) !important;
-}
-
-/* Pair highlighting (frequency hover) - wrapper gets light background, token gets primary */
-.highlight-left {
-  border-radius: 6px 0 0 6px;
-  background: var(--light-primary);
-}
-
-.highlight-right {
-  border-radius: 0 6px 6px 0;
-  background: var(--light-primary);
-}
-
-/* Tokens inside highlighted pair also get primary color */
-.highlight-left .token,
-.highlight-right .token {
-  background-color: var(--primary) !important;
-}
-
-/* Token inside highlighted pair wrapper - adjust border radius to match wrapper */
-/*
-.highlight-left .token {
-  border-radius: 4px 0 0 4px;
-}
-
-.highlight-right .token {
-  border-radius: 0 4px 4px 0;
-}
- */
-</style>

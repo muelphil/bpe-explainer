@@ -102,8 +102,14 @@ watch(() => settings.value.darkMode, (darkMode) => {
     <div class="w-96 flex flex-col bg-white dark:bg-slate-800 overflow-hidden" v-if="isInitialized">
       <!-- Panels stack vertically with no gaps, filling available height -->
       <div class="flex-1 flex flex-col overflow-hidden">
-        <FrequencyPanel @hoverPair="handlePairHover" />
-        <VocabularyPanel @hoverToken="handleTokenHover" />
+        <FrequencyPanel 
+          :hoveredPair="effectiveHoveredPair"
+          @hoverPair="handlePairHover" 
+        />
+        <VocabularyPanel 
+          :hoveredTokenContent="effectiveHoveredTokenContent"
+          @hoverToken="handleTokenHover" 
+        />
         <StepPanel @goToStep="handleGoToStep" />
       </div>
 

@@ -1,14 +1,18 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import {computed} from 'vue'
 import CollapsiblePanel from './CollapsiblePanel.vue'
-import { useBPE } from '../composables/useBPE'
-import { displayTokenContent, getTokenColor } from '../utils/tokenColor'
+import {useBPE} from '../composables/useBPE'
+import {displayTokenContent, getTokenColor} from '../utils/tokenColor'
+
+defineProps<{
+  hoveredTokenContent: string | null
+}>()
 
 const emit = defineEmits<{
   hoverToken: [content: string | null]
 }>()
 
-const { vocabulary, currentStep } = useBPE()
+const {vocabulary, currentStep} = useBPE()
 
 const lastAddedToken = computed(() => {
   return vocabulary.value
@@ -18,6 +22,10 @@ const lastAddedToken = computed(() => {
 
 const handleTokenHover = (content: string | null) => {
   emit('hoverToken', content)
+}
+
+const isTokenHighlighted = (tokenContent: string, hoveredTokenContent: string | null): boolean => {
+  return hoveredTokenContent !== null && tokenContent === hoveredTokenContent
 }
 </script>
 
@@ -33,53 +41,50 @@ const handleTokenHover = (content: string | null) => {
           <span class="font-semibold">{{ vocabulary.length }}</span> tokens
         </div>
         <div v-if="lastAddedToken" class="flex items-center gap-2">
-          <span class="text-xs text-slate-500 dark:text-slate-400">Last:</span>
-          <div
-            class="px-2 py-0.5 rounded text-xs font-mono"
-            :style="{ backgroundColor: lastAddedToken.color }"
-          >
-            {{ displayTokenContent(lastAddedToken.content) }}
-          </div>
+          <span class="text-xs text-slate-500 dark:text-slate-400">Last added:</span>
+          <span class="token-wrapper" style="margin: 0; padding: 0;">
+            <span class="token no-id">
+              {{ displayTokenContent(lastAddedToken.content) }}
+            </span>
+          </span>
         </div>
       </div>
     </template>
 
     <!-- Details (collapsible) -->
     <template #details>
-      <div class="grid grid-cols-4 gap-2">
-        <div
+      <div class="token-container" style="gap: 4px;">
+        <span
           v-for="token in vocabulary"
           :key="token.id"
-          class="relative group"
+          class="token-wrapper"
+          :class="{
+            'highlight-single': isTokenHighlighted(token.content, hoveredTokenContent)
+          }"
+          style="margin: 0; padding: 0;"
           @mouseenter="handleTokenHover(token.content)"
           @mouseleave="handleTokenHover(null)"
         >
-          <!-- Token Display -->
-          <div
-            class="px-2 py-1 rounded text-center cursor-pointer transition-all hover:scale-110 hover:z-10 hover:shadow-lg"
+          <span
+            class="token relative group cursor-pointer transition-all hover:scale-110 hover:z-10 hover:shadow-lg"
             :style="{ backgroundColor: token.color }"
-            :class="{
-              'ring-2 ring-accent-400': token.addedAtStep === currentStep
-            }"
           >
-            <div class="text-xs font-mono font-medium truncate" :title="token.content">
-              {{ displayTokenContent(token.content) }}
-            </div>
-            <div class="text-[0.5rem] text-slate-600 dark:text-slate-400">
-              {{ token.id }}
-            </div>
-          </div>
+            <span class="token-content">{{ displayTokenContent(token.content) }}</span>
+            <span class="token-id">{{ token.id }}</span>
 
-          <!-- Tooltip on hover -->
-          <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-900 dark:bg-slate-700 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-20">
-            Token #{{ token.id }}
-            <span v-if="token.addedAtStep > 0"> (Step {{ token.addedAtStep }})</span>
-          </div>
-        </div>
+            <!-- Tooltip on hover -->
+            <span
+              class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-900 dark:bg-slate-700 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-20">
+              Token #{{ token.id }}
+              <span v-if="token.addedAtStep > 0"> (Step {{ token.addedAtStep }})</span>
+            </span>
+          </span>
+        </span>
       </div>
 
       <!-- Summary Stats -->
-      <div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700 text-xs text-slate-500 dark:text-slate-400">
+      <div
+        class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700 text-xs text-slate-500 dark:text-slate-400">
         <div class="flex justify-between">
           <span>Total Tokens:</span>
           <span class="font-semibold">{{ vocabulary.length }}</span>

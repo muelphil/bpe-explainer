@@ -1,14 +1,18 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import {computed} from 'vue'
 import CollapsiblePanel from './CollapsiblePanel.vue'
-import { useBPE } from '../composables/useBPE'
-import { displayTokenContent } from '../utils/tokenColor'
+import {useBPE} from '../composables/useBPE'
+import {displayTokenContent, getTokenColor} from '../utils/tokenColor'
+
+defineProps<{
+  hoveredPair: [string, string] | null
+}>()
 
 const emit = defineEmits<{
   hoverPair: [pair: [string, string] | null]
 }>()
 
-const { frequencies } = useBPE()
+const {frequencies} = useBPE()
 
 const topFrequency = computed(() => frequencies.value[0] || null)
 const remainingFrequencies = computed(() => frequencies.value.slice(1))
@@ -16,36 +20,36 @@ const remainingFrequencies = computed(() => frequencies.value.slice(1))
 const handlePairHover = (pair: [string, string] | null) => {
   emit('hoverPair', pair)
 }
+
+const isPairHighlighted = (pair: [string, string], hoveredPair: [string, string] | null): boolean => {
+  return hoveredPair !== null && pair[0] === hoveredPair[0] && pair[1] === hoveredPair[1]
+}
 </script>
 
 <template>
-  <CollapsiblePanel title="Frequency">
+  <CollapsiblePanel title="Frequency of Pairs">
     <!-- Critical Info (always visible) - First item of list -->
     <template #critical>
       <div v-if="!topFrequency" class="text-sm text-slate-500 dark:text-slate-400">
         No pairs available
       </div>
-      <div 
+      <div
         v-else
         class="flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors cursor-pointer"
         @mouseenter="handlePairHover(topFrequency.pair)"
         @mouseleave="handlePairHover(null)"
       >
-        <!-- Token Pair Visualization -->
-        <div class="flex items-center gap-0.5">
+        <!-- Token Pair Visualization using unified token classes -->
+        <div style="display:flex; gap: 2px; align-items: anchor-center;">
           <span
-            class="inline-block px-2 py-0.5 text-xs font-mono rounded"
+            class="token"
             :style="{ backgroundColor: getTokenColor(topFrequency.pair[0]) }"
-          >
-            {{ displayTokenContent(topFrequency.pair[0]) }}
-          </span>
+          >{{ displayTokenContent(topFrequency.pair[0]) }}</span>
           <span class="text-slate-400 dark:text-slate-500 text-xs">+</span>
           <span
-            class="inline-block px-2 py-0.5 text-xs font-mono rounded"
+            class="token"
             :style="{ backgroundColor: getTokenColor(topFrequency.pair[1]) }"
-          >
-            {{ displayTokenContent(topFrequency.pair[1]) }}
-          </span>
+          >{{ displayTokenContent(topFrequency.pair[1]) }}</span>
         </div>
 
         <!-- Frequency Count with Bar -->
@@ -70,20 +74,17 @@ const handlePairHover = (pair: [string, string] | null) => {
           @mouseenter="handlePairHover(freq.pair)"
           @mouseleave="handlePairHover(null)"
         >
-          <!-- Token Pair Visualization -->
-          <div class="flex items-center gap-0.5">
-            <span
-              class="inline-block px-2 py-0.5 text-xs font-mono rounded"
-              :style="{ backgroundColor: getTokenColor(freq.pair[0]) }"
-            >
-              {{ displayTokenContent(freq.pair[0]) }}
-            </span>
+          <!-- Token Pair Visualization using unified token classes -->
+          <div style="display:flex; gap: 2px; align-items: anchor-center;">
+              <span
+                class="token"
+                :style="{ backgroundColor: getTokenColor(freq.pair[0]) }"
+              >{{ displayTokenContent(freq.pair[0]) }}</span>
             <span class="text-slate-400 dark:text-slate-500 text-xs">+</span>
             <span
-              class="inline-block px-2 py-0.5 text-xs font-mono rounded"
+              class="token"
               :style="{ backgroundColor: getTokenColor(freq.pair[1]) }"
-            >
-              {{ displayTokenContent(freq.pair[1]) }}
+            >{{ displayTokenContent(freq.pair[1]) }}
             </span>
           </div>
 
@@ -104,8 +105,3 @@ const handlePairHover = (pair: [string, string] | null) => {
     </template>
   </CollapsiblePanel>
 </template>
-
-<script lang="ts">
-import { getTokenColor } from '../utils/tokenColor'
-export { getTokenColor }
-</script>

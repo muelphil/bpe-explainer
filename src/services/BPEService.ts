@@ -1,7 +1,7 @@
-import { reactive } from 'vue'
-import type { BPEState, BPESettings, Token, VocabEntry, PairFrequency, Step } from './types'
-import { getTokenColor } from '../utils/tokenColor'
-import { canMergePair } from './mergeRestrictions'
+import {reactive} from 'vue'
+import type {BPEState, BPESettings, Token, VocabEntry, PairFrequency, Step} from './types'
+import {getTokenColor} from '../utils/tokenColor'
+import {canMergePair} from './mergeRestrictions'
 
 export class BPEService {
   private state: BPEState
@@ -41,22 +41,22 @@ export class BPEService {
    */
   initialize(trainingData: string, settings?: Partial<BPESettings>): void {
     this.reset()
-    
+
     if (settings) {
       Object.assign(this.state.settings, settings)
     }
 
     this.state.trainingData = trainingData
-    
+
     // Create initial vocabulary
     this.createInitialVocabulary(trainingData)
-    
+
     // Perform initial tokenization
     this.tokenizeTrainingData(trainingData)
-    
+
     // Precompute all steps
     this.precomputeSteps()
-    
+
     // Set to initial state (step 0)
     this.state.currentStep = 0
     this.updateFrequenciesAndCompression()
@@ -136,12 +136,12 @@ export class BPEService {
     for (let i = 0; i < this.state.tokens.length - 1; i++) {
       const token1 = this.state.tokens[i].content
       const token2 = this.state.tokens[i + 1].content
-      
+
       // Check if this pair can be merged based on current restriction mode
       if (!canMergePair(token1, token2, this.state.settings.mergingRestriction)) {
         continue
       }
-      
+
       const pairKey = `${token1}|${token2}`
 
       if (frequencyMap.has(pairKey)) {
@@ -176,7 +176,7 @@ export class BPEService {
   mergePair(pair: [string, string]): VocabEntry {
     const [token1, token2] = pair
     const newContent = token1 + token2
-    
+
     // Get or create vocabulary entry
     const newVocabEntry = this.getOrCreateVocabEntry(newContent, this.state.currentStep + 1)
 
@@ -247,22 +247,22 @@ export class BPEService {
     })
 
     let stepNumber = 1
-    
+
     // Create a working copy of state
     const workingTokens = this.cloneTokens(this.state.tokens)
     const workingVocab = this.cloneVocabulary(this.state.vocabulary)
-    
+
     while (true) {
       // Calculate frequencies on working copy
       const frequencies = this.calculateFrequenciesForTokens(workingTokens)
       const mostFrequent = frequencies.length > 0 ? frequencies[0] : null
 
       // Check break condition
-      const shouldStop = 
-        (this.state.settings.breakCondition === 'maxVocabSize' && 
-         workingVocab.length >= this.state.settings.maxVocabSize) ||
-        (this.state.settings.breakCondition === 'noFrequentPairs' && 
-         (mostFrequent === null || mostFrequent.frequency === 1))
+      const shouldStop =
+        (this.state.settings.breakCondition === 'maxVocabSize' &&
+          workingVocab.length >= this.state.settings.maxVocabSize) ||
+        (this.state.settings.breakCondition === 'noFrequentPairs' &&
+          (mostFrequent === null || mostFrequent.frequency === 1))
 
       if (shouldStop || mostFrequent === null) {
         steps.push({
@@ -290,7 +290,7 @@ export class BPEService {
 
       // Merge step
       const newContent = pair[0] + pair[1]
-      
+
       // Get or create vocabulary entry
       let newVocabEntry = workingVocab.find(v => v.content === newContent)
       if (!newVocabEntry) {
@@ -361,12 +361,12 @@ export class BPEService {
     for (let i = 0; i < tokens.length - 1; i++) {
       const token1 = tokens[i].content
       const token2 = tokens[i + 1].content
-      
+
       // Check if this pair can be merged based on current restriction mode
       if (!canMergePair(token1, token2, this.state.settings.mergingRestriction)) {
         continue
       }
-      
+
       const pairKey = `${token1}|${token2}`
 
       if (frequencyMap.has(pairKey)) {
@@ -506,7 +506,7 @@ export class BPEService {
    */
   getHighlightedPositions(): number[][] {
     const positions: number[][] = []
-    
+
     for (let i = 0; i < this.state.tokens.length - 1; i++) {
       const pairKey = `${this.state.tokens[i].content}|${this.state.tokens[i + 1].content}`
       if (this.state.highlightedPairs.has(pairKey)) {
@@ -521,14 +521,14 @@ export class BPEService {
    * Clone tokens array
    */
   private cloneTokens(tokens: Token[]): Token[] {
-    return tokens.map(t => ({ ...t }))
+    return tokens.map(t => ({...t}))
   }
 
   /**
    * Clone vocabulary array
    */
   private cloneVocabulary(vocab: VocabEntry[]): VocabEntry[] {
-    return vocab.map(v => ({ ...v }))
+    return vocab.map(v => ({...v}))
   }
 }
 

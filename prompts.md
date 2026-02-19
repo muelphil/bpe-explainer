@@ -113,4 +113,23 @@ TODOS:
 * settings persisted in localStorage
 * dark mode using variables
 * dark mode token fix
+* byte token visualization (\0 instead of control token 0 weird questionmark)
+
+---
+
+Lets fix some bugs first:
+* light and dark mode themes should be using :root level variables with all the colors used by the page, which they should be setting based on theme
+* The vocabulary section should use the same token visualization as the one in the MainTokenView (although still 4 tokens per column)
+  * extract a token-container, token, etc class, also introduce .token-container.small and .no-id, then use this same class across the MainTokenView (keep as is) and the Vocabulary, Frequency and Step control panels. For the control panels, use .small and .no-id to set the appropriate styling. Vocabulary and Frequency should use the same highlighting as the tokens in the MainTokenView
+
+
+* last added: should not display anything after initialization
+* Algorithm complete -- Compression-Rate: XYZ
+* improve dark mode coloring for tokens
+* Settings - reduce bunch of settings to just two modes: Original BPE and LLM BPE
+
+
+---
+
+Let's improve the App. Currently, there is sort of welcome screen, that lets the user define the training data ()
 

@@ -2,7 +2,143 @@
 @tailwind components;
 @tailwind utilities;
 
-:root{
-  --light-primary: rgba(151, 179, 241, 0.8);
-  --primary: #83a1e2;
+/* Theme Variables */
+:root {
+  /* Primary Colors */
+  --light-primary: rgb(147, 197, 253); /* blue-300 */
+  --primary: rgb(96, 165, 250); /* blue-400 */
+
+  /* Background Colors */
+  --bg-primary: rgb(255, 255, 255); /* white */
+  --bg-secondary: rgb(248, 250, 252); /* slate-50 */
+  --bg-tertiary: rgb(241, 245, 249); /* slate-100 */
+  --bg-hover: rgb(241, 245, 249); /* slate-100 */
+  --bg-active: rgb(226, 232, 240); /* slate-200 */
+
+  /* Text Colors */
+  --text-primary: rgb(15, 23, 42); /* slate-900 */
+  --text-secondary: rgb(51, 65, 85); /* slate-700 */
+  --text-tertiary: rgb(100, 116, 139); /* slate-500 */
+  --text-muted: rgb(148, 163, 184); /* slate-400 */
+
+  /* Border Colors */
+  --border-primary: rgb(226, 232, 240); /* slate-200 */
+  --border-secondary: rgb(203, 213, 225); /* slate-300 */
+
+  /* Token ID Color */
+  --default-token-color: rgb(203, 213, 225);
+  --token-id-color: rgb(100, 116, 139); /* slate-500 */
+
+  /* Shadow Colors */
+  --shadow-color: rgba(0, 0, 0, 0.1);
+}
+
+.dark {
+  /* Primary Colors */
+  --light-primary: rgb(96, 165, 250); /* blue-400 */
+  --primary: rgb(59, 130, 246); /* blue-500 */
+
+  /* Background Colors */
+  --bg-primary: rgb(30, 41, 59); /* slate-800 */
+  --bg-secondary: rgb(15, 23, 42); /* slate-900 */
+  --bg-tertiary: rgb(51, 65, 85); /* slate-700 */
+  --bg-hover: rgb(51, 65, 85); /* slate-700 */
+  --bg-active: rgb(71, 85, 105); /* slate-600 */
+
+  /* Text Colors */
+  --text-primary: rgb(248, 250, 252); /* slate-50 */
+  --text-secondary: rgb(226, 232, 240); /* slate-200 */
+  --text-tertiary: rgb(148, 163, 184); /* slate-400 */
+  --text-muted: rgb(100, 116, 139); /* slate-500 */
+
+  /* Border Colors */
+  --border-primary: rgb(51, 65, 85); /* slate-700 */
+  --border-secondary: rgb(71, 85, 105); /* slate-600 */
+
+  /* Token ID Color */
+  --default-token-color: rgb(203, 213, 225);
+  --token-id-color: rgb(148, 163, 184); /* slate-400 */
+
+  /* Shadow Colors */
+  --shadow-color: rgba(0, 0, 0, 0.3);
+}
+
+/* Unified Token Styles */
+.token-container {
+  font-size: 1.125rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+  align-items: center;
+}
+
+.token-wrapper {
+  position: relative;
+  display: inline-block;
+  padding: 2px;
+  transition: all 0.2s ease;
+  margin: 1px 0;
+  font-size: 0;
+}
+
+.token {
+  position: relative;
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-family: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, monospace;
+  font-size: 0.875rem;
+  white-space: pre;
+  transition: all 0.2s ease;
+  font-weight: 500;
+  background-color: var(--default-token-color);
+}
+
+.token:has(.token-id) {
+  padding-bottom: 14px;
+}
+
+
+.token.small:has(.token-id) {
+  padding-bottom: 12px;
+}
+
+.token.small {
+  padding: 2px 6px;
+  font-size: 0.75rem;
+}
+
+.token-id {
+  position: absolute;
+  bottom: 2px;
+  right: 4px;
+  font-size: 0.5rem;
+  color: var(--token-id-color);
+  font-weight: 600;
+}
+
+.token.small .token-id {
+  font-size: 0.45rem;
+  right: 3px;
+}
+
+/* Single token highlight (vocabulary hover) */
+.highlight-single .token {
+  background-color: var(--primary) !important;
+}
+
+/* Pair highlighting (frequency hover) */
+.highlight-left {
+  border-radius: 6px 0 0 6px;
+  background: var(--light-primary);
+}
+
+.highlight-right {
+  border-radius: 0 6px 6px 0;
+  background: var(--light-primary);
+}
+
+.highlight-left .token,
+.highlight-right .token {
+  background-color: var(--primary) !important;
 }
