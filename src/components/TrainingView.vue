@@ -1,16 +1,11 @@
 <script setup lang="ts">
 import {computed} from 'vue'
-import {Settings} from 'lucide-vue-next'
 import {useBPE} from '../composables/useBPE'
 import {displayTokenContent} from '../utils/tokenColor'
 
 defineProps<{
   hoveredPair: [string, string] | null
   hoveredTokenContent: string | null
-}>()
-
-const emit = defineEmits<{
-  openSettings: []
 }>()
 
 const {tokens} = useBPE()
@@ -48,7 +43,7 @@ const isPairRight = (index: number, hoveredPair: [string, string] | null): boole
 </script>
 
 <template>
-  <div class="flex-1 flex flex-col bg-white dark:bg-slate-800 overflow-hidden relative">
+  <div class="flex-1 flex flex-col bg-white dark:bg-slate-800 overflow-hidden">
     <!-- Token Display Area -->
     <div class="flex-1 overflow-auto p-8">
       <div class="token-container">
@@ -70,15 +65,6 @@ const isPairRight = (index: number, hoveredPair: [string, string] | null): boole
         </span>
       </div>
     </div>
-
-    <!-- Settings Button -->
-    <button
-      @click="emit('openSettings')"
-      class="absolute bottom-4 right-4 p-3 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-full shadow-lg transition-colors"
-      title="Settings"
-    >
-      <Settings :size="20" class="text-slate-700 dark:text-slate-300"/>
-    </button>
   </div>
 </template>
 

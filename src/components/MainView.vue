@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { useBPE } from '../composables/useBPE'
+import {ref, computed} from 'vue'
+import {Settings} from 'lucide-vue-next'
+import {useBPE} from '../composables/useBPE'
 import TrainingDataView from './TrainingDataView.vue'
 import TrainingView from './TrainingView.vue'
 import ValidationView from './ValidationView.vue'
@@ -26,7 +27,7 @@ const emit = defineEmits<{
 
 type ViewMode = 'training-data' | 'training' | 'validation'
 
-const { initialize, state } = useBPE()
+const {initialize, state} = useBPE()
 
 const currentMode = ref<ViewMode>('training-data')
 const isTrainingDataDefined = ref(false)
@@ -36,17 +37,17 @@ const handleStartTraining = (trainingData: string) => {
   initialize(trainingData)
   isTrainingDataDefined.value = true
   currentMode.value = 'training'
-  emit('modeChange', { showSidebars: true, showControlPanel: true })
+  emit('modeChange', {showSidebars: true, showControlPanel: true})
 }
 
 const switchToMode = (mode: ViewMode) => {
   if (mode === 'training-data') {
     // Going back to training data resets everything
     currentMode.value = mode
-    emit('modeChange', { showSidebars: false, showControlPanel: false })
+    emit('modeChange', {showSidebars: false, showControlPanel: false})
   } else if (mode === 'training' && isTrainingDataDefined.value) {
     currentMode.value = mode
-    emit('modeChange', { showSidebars: true, showControlPanel: true })
+    emit('modeChange', {showSidebars: true, showControlPanel: true})
   } else if (mode === 'training' && !isTrainingDataDefined.value && currentMode.value === 'training-data') {
     // If clicking Training button while in training-data mode, trigger start training
     if (trainingDataViewRef.value) {
@@ -54,7 +55,7 @@ const switchToMode = (mode: ViewMode) => {
     }
   } else if (mode === 'validation' && isTrainingDataDefined.value) {
     currentMode.value = mode
-    emit('modeChange', { showSidebars: true, showControlPanel: false })
+    emit('modeChange', {showSidebars: true, showControlPanel: false})
   }
 }
 
@@ -65,9 +66,10 @@ const isButtonEnabled = (mode: ViewMode) => {
 }
 
 // Emit mode change on mount
-import { onMounted } from 'vue'
+import {onMounted} from 'vue'
+
 onMounted(() => {
-  emit('modeChange', { showSidebars: false, showControlPanel: false })
+  emit('modeChange', {showSidebars: false, showControlPanel: false})
 })
 
 const showControlPanel = computed(() => {
@@ -83,8 +85,8 @@ const showControlPanel = computed(() => {
       <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100">
         Byte-Pair Encoding Visualizer
       </h1>
-      
-      <!-- Mode Navigation Buttons -->
+
+      <!-- Mode Navigation and Settings Buttons -->
       <div class="flex gap-2">
         <button
           @click="switchToMode('training-data')"
@@ -125,6 +127,13 @@ const showControlPanel = computed(() => {
         >
           Validation
         </button>
+        <button
+          @click="emit('openSettings')"
+          class="px-4 py-1.5 rounded-md text-sm font-medium transition-all bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600 flex items-center gap-2"
+          title="Settings"
+        >
+          <Settings :size="16"/>
+        </button>
       </div>
     </div>
 
@@ -139,7 +148,6 @@ const showControlPanel = computed(() => {
       v-else-if="currentMode === 'training'"
       :hoveredPair="effectiveHoveredPair"
       :hoveredTokenContent="effectiveHoveredTokenContent"
-      @openSettings="emit('openSettings')"
       class="flex-1 overflow-hidden"
     />
     <ValidationView

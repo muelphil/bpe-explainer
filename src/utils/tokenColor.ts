@@ -24,8 +24,8 @@ const USE_RANDOM_COLORS = false // Set to true to enable random colors
 
 export function getTokenColor(content: string): string {
   if (!USE_RANDOM_COLORS) {
-    // Uniform color for all tokens
-    return 'rgb(203, 213, 225)' // slate-300
+    // Return empty string - CSS variables will handle light/dark mode
+    return ''
   }
 
   // Random color based on content hash

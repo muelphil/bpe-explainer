@@ -92,6 +92,7 @@
   transition: all 0.2s ease;
   font-weight: 500;
   background-color: var(--default-token-color);
+  color: var(--default-token-text);
 }
 
 .token:has(.token-id) {
@@ -140,6 +141,11 @@
   background-color: var(--primary) !important;
 }
 
+/* Dark mode: highlighted tokens should have bright text */
+.dark .highlight-single .token {
+  color: white !important;
+}
+
 /* Pair highlighting (frequency hover) */
 .highlight-left {
   border-radius: 6px 0 0 6px;
@@ -154,6 +160,12 @@
 .highlight-left .token,
 .highlight-right .token {
   background-color: var(--primary) !important;
+}
+
+/* Dark mode: highlighted pair tokens should have bright text */
+.dark .highlight-left .token,
+.dark .highlight-right .token {
+  color: white !important;
 }
 
 /* Error token styling */

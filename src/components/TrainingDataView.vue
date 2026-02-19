@@ -76,7 +76,7 @@ defineExpose({
             spellcheck="false"
           ></textarea>
         </div>
-        
+
         <p class="text-xs text-slate-500 dark:text-slate-400">
           {{ trainingData.length }} characters
         </p>
@@ -84,7 +84,7 @@ defineExpose({
     </div>
 
     <!-- Start Training Button - Fixed at bottom -->
-    <div class="px-6 py-6">
+    <div class="px-6 pb-6">
       <div class="w-full">
         <button
           @click="handleStartTraining"
