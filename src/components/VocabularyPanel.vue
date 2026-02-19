@@ -12,12 +12,23 @@ const emit = defineEmits<{
   hoverToken: [content: string | null]
 }>()
 
-const {vocabulary, currentStep} = useBPE()
+const {vocabulary, currentStep, steps, tokens} = useBPE()
 
 const lastAddedToken = computed(() => {
-  return vocabulary.value
-    .filter(v => v.addedAtStep === currentStep.value)
-    .pop()
+  // Find the last merge step at or before the current step
+  for (let i = currentStep.value; i >= 0; i--) {
+    const step = steps.value[i]
+    if (step && step.type === 'merge' && step.addedToken) {
+      return step.addedToken
+    }
+  }
+  return null
+})
+
+// Count unique tokens currently used in the token array
+const tokensUsed = computed(() => {
+  const uniqueTokenIds = new Set(tokens.value.map(t => t.id))
+  return uniqueTokenIds.size
 })
 
 const handleTokenHover = (content: string | null) => {
@@ -36,17 +47,15 @@ const isTokenHighlighted = (tokenContent: string, hoveredTokenContent: string | 
       <div v-if="vocabulary.length === 0" class="text-sm text-slate-500 dark:text-slate-400">
         Empty vocabulary
       </div>
-      <div v-else class="flex items-center justify-between">
+      <div v-else class="flex items-center justify-between" style="min-height: 22px">
         <div class="text-sm text-slate-700 dark:text-slate-300">
           <span class="font-semibold">{{ vocabulary.length }}</span> tokens
         </div>
         <div v-if="lastAddedToken" class="flex items-center gap-2">
           <span class="text-xs text-slate-500 dark:text-slate-400">Last added:</span>
-          <span class="token-wrapper" style="margin: 0; padding: 0;">
-            <span class="token no-id">
+            <span class="token small">
               {{ displayTokenContent(lastAddedToken.content) }}
             </span>
-          </span>
         </div>
       </div>
     </template>
@@ -83,11 +92,10 @@ const isTokenHighlighted = (tokenContent: string, hoveredTokenContent: string | 
       </div>
 
       <!-- Summary Stats -->
-      <div
-        class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700 text-xs text-slate-500 dark:text-slate-400">
+      <div class="-mx-4 mt-4 pt-4 px-4 border-t border-slate-200 dark:border-slate-700 text-xs text-slate-500 dark:text-slate-400">
         <div class="flex justify-between">
-          <span>Total Tokens:</span>
-          <span class="font-semibold">{{ vocabulary.length }}</span>
+          <span>Tokens Used:</span>
+          <span class="font-semibold">{{ tokensUsed }}</span>
         </div>
         <div class="flex justify-between mt-1">
           <span>Longest Token:</span>

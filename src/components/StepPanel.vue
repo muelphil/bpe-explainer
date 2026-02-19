@@ -40,16 +40,19 @@ const getStepTypeLabel = (type: string) => {
 watch(currentStep, async () => {
   await nextTick()
   if (stepsContainerRef.value) {
-    const currentStepElement = stepsContainerRef.value.querySelector(`[data-step="${currentStep.value}"]`)
-    if (currentStepElement) {
-      currentStepElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+    // Find the next step after current
+    const nextStepNumber = currentStep.value + 1
+    const nextStepElement = stepsContainerRef.value.querySelector(`[data-step="${nextStepNumber}"]`)
+    if (nextStepElement) {
+      // Scroll next step to top so current step appears at fixed position above it
+      nextStepElement.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }
   }
 })
 </script>
 
 <template>
-  <CollapsiblePanel title="Steps">
+  <CollapsiblePanel title="Steps" :noCriticalPadding="true">
     <!-- Critical Info (always visible) - Current step only -->
     <template #critical>
       <div v-if="!currentStepItem" class="text-sm text-slate-500 dark:text-slate-400">
@@ -58,9 +61,9 @@ watch(currentStep, async () => {
       <button
         v-else
         @click="handleStepClick(currentStepItem.stepNumber)"
-        class="w-full text-left p-3 rounded-lg transition-all hover:bg-slate-50 dark:hover:bg-slate-900 bg-primary-50 dark:bg-primary-900/20 border-2 border-primary-300 dark:border-primary-700"
+        class="w-full text-left transition-all hover:bg-slate-100 dark:hover:bg-slate-800 bg-primary-50 dark:bg-primary-900/20"
       >
-        <div class="flex items-start gap-3">
+        <div class="flex items-start gap-3 py-3 px-4">
           <!-- Step Icon -->
           <div class="flex-shrink-0 mt-0.5">
             <div class="w-5 h-5 rounded-full bg-primary-500 flex items-center justify-center animate-pulse">
@@ -138,19 +141,18 @@ watch(currentStep, async () => {
     <template #details>
       <div class="flex flex-col h-full -m-4">
         <!-- All Steps List (flex-1 to use remaining space) -->
-        <div ref="stepsContainerRef" class="flex-1 overflow-y-auto p-4 space-y-1">
+        <div ref="stepsContainerRef" class="flex-1 overflow-y-auto">
           <button
             v-for="(step, index) in steps"
             :key="step.stepNumber"
             :data-step="step.stepNumber"
             @click="handleStepClick(step.stepNumber)"
-            class="w-full text-left p-3 rounded-lg transition-all hover:bg-slate-50 dark:hover:bg-slate-900 group"
+            class="w-full text-left transition-all hover:bg-slate-100 dark:hover:bg-slate-800 border-b border-slate-200 dark:border-slate-700"
             :class="{
-              'bg-primary-50 dark:bg-primary-900/20 border-2 border-primary-300 dark:border-primary-700': step.stepNumber === currentStep,
-              'hover:border hover:border-slate-300 dark:hover:border-slate-600': step.stepNumber !== currentStep
+              'bg-primary-50 dark:bg-primary-900/20': step.stepNumber === currentStep
             }"
           >
-            <div class="flex items-start gap-3">
+            <div class="flex items-start gap-3 py-3 px-4">
               <!-- Step Icon -->
               <div class="flex-shrink-0 mt-0.5">
                 <div
@@ -235,20 +237,6 @@ watch(currentStep, async () => {
               </div>
             </div>
           </button>
-        </div>
-
-        <!-- Progress Section (fixed size) -->
-        <div class="flex-shrink-0 p-4 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900">
-          <div class="flex justify-between text-xs text-slate-500 dark:text-slate-400 mb-2">
-            <span>Progress</span>
-            <span>{{ Math.round(((currentStep + 1) / steps.length) * 100) }}%</span>
-          </div>
-          <div class="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-            <div
-              class="h-full bg-gradient-to-r from-primary-400 to-primary-600 transition-all duration-300"
-              :style="{ width: `${((currentStep + 1) / steps.length) * 100}%` }"
-            ></div>
-          </div>
         </div>
       </div>
     </template>

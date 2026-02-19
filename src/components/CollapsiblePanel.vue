@@ -4,6 +4,7 @@ import { ChevronDown } from 'lucide-vue-next'
 
 defineProps<{
   title: string
+  noCriticalPadding?: boolean
 }>()
 
 const isExpanded = ref(true)
@@ -29,7 +30,10 @@ const toggle = () => {
     </button>
 
     <!-- Critical Info (always visible, not collapsible) -->
-    <div class="px-4 py-3 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 flex-shrink-0">
+    <div 
+      class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 flex-shrink-0"
+      :class="{ 'px-4 py-3': !noCriticalPadding }"
+    >
       <slot name="critical" />
     </div>
 
