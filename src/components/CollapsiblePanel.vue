@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, useSlots, computed } from 'vue'
 import { ChevronDown } from 'lucide-vue-next'
 
 const props = defineProps<{
@@ -12,7 +12,9 @@ const isExpanded = ref(true)
 const toggle = () => {
   isExpanded.value = !isExpanded.value
 }
+const detailsSlotExists = () => !!slots.details
 
+const slots = useSlots()
 const shouldPad = props.criticalPadding !== false
 </script>
 
@@ -42,7 +44,7 @@ const shouldPad = props.criticalPadding !== false
 
   <!-- Collapsible Details (scrollable) - dynamic height, shares space with other flex-1 elements -->
   <div
-    v-if="isExpanded"
+    v-if="isExpanded && detailsSlotExists()"
     class="panel-details bg-white dark:bg-slate-800 overflow-y-auto border-b border-slate-200 dark:border-slate-700"
     style="flex: 1 1 0; min-height: 0; overflow-x:hidden;"
   >

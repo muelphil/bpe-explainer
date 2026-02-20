@@ -199,6 +199,12 @@ Please start by fixing issue 2. My idea would be to not have 1 top element for e
 
 Start by fixing issue 2. We will later fix issue 1.
 
+---
+I would like to try something out regarding the StepPanel. Adjust it as following (will require custom collapsible adjustment for this panel only):
+* instead of showing the current step at the top and then a list of steps, only show a list of steps
+* make all steps have the same height (78px)
+* in uncollapsed mode, scroll the current step to the top
+* in collapsed mode, do the same, but disable scroll and set the height of the list to exactly one item, so it shows the current step
 
 
 

@@ -13,7 +13,7 @@ export class BPEService {
   constructor() {
     // Load settings from localStorage
     const savedSettings = SettingsService.load()
-    
+
     this.state = reactive({
       trainingData: '',
       tokens: [],
@@ -27,7 +27,7 @@ export class BPEService {
       highlightedPairs: new Set(),
       highlightedTokenContent: null
     }) as BPEState
-    
+
     // Apply settings (e.g., dark mode)
     SettingsService.apply(savedSettings)
   }
@@ -278,21 +278,21 @@ export class BPEService {
       if (shouldStop || mostFrequent === null) {
         const compressionRatio = this.state.trainingData.length / workingTokens.length
         const compressionPercentage = ((1 - 1 / compressionRatio) * 100).toFixed(1)
-        
+
         // Determine stop reason
         let stopReason = ''
-        if (this.state.settings.breakCondition === 'maxVocabSize' && 
+        if (this.state.settings.breakCondition === 'maxVocabSize' &&
             workingVocab.length >= this.state.settings.maxVocabSize) {
           stopReason = `Reached maximum vocabulary size (${this.state.settings.maxVocabSize})`
-        } else if (this.state.settings.breakCondition === 'noFrequentPairs' || 
+        } else if (this.state.settings.breakCondition === 'noFrequentPairs' ||
                    mostFrequent === null || mostFrequent.frequency === 1) {
-          stopReason = 'No more frequent pairs (all pairs have frequency 1)'
+          stopReason = 'All pairs have frequency 1'
         }
-        
+
         steps.push({
           stepNumber,
           type: 'complete',
-          description: `Algorithm complete. ${stopReason}. Compression Rate: ${compressionPercentage}%`,
+          description: `${stopReason}, Compression Rate: ${compressionPercentage}%`,
           tokensSnapshot: this.cloneTokens(workingTokens),
           vocabularySnapshot: this.cloneVocabulary(workingVocab)
         })

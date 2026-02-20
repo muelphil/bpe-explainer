@@ -3,33 +3,48 @@
 @tailwind utilities;
 
 /* Custom Scrollbar Styling */
-.panel-details::-webkit-scrollbar {
+.panel-details::-webkit-scrollbar,
+.steps-container::-webkit-scrollbar {
   width: 8px;
 }
 
-.panel-details::-webkit-scrollbar-track {
+.panel-details::-webkit-scrollbar-track,
+.steps-container::-webkit-scrollbar-track {
   background: rgb(248, 250, 252); /* slate-50 */
 }
 
-.panel-details::-webkit-scrollbar-thumb {
+.panel-details::-webkit-scrollbar-thumb,
+.steps-container::-webkit-scrollbar-thumb {
   background: rgb(203, 213, 225); /* slate-300 */
   border-radius: 4px;
 }
 
-.panel-details::-webkit-scrollbar-thumb:hover {
+.panel-details::-webkit-scrollbar-thumb:hover,
+.steps-container::-webkit-scrollbar-thumb:hover {
   background: rgb(148, 163, 184); /* slate-400 */
 }
 
-.dark .panel-details::-webkit-scrollbar-track {
+.dark .panel-details::-webkit-scrollbar-track,
+.dark .steps-container::-webkit-scrollbar-track {
   background: rgb(30, 41, 59); /* slate-800 */
 }
 
-.dark .panel-details::-webkit-scrollbar-thumb {
+.dark .panel-details::-webkit-scrollbar-thumb,
+.dark .steps-container::-webkit-scrollbar-thumb {
   background: rgb(71, 85, 105); /* slate-600 */
 }
 
-.dark .panel-details::-webkit-scrollbar-thumb:hover {
+.dark .panel-details::-webkit-scrollbar-thumb:hover,
+.dark .steps-container::-webkit-scrollbar-thumb:hover {
   background: rgb(100, 116, 139); /* slate-500 */
+}
+
+/* Line clamping */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 /* Theme Variables */
@@ -221,4 +236,8 @@
 .flex-break{
   flex-basis: 100%;
   height: 0; /* optional */
+}
+
+.panel-details:empty {
+  display: none;
 }

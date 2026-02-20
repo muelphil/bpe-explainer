@@ -30,7 +30,7 @@ const isPairHighlighted = (pair: [string, string], hoveredPair: [string, string]
   <CollapsiblePanel title="Frequency of Pairs">
     <!-- Critical Info (always visible) - First item of list -->
     <template #critical>
-      <div v-if="!topFrequency" class="text-sm text-slate-500 dark:text-slate-400">
+      <div v-if="!topFrequency" class="text-sm text-slate-500 dark:text-slate-400 p-2">
         No pairs available
       </div>
       <div
@@ -65,7 +65,7 @@ const isPairHighlighted = (pair: [string, string], hoveredPair: [string, string]
     </template>
 
     <!-- Details (collapsible) - Remaining items -->
-    <template #details>
+    <template #details v-if="topFrequency">
       <div class="-m-3">
         <div
           v-for="(freq, index) in remainingFrequencies"
