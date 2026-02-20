@@ -4,6 +4,54 @@ export interface TrainingPreset {
   data: string
 }
 
+const programmingPreset = `function breadthFirstSearch(graph, start) {
+  const visited = new Set();
+  const queue = [start];
+  const result = [];
+
+  while (queue.length > 0) {
+    const node = queue.shift();
+
+    if (!visited.has(node)) {
+      visited.add(node);
+      result.push(node);
+
+      for (const neighbor of graph[node]) {
+        if (!visited.has(neighbor)) {
+          queue.push(neighbor);
+        }
+      }
+    }
+  }
+
+  return result;
+}
+
+function depthFirstSearch(graph, start) {
+  const visited = new Set();
+  const stack = [start];
+  const result = [];
+
+  while (stack.length > 0) {
+    const node = stack.pop();
+
+    if (!visited.has(node)) {
+      visited.add(node);
+      result.push(node);
+
+      // Reverse to preserve left-to-right order
+      const neighbors = graph[node];
+      for (let i = neighbors.length - 1; i >= 0; i--) {
+        if (!visited.has(neighbors[i])) {
+          stack.push(neighbors[i]);
+        }
+      }
+    }
+  }
+
+  return result;
+}`
+
 export const trainingPresets: TrainingPreset[] = [
   {
     id: 'lorem-ipsum',
@@ -13,7 +61,7 @@ export const trainingPresets: TrainingPreset[] = [
   {
     id: 'programming',
     name: 'Programming',
-    data: 'function calculateSum(a, b) { return a + b; } const result = calculateSum(10, 20); console.log(result); // Output: 30\nlet array = [1, 2, 3, 4, 5]; array.forEach(num => console.log(num * 2));'
+    data: programmingPreset //'function calculateSum(a, b) { return a + b; } const result = calculateSum(10, 20); console.log(result); // Output: 30\nlet array = [1, 2, 3, 4, 5]; array.forEach(num => console.log(num * 2));'
   },
   {
     id: 'conversation',

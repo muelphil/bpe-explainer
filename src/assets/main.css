@@ -2,6 +2,36 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Custom Scrollbar Styling */
+.panel-details::-webkit-scrollbar {
+  width: 8px;
+}
+
+.panel-details::-webkit-scrollbar-track {
+  background: rgb(248, 250, 252); /* slate-50 */
+}
+
+.panel-details::-webkit-scrollbar-thumb {
+  background: rgb(203, 213, 225); /* slate-300 */
+  border-radius: 4px;
+}
+
+.panel-details::-webkit-scrollbar-thumb:hover {
+  background: rgb(148, 163, 184); /* slate-400 */
+}
+
+.dark .panel-details::-webkit-scrollbar-track {
+  background: rgb(30, 41, 59); /* slate-800 */
+}
+
+.dark .panel-details::-webkit-scrollbar-thumb {
+  background: rgb(71, 85, 105); /* slate-600 */
+}
+
+.dark .panel-details::-webkit-scrollbar-thumb:hover {
+  background: rgb(100, 116, 139); /* slate-500 */
+}
+
 /* Theme Variables */
 :root {
   /* Primary Colors */

@@ -65,8 +65,8 @@ watch(currentStep, async () => {
       >
         <div class="flex items-start gap-3 py-3 px-4">
           <!-- Step Icon -->
-          <div class="flex-shrink-0 mt-0.5">
-            <div class="w-5 h-5 rounded-full bg-primary-500 flex items-center justify-center animate-pulse">
+          <div class="flex-shrink-0 mt-0.5" style="align-self: center;">
+            <div class="w-5 h-5 rounded-full bg-primary-500 flex items-center justify-center">
               <Circle :size="8" class="text-white fill-white" />
             </div>
           </div>
@@ -89,7 +89,7 @@ watch(currentStep, async () => {
                 #{{ currentStepItem.stepNumber }}
               </span>
             </div>
-            
+
             <!-- Token Visualization for Select and Merge steps -->
             <div v-if="currentStepItem.type === 'select' && currentStepItem.selectedPair" class="mb-2">
               <div style="display:flex; gap: 2px; align-items: center;">
@@ -104,7 +104,7 @@ watch(currentStep, async () => {
                 >{{ displayTokenContent(currentStepItem.selectedPair[1]) }}</span>
               </div>
             </div>
-            
+
             <div v-else-if="currentStepItem.type === 'merge' && currentStepItem.selectedPair && currentStepItem.addedToken" class="mb-2">
               <div style="display:flex; gap: 4px; align-items: center;">
                 <span
@@ -123,7 +123,7 @@ watch(currentStep, async () => {
                 >{{ displayTokenContent(currentStepItem.addedToken.content) }}</span>
               </div>
             </div>
-            
+
             <p v-else class="text-sm text-slate-700 dark:text-slate-300">
               {{ currentStepItem.description }}
             </p>
@@ -154,7 +154,7 @@ watch(currentStep, async () => {
           >
             <div class="flex items-start gap-3 py-3 px-4">
               <!-- Step Icon -->
-              <div class="flex-shrink-0 mt-0.5">
+              <div class="flex-shrink-0 mt-0.5"  style="align-self: center;">
                 <div
                   v-if="getStepIcon(step.stepNumber) === 'completed'"
                   class="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center"
@@ -163,7 +163,7 @@ watch(currentStep, async () => {
                 </div>
                 <div
                   v-else-if="getStepIcon(step.stepNumber) === 'current'"
-                  class="w-5 h-5 rounded-full bg-primary-500 flex items-center justify-center animate-pulse"
+                  class="w-5 h-5 rounded-full bg-primary-500 flex items-center justify-center"
                 >
                   <Circle :size="8" class="text-white fill-white" />
                 </div>
@@ -191,7 +191,7 @@ watch(currentStep, async () => {
                     #{{ step.stepNumber }}
                   </span>
                 </div>
-                
+
                 <!-- Token Visualization for Select and Merge steps -->
                 <div v-if="step.type === 'select' && step.selectedPair" class="mb-1">
                   <div style="display:flex; gap: 2px; align-items: center;">
@@ -206,7 +206,7 @@ watch(currentStep, async () => {
                     >{{ displayTokenContent(step.selectedPair[1]) }}</span>
                   </div>
                 </div>
-                
+
                 <div v-else-if="step.type === 'merge' && step.selectedPair && step.addedToken" class="mb-1">
                   <div style="display:flex; gap: 4px; align-items: center;">
                     <span
@@ -225,7 +225,7 @@ watch(currentStep, async () => {
                     >{{ displayTokenContent(step.addedToken.content) }}</span>
                   </div>
                 </div>
-                
+
                 <p v-else class="text-sm text-slate-700 dark:text-slate-300">
                   {{ step.description }}
                 </p>

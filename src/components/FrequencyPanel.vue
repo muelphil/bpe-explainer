@@ -35,7 +35,7 @@ const isPairHighlighted = (pair: [string, string], hoveredPair: [string, string]
       </div>
       <div
         v-else
-        class="flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors cursor-pointer"
+        class="flex items-center justify-between p-2 hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors cursor-pointer"
         @mouseenter="handlePairHover(topFrequency.pair)"
         @mouseleave="handlePairHover(null)"
       >
@@ -66,12 +66,11 @@ const isPairHighlighted = (pair: [string, string], hoveredPair: [string, string]
 
     <!-- Details (collapsible) - Remaining items -->
     <template #details>
-<!--      <div class="space-y-2">-->
-      <div>
+      <div class="-m-3">
         <div
           v-for="(freq, index) in remainingFrequencies"
           :key="`${freq.pair[0]}-${freq.pair[1]}`"
-          class="flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors cursor-pointer"
+          class="flex items-center justify-between p-2 hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors cursor-pointer"
           @mouseenter="handlePairHover(freq.pair)"
           @mouseleave="handlePairHover(null)"
         >

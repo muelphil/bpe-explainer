@@ -32,9 +32,9 @@ const shouldPad = props.criticalPadding !== false
   </button>
 
   <!-- Critical Info (always visible) - static height -->
-  <div 
+  <div
     class="panel-critical bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700"
-    :class="{ 'px-4 py-3': shouldPad }"
+    :class="{ 'p-3': shouldPad }"
     style="flex: 0 0 auto;"
   >
     <slot name="critical" />
@@ -44,9 +44,9 @@ const shouldPad = props.criticalPadding !== false
   <div
     v-if="isExpanded"
     class="panel-details bg-white dark:bg-slate-800 overflow-y-auto border-b border-slate-200 dark:border-slate-700"
-    style="flex: 1 1 0; min-height: 0;"
+    style="flex: 1 1 0; min-height: 0; overflow-x:hidden;"
   >
-    <div class="p-4">
+    <div class="p-3">
       <slot name="details" />
     </div>
   </div>

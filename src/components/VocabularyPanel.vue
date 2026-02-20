@@ -57,7 +57,7 @@ const isTokenHighlighted = (tokenContent: string, hoveredTokenContent: string | 
       <div v-if="vocabulary.length === 0" class="text-sm text-slate-500 dark:text-slate-400">
         Empty vocabulary
       </div>
-      <div v-else class="flex items-center justify-between" style="min-height: 22px">
+      <div v-else class="flex items-center justify-between p-2" style="min-height: 22px">
         <div class="text-sm text-slate-700 dark:text-slate-300">
           <span class="font-semibold">{{ vocabulary.length }}</span> tokens
         </div>
