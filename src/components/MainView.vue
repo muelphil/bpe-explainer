@@ -162,18 +162,35 @@ const showControlPanel = computed(() => {
 <style scoped>
 .header-gradient {
   background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
-  padding: 8px 16px;
+  padding: 4px 12px;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
 }
 
 .dark .header-gradient {
   background: linear-gradient(135deg, #2563eb 0%, #1e3a8a 100%);
 }
 
+.header-link {
+  font-family: 'Jersey 15', cursive;
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.7);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.header-link:hover {
+  color: rgba(255, 255, 255, 0.95);
+}
+
 .header-title {
   font-family: 'Jersey 15', cursive;
-  font-size: 1.5rem;
+  font-size: 1.35rem;
   font-weight: 400;
   color: white;
   margin: 0;

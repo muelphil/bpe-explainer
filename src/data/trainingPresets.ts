@@ -61,7 +61,7 @@ const generateLargeText = () => {
     'Web development has evolved significantly with modern frameworks and tooling.',
     'Natural language processing enables computers to understand and generate human language.'
   ]
-  
+
   let text = ''
   for (let i = 0; i < 100; i++) {
     text += paragraphs[i % paragraphs.length] + ' '
@@ -74,7 +74,8 @@ export const trainingPresets: TrainingPreset[] = [
   {
     id: 'lorem-ipsum',
     name: 'Lorem Ipsum',
-    data: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.'
+    // https://generator.lorem-ipsum.info/
+    data: 'Lorem ipsum dolor sit amet, vel ex nusquam liberavisse signiferumque, cum in porro dolore dignissim, te dicam feugiat admodum mea. Dolorem incorrupte scribentur cu has, posse ornatus minimum cu vis. Cum ne timeam oblique platonem, laudem mandamus ut est, latine regione sed at. Vis diam tation volutpat ei. Quaestio dignissim vel ea, ad eam malis probatus repudiandae, mei nullam aliquam dolorum te. Tritani concludaturque at nam. Vero electram cum ea. Doming detraxit cum ad. Qui at dicit aliquando definiebas. Vim an facilis officiis constituam. Ex ius aliquam recteque, duo ei nostrud insolens, facer suscipit definiebas mea ut. Eam aeque ancillae no. Ad case scribentur has. Eros civibus eu duo, in mazim debet mel. Ei meis reque facilisis qui, cu animal recteque sit, ei vel minim dicit. Eam no ancillae detracto necessitatibus. At habeo dicunt vix, ocurreret disputando mea ea. Eum volumus principes disputationi cu. Quo inermis consectetuer ad, minim erroribus cum at. Te diam commodo molestie eos, amet posidonium nam id. Eu alia scaevola lobortis mei, solum moderatius cu sea. Veniam patrioque abhorreant et his, nostrud hendrerit duo cu. Eam ea regione iuvaret consequat. Vis stet autem cotidieque te, vel aliquam nonumes eu. Vel audiam indoctum consectetuer no. Lorem tritani te has. Mazim voluptatibus quo in. Id est dicant vivendum, sit denique mediocrem facilisis ea. Tacimates pericula ei cum.'
   },
   {
     id: 'programming',
@@ -91,9 +92,9 @@ export const trainingPresets: TrainingPreset[] = [
     name: 'Text',
     data: `Internationalization and localization often begin with standardization and normalization. The organization prioritized optimization, visualization, and customization to improve usability and scalability. Reliability and adaptability were central to maintainability, encouraging interoperability and reusability across the application. In this configuration, synchronization and serialization supported automation, while flexibility and stability ensured long-term sustainability and compatibility.`
   },
-  {
-    id: 'large',
-    name: 'Large Text (25k+ chars)',
-    data: generateLargeText()
-  }
+  // {
+  //   id: 'large',
+  //   name: 'Large Text (25k+ chars)',
+  //   data: generateLargeText()
+  // }
 ]
