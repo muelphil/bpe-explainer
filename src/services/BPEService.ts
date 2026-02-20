@@ -37,6 +37,13 @@ export class BPEService {
   }
 
   /**
+   * Update settings without re-initializing
+   */
+  updateSettings(settings: Partial<BPESettings>): void {
+    Object.assign(this.state.settings, settings)
+  }
+
+  /**
    * Initialize the BPE algorithm with training data
    */
   initialize(trainingData: string, settings?: Partial<BPESettings>): void {

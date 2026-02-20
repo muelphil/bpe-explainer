@@ -161,3 +161,14 @@ This is not exactly what I wanted:
 ---
 
 Please next improve the step visualization. Replace "Select" title with "Select most frequent pair". In the content of merge and select steps, use small token display without token ids to display what is done in the step. Orient yourself on the Vocabulary display, with select most frequent pair basically showing the same as the most frequent pair display in the frequencies section under the step title and Merge step displaying token1 + token2 → token3 similar to the frequency display but with the resulting title on the right. 
+
+---
+
+
+* Settings rework
+* Side Nav rework
+  * start in collapsed mode
+* Icon?
+* Integration into personal website
+* presets?
+* use Jersey 15 font for header

@@ -11,7 +11,7 @@ const editableDiv = ref<HTMLDivElement | null>(null)
 
 // Tokenize input when it changes
 const tokenizationResult = computed(() => {
-  return state.vocabulary.length > 0 
+  return state.vocabulary.length > 0
     ? bpeService.tokenizeInput(inputText.value)
     : { tokens: [], hasErrors: false, compressionRatio: 1 }
 })
@@ -29,9 +29,9 @@ watch(inputText, (newValue) => {
     const selection = window.getSelection()
     const range = selection?.getRangeAt(0)
     const cursorPos = range?.startOffset || 0
-    
+
     editableDiv.value.textContent = newValue
-    
+
     // Restore cursor position
     if (selection && editableDiv.value.firstChild) {
       try {
@@ -80,7 +80,7 @@ const compressionPercentage = computed(() => {
     <div class="flex flex-col overflow-hidden border-t border-slate-200 dark:border-slate-700" style="flex: 0 0 67%">
       <div class="px-6 py-4">
         <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">
-          Tokenized Input 
+          Tokenized Input
           <span class="text-sm font-normal text-slate-600 dark:text-slate-400">
             (Compression Rate: {{ compressionPercentage }}%)
           </span>
@@ -110,15 +110,14 @@ const compressionPercentage = computed(() => {
             </span>
           </template>
         </div>
-        
+
         <!-- Error message if there are errors -->
-        <div 
-          v-if="tokenizationResult.hasErrors" 
+        <div
+          v-if="tokenizationResult.hasErrors"
           class="mt-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-300 dark:border-red-700 rounded-lg"
         >
           <p class="text-sm text-red-800 dark:text-red-200">
-            <strong>Warning:</strong> Some characters could not be tokenized with the current vocabulary. 
-            They are shown with a red border.
+            <strong>Warning:</strong> Some characters could not be tokenized with the current vocabulary.
           </p>
         </div>
       </div>

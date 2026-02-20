@@ -45,7 +45,7 @@ const isPairRight = (index: number, hoveredPair: [string, string] | null): boole
 <template>
   <div class="flex-1 flex flex-col bg-white dark:bg-slate-800 overflow-hidden">
     <!-- Token Display Area -->
-    <div class="flex-1 overflow-auto p-8">
+    <div class="flex-1 overflow-auto p-6">
       <div class="token-container">
         <span
           v-for="(token, index) in tokens"

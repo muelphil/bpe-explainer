@@ -26,6 +26,10 @@ export function useBPE() {
     bpeService.initialize(trainingData, settings)
   }
 
+  const updateSettings = (settings: Partial<BPESettings>) => {
+    bpeService.updateSettings(settings)
+  }
+
   const nextStep = () => bpeService.nextStep()
   const previousStep = () => bpeService.previousStep()
   const goToStep = (stepNumber: number) => bpeService.goToStep(stepNumber)
@@ -55,6 +59,7 @@ export function useBPE() {
 
     // Methods
     initialize,
+    updateSettings,
     nextStep,
     previousStep,
     goToStep,

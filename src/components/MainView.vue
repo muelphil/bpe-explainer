@@ -81,13 +81,15 @@ const showControlPanel = computed(() => {
 <template>
   <div class="h-full w-full flex flex-col">
     <!-- Header with title and mode buttons -->
-    <div class="px-6 py-4 flex items-center justify-between">
-      <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100">
-        Byte-Pair Encoding Visualizer
-      </h1>
+    <div class="px-6 py-4 flex items-center justify-between gap-4">
+      <div class="header-gradient">
+        <h1 class="header-title">
+          Byte-Pair Encoding Visualizer
+        </h1>
+      </div>
 
       <!-- Mode Navigation and Settings Buttons -->
-      <div class="flex gap-2">
+      <div class="flex gap-2 flex-shrink-0">
         <button
           @click="switchToMode('training-data')"
           :disabled="!isButtonEnabled('training-data')"
@@ -157,4 +159,26 @@ const showControlPanel = computed(() => {
   </div>
 </template>
 
+<style scoped>
+.header-gradient {
+  background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+  padding: 8px 16px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.dark .header-gradient {
+  background: linear-gradient(135deg, #2563eb 0%, #1e3a8a 100%);
+}
+
+.header-title {
+  font-family: 'Jersey 15', cursive;
+  font-size: 1.5rem;
+  font-weight: 400;
+  color: white;
+  margin: 0;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+  letter-spacing: 0.5px;
+}
+</style>
 

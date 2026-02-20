@@ -9,7 +9,7 @@ import StepPanel from './components/StepPanel.vue'
 import ControlPanel from './components/ControlPanel.vue'
 import type { BPESettings } from './services/types'
 
-const { initialize, goToStep, state, settings, currentStepData } = useBPE()
+const { initialize, updateSettings, goToStep, state, settings, currentStepData } = useBPE()
 
 const isSettingsOpen = ref(false)
 const hoveredPair = ref<[string, string] | null>(null)
@@ -47,7 +47,10 @@ const handleOpenSettings = () => {
 }
 
 const handleSaveSettings = (newSettings: BPESettings) => {
-  // Re-initialize with new settings
+  // Update settings first
+  updateSettings(newSettings)
+  
+  // Re-initialize if we have training data
   if (state.trainingData) {
     initialize(state.trainingData, newSettings)
   }
