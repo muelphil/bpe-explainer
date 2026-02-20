@@ -19,10 +19,12 @@ const showControlPanel = ref(false)
 
 // Computed properties for highlighting - user hover takes priority, then step highlighting
 const effectiveHoveredPair = computed(() => {
-  // User hover takes priority
-  if (hoveredPair.value) return hoveredPair.value
+  // If user is hovering anything (pair OR token), pause step-based highlighting
+  if (hoveredPair.value || hoveredTokenContent.value) {
+    return hoveredPair.value // Return pair if hovering pair, null if hovering token
+  }
 
-  // If no user hover, use step highlighting
+  // No user interaction - use step highlighting
   if (currentStepData.value?.highlightPair) {
     return currentStepData.value.highlightPair
   }
@@ -31,10 +33,12 @@ const effectiveHoveredPair = computed(() => {
 })
 
 const effectiveHoveredTokenContent = computed(() => {
-  // User hover takes priority
-  if (hoveredTokenContent.value) return hoveredTokenContent.value
+  // If user is hovering anything (pair OR token), pause step-based highlighting
+  if (hoveredPair.value || hoveredTokenContent.value) {
+    return hoveredTokenContent.value // Return token if hovering token, null if hovering pair
+  }
 
-  // If no user hover, use step highlighting
+  // No user interaction - use step highlighting
   if (currentStepData.value?.highlightTokenContent) {
     return currentStepData.value.highlightTokenContent
   }

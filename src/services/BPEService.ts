@@ -17,9 +17,9 @@ export class BPEService {
       currentStep: 0,
       steps: [],
       settings: {
-        initialVocab: 'characters',
+        initialVocab: 'bytes',
         breakCondition: 'maxVocabSize',
-        maxVocabSize: 256,
+        maxVocabSize: 512,
         playSpeed: 500,
         darkMode: false,
         mergingRestriction: 'llm' // LLM mode is now the default
@@ -557,11 +557,11 @@ export class BPEService {
     // Greedy tokenization: try to match longest possible tokens from vocabulary
     while (position < input.length) {
       let matched = false
-      
+
       // Try to find longest matching vocabulary entry starting at current position
       // Sort vocabulary by length (longest first) for greedy matching
       const sortedVocab = [...this.state.vocabulary].sort((a, b) => b.content.length - a.content.length)
-      
+
       for (const vocabEntry of sortedVocab) {
         if (input.substring(position, position + vocabEntry.content.length) === vocabEntry.content) {
           // Found a match

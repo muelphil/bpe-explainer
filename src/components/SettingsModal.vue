@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { X } from 'lucide-vue-next'
+import { X, Info } from 'lucide-vue-next'
+import ButtonGroup from './ButtonGroup.vue'
 import type { BPESettings } from '../services/types'
 
 const props = defineProps<{
@@ -16,10 +17,29 @@ const emit = defineEmits<{
 // Local state for form
 const localSettings = ref<BPESettings>({ ...props.settings })
 
+// Preset type
+type PresetType = 'original' | 'llm'
+
+// Apply preset
+const applyPreset = (preset: PresetType) => {
+  if (preset === 'original') {
+    localSettings.value.initialVocab = 'characters'
+    localSettings.value.breakCondition = 'noFrequentPairs'
+    localSettings.value.mergingRestriction = 'none'
+  } else {
+    localSettings.value.initialVocab = 'bytes'
+    localSettings.value.breakCondition = 'maxVocabSize'
+    localSettings.value.mergingRestriction = 'llm'
+  }
+}
+
 // Watch for settings prop changes
 watch(() => props.settings, (newSettings) => {
   localSettings.value = { ...newSettings }
 }, { deep: true })
+
+// Initialize preset on mount
+// (no preset detection needed - presets are just action buttons)
 
 const handleSave = () => {
   emit('save', { ...localSettings.value })
@@ -54,88 +74,164 @@ const handleCancel = () => {
 
           <!-- Content -->
           <div class="p-6 space-y-6 overflow-y-auto max-h-[calc(90vh-140px)]">
-            <!-- Initial Vocabulary -->
-            <div class="space-y-2">
-              <label class="block text-sm font-medium text-slate-900 dark:text-slate-100">
-                Initial Vocabulary
-              </label>
-              <div class="space-y-2">
-                <label class="flex items-center space-x-3 cursor-pointer">
-                  <input
-                    v-model="localSettings.initialVocab"
-                    type="radio"
-                    value="characters"
-                    class="w-4 h-4 text-primary-500 focus:ring-primary-500"
-                  />
-                  <span class="text-sm text-slate-700 dark:text-slate-300">
-                    Characters from training data
-                  </span>
+            <!-- Preset Selection -->
+            <div class="space-y-3">
+              <div class="flex items-center justify-between">
+                <label class="text-sm font-medium text-slate-900 dark:text-slate-100">
+                  Presets
                 </label>
-                <label class="flex items-center space-x-3 cursor-pointer">
-                  <input
-                    v-model="localSettings.initialVocab"
-                    type="radio"
-                    value="bytes"
-                    class="w-4 h-4 text-primary-500 focus:ring-primary-500"
-                  />
-                  <span class="text-sm text-slate-700 dark:text-slate-300">
-                    All 256 bytes
+                <button
+                  class="group relative"
+                  @mouseenter="$event => $event.currentTarget.querySelector('.tooltip').classList.remove('opacity-0')"
+                  @mouseleave="$event => $event.currentTarget.querySelector('.tooltip').classList.add('opacity-0')"
+                >
+                  <Info :size="16" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300" />
+                  <span class="tooltip absolute right-0 top-6 w-72 p-2 bg-slate-900 dark:bg-slate-700 text-white text-xs rounded opacity-0 transition-opacity pointer-events-none z-10">
+                    Original BPE (1994) was designed for text compression. LLM BPE uses modern adjustments for building vocabularies for large language models based on training data.
                   </span>
-                </label>
+                </button>
+              </div>
+              <div class="flex gap-3">
+                <button
+                  @click="applyPreset('llm')"
+                  class="flex-1 px-4 py-2 text-sm font-medium rounded-lg border-2 border-primary-500 text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors"
+                >
+                  Apply LLM BPE
+                </button>
+                <button
+                  @click="applyPreset('original')"
+                  class="flex-1 px-4 py-2 text-sm font-medium rounded-lg border-2 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                >
+                  Apply Original BPE
+                </button>
               </div>
             </div>
 
-            <!-- Break Condition -->
-            <div class="space-y-2">
-              <label class="block text-sm font-medium text-slate-900 dark:text-slate-100">
-                Stop Condition
-              </label>
-              <div class="space-y-2">
-                <label class="flex items-center space-x-3 cursor-pointer">
-                  <input
-                    v-model="localSettings.breakCondition"
-                    type="radio"
-                    value="maxVocabSize"
-                    class="w-4 h-4 text-primary-500 focus:ring-primary-500"
-                  />
-                  <span class="text-sm text-slate-700 dark:text-slate-300">
-                    Maximum vocabulary size
-                  </span>
+            <!-- Initial Vocabulary -->
+            <div class="space-y-3">
+              <div class="flex items-center justify-between">
+                <label class="text-sm font-medium text-slate-900 dark:text-slate-100">
+                  Initial Vocabulary
                 </label>
-                <label class="flex items-center space-x-3 cursor-pointer">
-                  <input
-                    v-model="localSettings.breakCondition"
-                    type="radio"
-                    value="noFrequentPairs"
-                    class="w-4 h-4 text-primary-500 focus:ring-primary-500"
-                  />
-                  <span class="text-sm text-slate-700 dark:text-slate-300">
-                    No frequent pairs (frequency = 1)
+                <button
+                  class="group relative"
+                  @mouseenter="$event => $event.currentTarget.querySelector('.tooltip').classList.remove('opacity-0')"
+                  @mouseleave="$event => $event.currentTarget.querySelector('.tooltip').classList.add('opacity-0')"
+                >
+                  <Info :size="16" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300" />
+                  <span class="tooltip absolute right-0 top-6 w-64 p-2 bg-slate-900 dark:bg-slate-700 text-white text-xs rounded opacity-0 transition-opacity pointer-events-none z-10">
+                    Characters uses only the unique characters from your training data. All 256 bytes starts with the complete byte vocabulary.
                   </span>
-                </label>
+                </button>
               </div>
+              <ButtonGroup
+                v-model="localSettings.initialVocab"
+                :options="[
+                  { value: 'bytes', label: 'All 256 Bytes' },
+                  { value: 'characters', label: 'Characters' },
+                ]"
+              />
+            </div>
+
+            <!-- Merging Restrictions -->
+            <div class="space-y-3">
+              <div class="flex items-center justify-between">
+                <label class="text-sm font-medium text-slate-900 dark:text-slate-100">
+                  Merge Rules
+                </label>
+                <button
+                  class="group relative"
+                  @mouseenter="$event => $event.currentTarget.querySelector('.tooltip').classList.remove('opacity-0')"
+                  @mouseleave="$event => $event.currentTarget.querySelector('.tooltip').classList.add('opacity-0')"
+                >
+                  <Info :size="16" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300" />
+                  <span class="tooltip absolute right-0 top-6 w-64 p-2 bg-slate-900 dark:bg-slate-700 text-white text-xs rounded opacity-0 transition-opacity pointer-events-none z-10">
+                    LLM rules keep letters, numbers, and symbols separate, mimicking modern tokenizers. No restrictions allows any adjacent tokens to merge.
+                  </span>
+                </button>
+              </div>
+              <ButtonGroup
+                v-model="localSettings.mergingRestriction"
+                :options="[
+                  { value: 'llm', label: 'LLM Rules' },
+                  { value: 'none', label: 'No Restrictions' }
+                ]"
+              />
+            </div>
+
+            <!-- Stop Condition -->
+            <div class="space-y-3">
+              <div class="flex items-center justify-between">
+                <label class="text-sm font-medium text-slate-900 dark:text-slate-100">
+                  Stop Condition
+                </label>
+                <button
+                  class="group relative"
+                  @mouseenter="$event => $event.currentTarget.querySelector('.tooltip').classList.remove('opacity-0')"
+                  @mouseleave="$event => $event.currentTarget.querySelector('.tooltip').classList.add('opacity-0')"
+                >
+                  <Info :size="16" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300" />
+                  <span class="tooltip absolute right-0 top-6 w-64 p-2 bg-slate-900 dark:bg-slate-700 text-white text-xs rounded opacity-0 transition-opacity pointer-events-none z-10">
+                    Maximum vocabulary size stops when reaching a target number of tokens. No frequent pairs stops when all pairs occur only once.
+                  </span>
+                </button>
+              </div>
+              <ButtonGroup
+                v-model="localSettings.breakCondition"
+                :options="[
+                  { value: 'maxVocabSize', label: 'Max Vocabulary Size' },
+                  { value: 'noFrequentPairs', label: 'No Frequent Pairs' }
+                ]"
+              />
             </div>
 
             <!-- Max Vocab Size -->
-            <div v-if="localSettings.breakCondition === 'maxVocabSize'" class="space-y-2">
-              <label class="block text-sm font-medium text-slate-900 dark:text-slate-100">
-                Max Vocabulary Size
-              </label>
+            <div class="space-y-3">
+              <div class="flex items-center justify-between">
+                <label class="text-sm font-medium text-slate-900 dark:text-slate-100">
+                  Maximum Vocabulary Size
+                </label>
+                <button
+                  class="group relative"
+                  @mouseenter="$event => $event.currentTarget.querySelector('.tooltip').classList.remove('opacity-0')"
+                  @mouseleave="$event => $event.currentTarget.querySelector('.tooltip').classList.add('opacity-0')"
+                >
+                  <Info :size="16" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300" />
+                  <span class="tooltip absolute right-0 top-6 w-64 p-2 bg-slate-900 dark:bg-slate-700 text-white text-xs rounded opacity-0 transition-opacity pointer-events-none z-10">
+                    The algorithm stops when the vocabulary reaches this size. Common values: 256 (tiny), 1000 (small), 50000 (GPT-like).
+                  </span>
+                </button>
+              </div>
               <input
                 v-model.number="localSettings.maxVocabSize"
                 type="number"
                 min="10"
                 max="10000"
-                class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                :disabled="localSettings.breakCondition !== 'maxVocabSize'"
+                class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
               />
-              <p class="text-xs text-slate-500">Common values: 256 (small), 1000 (medium), 50000 (GPT-like)</p>
             </div>
 
+            <!-- Divider -->
+            <div class="border-t border-slate-200 dark:border-slate-700 my-6"></div>
+
             <!-- Play Speed -->
-            <div class="space-y-2">
-              <label class="block text-sm font-medium text-slate-900 dark:text-slate-100">
-                Play Speed: {{ localSettings.playSpeed }}ms
-              </label>
+            <div class="space-y-3">
+              <div class="flex items-center justify-between">
+                <label class="text-sm font-medium text-slate-900 dark:text-slate-100">
+                  Step Speed: {{ localSettings.playSpeed }}ms
+                </label>
+                <button
+                  class="group relative"
+                  @mouseenter="$event => $event.currentTarget.querySelector('.tooltip').classList.remove('opacity-0')"
+                  @mouseleave="$event => $event.currentTarget.querySelector('.tooltip').classList.add('opacity-0')"
+                >
+                  <Info :size="16" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300" />
+                  <span class="tooltip absolute right-0 top-6 w-64 p-2 bg-slate-900 dark:bg-slate-700 text-white text-xs rounded opacity-0 transition-opacity pointer-events-none z-10">
+                    Controls how fast steps advance when using the play button. Lower values are faster.
+                  </span>
+                </button>
+              </div>
               <input
                 v-model.number="localSettings.playSpeed"
                 type="range"
@@ -151,7 +247,7 @@ const handleCancel = () => {
             </div>
 
             <!-- Dark Mode -->
-            <div class="space-y-2">
+            <div class="space-y-3">
               <label class="flex items-center justify-between cursor-pointer">
                 <span class="text-sm font-medium text-slate-900 dark:text-slate-100">Dark Mode</span>
                 <div class="relative">
@@ -163,40 +259,6 @@ const handleCancel = () => {
                   <div class="w-11 h-6 bg-slate-200 peer-focus:ring-2 peer-focus:ring-primary-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-500"></div>
                 </div>
               </label>
-            </div>
-
-            <!-- Merging Restrictions -->
-            <div class="space-y-2">
-              <label class="block text-sm font-medium text-slate-900 dark:text-slate-100">
-                Merging Restrictions
-              </label>
-              <div class="space-y-2">
-                <label class="flex items-center space-x-3 cursor-pointer">
-                  <input
-                    v-model="localSettings.mergingRestriction"
-                    type="radio"
-                    value="none"
-                    class="w-4 h-4 text-primary-500 focus:ring-primary-500"
-                  />
-                  <span class="text-sm text-slate-700 dark:text-slate-300">
-                    None - Any pairs can merge
-                  </span>
-                </label>
-                <label class="flex items-center space-x-3 cursor-pointer">
-                  <input
-                    v-model="localSettings.mergingRestriction"
-                    type="radio"
-                    value="llm"
-                    class="w-4 h-4 text-primary-500 focus:ring-primary-500"
-                  />
-                  <span class="text-sm text-slate-700 dark:text-slate-300">
-                    LLM - Spaces can only join to the right
-                  </span>
-                </label>
-              </div>
-              <p class="text-xs text-slate-500">
-                LLM mode: letters with letters, numbers with numbers, symbols with symbols - all stay separate
-              </p>
             </div>
           </div>
 

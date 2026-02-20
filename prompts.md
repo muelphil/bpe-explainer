@@ -166,9 +166,21 @@ Please next improve the step visualization. Replace "Select" title with "Select 
 
 
 * Settings rework
-* Side Nav rework
-  * start in collapsed mode
-* Icon?
+  * save settings in localStorage
+  * implement settings service responsible for loading and applying settings
+  * preset buttons: currently the preset "Apply LLM BPE" is being highlighted, but should not. It should just be 2 buttons, styled as the other buttons in the app (no border, blue background color)
+* Last Step (Algorithm complete) should list stop condition
+* Vocabulary: show tokens not used in Training Data as **slightly** greyed out
+
+
+* Icon for Tab? Maybe not necessary if I integrate it
 * Integration into personal website
-* presets?
-* use Jersey 15 font for header
+* Side Nav rework
+    * start in collapsed mode
+
+---
+
+Please improve the settings.
+There should be a new first settings: Presets: Original BPE and LLM BPE, which should set all the other settings (Initial Vocabulary, Stop Condition, Merging Restriction) the ones corresponding with the given preset. The radio groups should be replaced with button groups, where one is activated. Implement a custom input component for this, button group (buttons are connected to each other, activated option is highlighted). Improve settings wording. Include an info icon for each option on the right side of the label, hovering shows explanation text. Reorder settings to put them into logical order -- UI settings, such as Dark Mode and Step Speed belong to the very bottom.
+
+Button bars should span the entire width. LLM BPE = All 256 bytes, LLM Rules and Max Vocab Size. All LLM options should appear on the left side, BPE options on the right. Maximum Vocabulary Size should be visible disabled when Stop Condition "No Frequent Pairs" is selected. Dark Mode does not require info. "LLM BPE uses restrictions to ..." is inadequate. The idea is that Original BPE shows the original implementation from 1994 targeted for compression, while LLM BPE shows adjusted version used for building LLM Vocabularies based on training data.
