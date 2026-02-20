@@ -52,7 +52,7 @@ watch(currentStep, async () => {
 </script>
 
 <template>
-  <CollapsiblePanel title="Steps" :noCriticalPadding="true">
+  <CollapsiblePanel title="Steps" :criticalPadding="false">
     <!-- Critical Info (always visible) - Current step only -->
     <template #critical>
       <div v-if="!currentStepItem" class="text-sm text-slate-500 dark:text-slate-400">

@@ -184,3 +184,21 @@ Please improve the settings.
 There should be a new first settings: Presets: Original BPE and LLM BPE, which should set all the other settings (Initial Vocabulary, Stop Condition, Merging Restriction) the ones corresponding with the given preset. The radio groups should be replaced with button groups, where one is activated. Implement a custom input component for this, button group (buttons are connected to each other, activated option is highlighted). Improve settings wording. Include an info icon for each option on the right side of the label, hovering shows explanation text. Reorder settings to put them into logical order -- UI settings, such as Dark Mode and Step Speed belong to the very bottom.
 
 Button bars should span the entire width. LLM BPE = All 256 bytes, LLM Rules and Max Vocab Size. All LLM options should appear on the left side, BPE options on the right. Maximum Vocabulary Size should be visible disabled when Stop Condition "No Frequent Pairs" is selected. Dark Mode does not require info. "LLM BPE uses restrictions to ..." is inadequate. The idea is that Original BPE shows the original implementation from 1994 targeted for compression, while LLM BPE shows adjusted version used for building LLM Vocabularies based on training data.
+
+---
+
+One of the last issues of the app is the UI of the sidenav and the 3 control panels it contains: Frequency, Vocabulary, Steps. There are 2 issues:
+1. on wide screens, the sidenavs get too little space and the training view too little
+2. the collapsing is not working as intended -- the control panels in the sidenav are overlapping or overflowing the given space.
+
+I would like you to address these issues as follows:
+1. On wide screens, split the side nav into 2 side navs, both displayed on the right side of the screen: the left one should contain the steps and the play/pause panel, the right one should contain the vocabulary and the frequency panels. If the screen is wide enough to show both panels next to each other, disable the collapsing on the steps panel, it is always shown in full
+2. rework the collapsing so that it reliably works. consider 2 things: for each panel, there are subsections that are still to be shown when collapsed (such as the critical information, e.g. most frequent pair for frequency panel) and other that dont. Additionally, when uncollapsed, there are sections that are of static height, e.g. the most frequent pair in frequency panel, and ones that may have dynamic height, where they can take up less vertical space (shrinking) and provide scrolling, e.g. the other frequency pairs in a list in the frequency panel.
+
+Please start by fixing issue 2. My idea would be to not have 1 top element for each of the panels but use vues ability to provide the subsections without a wrapping element, where the subsections will be rendered after one another -- so that the header and subsections of all the panels are at the same level. Additionally, apply classes to the subsections of the panel that hide them when the panel is collapsed using display:none and different classes for whether they are of static height (flex: 0 0) or allow shrink/grow (flex: 1 1).
+
+Start by fixing issue 2. We will later fix issue 1.
+
+
+
+
