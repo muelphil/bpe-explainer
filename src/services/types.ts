@@ -24,8 +24,19 @@ export interface Step {
   description: string
   selectedPair?: [string, string]
   addedToken?: VocabEntry
-  tokensSnapshot: Token[]
-  vocabularySnapshot: VocabEntry[]
+  
+  // Full snapshots (only for step 0)
+  tokensSnapshot?: Token[]
+  vocabularySnapshot?: VocabEntry[]
+  
+  // Delta information (for steps > 0)
+  // For merge steps: which pair was merged and what vocab entry was added
+  mergedPair?: [string, string]
+  addedVocabEntry?: VocabEntry
+  
+  // Metadata (always present for easy access)
+  tokenCount: number // Number of tokens at this step
+  
   highlightPair?: [string, string] // Pair to highlight for this step (select/merge)
   highlightTokenContent?: string // Token content to highlight (for merged result)
 }

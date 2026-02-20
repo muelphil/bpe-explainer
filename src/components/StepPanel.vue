@@ -167,7 +167,7 @@ watch([currentStep, isExpanded], async () => {
 
         <!-- Token Count Badge -->
         <div class="flex-shrink-0 text-xs text-slate-500 dark:text-slate-400 font-mono">
-          {{ step.tokensSnapshot.length }}t
+          {{ step.tokenCount }}t
         </div>
       </div>
     </button>

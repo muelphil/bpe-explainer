@@ -65,7 +65,11 @@ describe('BPEService', () => {
 
   describe('Step Navigation', () => {
     beforeEach(() => {
-      service.initialize('aaabbb', { maxVocabSize: 10 })
+      service.initialize('aaabbb', { 
+        initialVocab: 'characters', 
+        breakCondition: 'maxVocabSize',
+        maxVocabSize: 10 
+      })
     })
 
     it('should start at step 0', () => {

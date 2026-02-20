@@ -9,6 +9,8 @@ export class BPEService {
   private nextTokenId = 0
   private nextVocabId = 0
   private playIntervalId: number | null = null
+  // Cache for reconstructed steps (stepNumber -> {tokens, vocab})
+  private stepCache = new Map<number, { tokens: Token[], vocab: VocabEntry[] }>()
 
   constructor() {
     // Load settings from localStorage
@@ -244,22 +246,26 @@ export class BPEService {
 
   /**
    * Precompute all steps for the algorithm
+   * Uses delta-based approach: only step 0 stores full snapshots,
+   * subsequent steps store only the merge deltas
    */
   precomputeSteps(): void {
     const steps: Step[] = []
 
-    // Step 0: Initial tokenization
+    // Step 0: Initial tokenization (full snapshot)
+    const initialTokens = this.cloneTokens(this.state.tokens)
     steps.push({
       stepNumber: 0,
       type: 'tokenize',
       description: 'Initial tokenization complete',
-      tokensSnapshot: this.cloneTokens(this.state.tokens),
-      vocabularySnapshot: this.cloneVocabulary(this.state.vocabulary)
+      tokensSnapshot: initialTokens,
+      vocabularySnapshot: this.cloneVocabulary(this.state.vocabulary),
+      tokenCount: initialTokens.length
     })
 
     let stepNumber = 1
 
-    // Create a working copy of state
+    // Create a working copy of state for computing steps
     const workingTokens = this.cloneTokens(this.state.tokens)
     const workingVocab = this.cloneVocabulary(this.state.vocabulary)
 
@@ -289,30 +295,29 @@ export class BPEService {
           stopReason = 'All pairs have frequency 1'
         }
 
+        // Complete step - no delta, as it doesn't change state
         steps.push({
           stepNumber,
           type: 'complete',
           description: `${stopReason}, Compression Rate: ${compressionPercentage}%`,
-          tokensSnapshot: this.cloneTokens(workingTokens),
-          vocabularySnapshot: this.cloneVocabulary(workingVocab)
+          tokenCount: workingTokens.length
         })
         break
       }
 
-      // Selection step
+      // Selection step - no delta, as it doesn't change state
       const pair = mostFrequent.pair
       steps.push({
         stepNumber,
         type: 'select',
         description: `Select most frequent pair: "${pair[0]}" + "${pair[1]}" (frequency: ${mostFrequent.frequency})`,
         selectedPair: pair,
-        tokensSnapshot: this.cloneTokens(workingTokens),
-        vocabularySnapshot: this.cloneVocabulary(workingVocab),
-        highlightPair: pair // Highlight the selected pair
+        highlightPair: pair, // Highlight the selected pair
+        tokenCount: workingTokens.length
       })
       stepNumber++
 
-      // Merge step
+      // Merge step - store delta (pair merged + vocab entry added)
       const newContent = pair[0] + pair[1]
 
       // Get or create vocabulary entry
@@ -337,7 +342,7 @@ export class BPEService {
           workingTokens[i + 1].content === pair[1]
         ) {
           newTokens.push({
-            id: newVocabEntry.id, // Use vocabulary ID
+            id: newVocabEntry.id,
             content: newContent,
             color: newVocabEntry.color,
             skipAnimation: true
@@ -359,15 +364,18 @@ export class BPEService {
         }
       }
 
+      // Store merge step with delta information
       steps.push({
         stepNumber,
         type: 'merge',
         description: `Merged "${pair[0]}" + "${pair[1]}" → "${newContent}"`,
         selectedPair: pair,
         addedToken: newVocabEntry,
-        tokensSnapshot: this.cloneTokens(newTokens),
-        vocabularySnapshot: this.cloneVocabulary(workingVocab),
-        highlightTokenContent: newContent // Highlight the newly merged token
+        // Delta fields for reconstruction
+        mergedPair: pair,
+        addedVocabEntry: {...newVocabEntry}, // Clone to avoid reference issues
+        highlightTokenContent: newContent, // Highlight the newly merged token
+        tokenCount: newTokens.length
       })
       stepNumber++
 
@@ -375,6 +383,9 @@ export class BPEService {
     }
 
     this.state.steps = steps
+    
+    // Clear cache since we have new steps
+    this.stepCache.clear()
   }
 
   /**
@@ -420,11 +431,11 @@ export class BPEService {
     }
 
     this.state.currentStep = stepNumber
-    const step = this.state.steps[stepNumber]
 
-    // Restore state from snapshot
-    this.state.tokens = this.cloneTokens(step.tokensSnapshot)
-    this.state.vocabulary = this.cloneVocabulary(step.vocabularySnapshot)
+    // Reconstruct state from deltas
+    const { tokens, vocab } = this.reconstructStep(stepNumber)
+    this.state.tokens = tokens
+    this.state.vocabulary = vocab
 
     this.updateFrequenciesAndCompression()
   }
@@ -490,6 +501,7 @@ export class BPEService {
     this.state.highlightedTokenContent = null
     this.nextTokenId = 0
     this.nextVocabId = 0
+    this.stepCache.clear() // Clear reconstruction cache
   }
 
   /**
@@ -554,6 +566,123 @@ export class BPEService {
    */
   private cloneVocabulary(vocab: VocabEntry[]): VocabEntry[] {
     return vocab.map(v => ({...v}))
+  }
+
+  /**
+   * Apply a merge operation to a token array
+   */
+  private applyMerge(tokens: Token[], pair: [string, string], newVocabEntry: VocabEntry): Token[] {
+    const [token1, token2] = pair
+    const newTokens: Token[] = []
+    let i = 0
+
+    while (i < tokens.length) {
+      if (
+        i < tokens.length - 1 &&
+        tokens[i].content === token1 &&
+        tokens[i + 1].content === token2
+      ) {
+        // Merge this pair
+        newTokens.push({
+          id: newVocabEntry.id,
+          content: newVocabEntry.content,
+          color: newVocabEntry.color,
+          skipAnimation: true
+        })
+        i += 2 // Skip both tokens
+      } else {
+        // Keep existing token
+        newTokens.push({...tokens[i]})
+        i++
+      }
+    }
+
+    return newTokens
+  }
+
+  /**
+   * Reconstruct state for a specific step using deltas
+   * Uses caching with checkpoints every 20 steps for efficiency
+   */
+  private reconstructStep(targetStep: number): { tokens: Token[], vocab: VocabEntry[] } {
+    // Check cache first - return a clone to avoid reference issues
+    if (this.stepCache.has(targetStep)) {
+      const cached = this.stepCache.get(targetStep)!
+      return {
+        tokens: this.cloneTokens(cached.tokens),
+        vocab: this.cloneVocabulary(cached.vocab)
+      }
+    }
+
+    // Step 0 always has full snapshot
+    if (targetStep === 0) {
+      const step0 = this.state.steps[0]
+      const result = {
+        tokens: this.cloneTokens(step0.tokensSnapshot!),
+        vocab: this.cloneVocabulary(step0.vocabularySnapshot!)
+      }
+      // Cache step 0
+      this.stepCache.set(0, {
+        tokens: this.cloneTokens(result.tokens),
+        vocab: this.cloneVocabulary(result.vocab)
+      })
+      return result
+    }
+
+    // Find the nearest checkpoint (every 20 steps or step 0)
+    const CHECKPOINT_INTERVAL = 20
+    let startStep = Math.floor(targetStep / CHECKPOINT_INTERVAL) * CHECKPOINT_INTERVAL
+    
+    // If checkpoint is not 0 and not cached, start from 0
+    if (startStep > 0 && !this.stepCache.has(startStep)) {
+      startStep = 0
+    }
+
+    // Get starting state (will return clones from cache)
+    let { tokens, vocab } = startStep === 0 
+      ? this.reconstructStep(0)
+      : this.reconstructStep(startStep) // Use reconstructStep to get clones
+
+    // Apply deltas from startStep+1 to targetStep
+    for (let i = startStep + 1; i <= targetStep; i++) {
+      const step = this.state.steps[i]
+      
+      if (step.type === 'merge' && step.mergedPair && step.addedVocabEntry) {
+        // Add new vocab entry
+        vocab.push({...step.addedVocabEntry})
+        // Apply merge to tokens
+        tokens = this.applyMerge(tokens, step.mergedPair, step.addedVocabEntry)
+      }
+      // Select and complete steps don't modify state, just provide context
+
+      // Cache checkpoints
+      if (i % CHECKPOINT_INTERVAL === 0) {
+        this.stepCache.set(i, {
+          tokens: this.cloneTokens(tokens),
+          vocab: this.cloneVocabulary(vocab)
+        })
+      }
+    }
+
+    // Cache the final result
+    this.stepCache.set(targetStep, {
+      tokens: this.cloneTokens(tokens),
+      vocab: this.cloneVocabulary(vocab)
+    })
+
+    // Limit cache size (keep last 10 accessed steps)
+    if (this.stepCache.size > 10) {
+      const sortedKeys = Array.from(this.stepCache.keys()).sort((a, b) => a - b)
+      // Keep step 0 and recent steps
+      const toKeep = new Set([0, ...sortedKeys.slice(-9)])
+      for (const key of this.stepCache.keys()) {
+        if (!toKeep.has(key)) {
+          this.stepCache.delete(key)
+        }
+      }
+    }
+
+    return { tokens, vocab }
   }
 
   /**
