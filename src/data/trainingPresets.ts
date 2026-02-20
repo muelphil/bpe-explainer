@@ -61,11 +61,16 @@ export const trainingPresets: TrainingPreset[] = [
   {
     id: 'programming',
     name: 'Programming',
-    data: programmingPreset //'function calculateSum(a, b) { return a + b; } const result = calculateSum(10, 20); console.log(result); // Output: 30\nlet array = [1, 2, 3, 4, 5]; array.forEach(num => console.log(num * 2));'
+    data: programmingPreset
   },
   {
     id: 'conversation',
     name: 'Conversation',
     data: 'Hello! How are you doing today? I\'m doing great, thanks for asking. What brings you here? I wanted to learn more about tokenization. That\'s wonderful! Tokenization is a fundamental concept in natural language processing. It breaks text into smaller units called tokens.'
+  },
+  {
+    id: 'text',
+    name: 'Text',
+    data: `Internationalization and localization often begin with standardization and normalization. The organization prioritized optimization, visualization, and customization to improve usability and scalability. Reliability and adaptability were central to maintainability, encouraging interoperability and reusability across the application. In this configuration, synchronization and serialization supported automation, while flexibility and stability ensured long-term sustainability and compatibility.`
   }
 ]

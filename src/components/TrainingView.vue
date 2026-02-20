@@ -47,22 +47,23 @@ const isPairRight = (index: number, hoveredPair: [string, string] | null): boole
     <!-- Token Display Area -->
     <div class="flex-1 overflow-auto p-6">
       <div class="token-container">
-        <span
-          v-for="(token, index) in tokens"
-          :key="`${token.id}-${index}`"
-          class="token-wrapper"
-          :class="{
+        <template v-for="(token, index) in tokens" :key="`${token.id}-${index}`">
+          <span
+            class="token-wrapper"
+            :class="{
             'highlight-single': isTokenHighlightedSingle(token, hoveredTokenContent),
             'highlight-left': isPairLeft(index, hoveredPair),
-            'highlight-right': isPairRight(index, hoveredPair)
+            'highlight-right': isPairRight(index, hoveredPair),
           }"
-        >
+                  >
           <span
             class="token"
             :style="token.color ? {backgroundColor: token.color} : {}"
           >{{ displayTokenContent(token.content) }}<span class="token-id">{{ token.id }}</span>
           </span>
         </span>
+          <span v-if="token.content.includes('\n')" class="flex-break"></span>
+        </template>
       </div>
     </div>
   </div>
