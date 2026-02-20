@@ -52,6 +52,24 @@ function depthFirstSearch(graph, start) {
   return result;
 }`
 
+// Generate a large text for performance testing
+const generateLargeText = () => {
+  const paragraphs = [
+    'The quick brown fox jumps over the lazy dog.',
+    'Internationalization and localization often begin with standardization and normalization.',
+    'Machine learning algorithms process vast amounts of data to identify patterns and make predictions.',
+    'Web development has evolved significantly with modern frameworks and tooling.',
+    'Natural language processing enables computers to understand and generate human language.'
+  ]
+  
+  let text = ''
+  for (let i = 0; i < 100; i++) {
+    text += paragraphs[i % paragraphs.length] + ' '
+    if (i % 5 === 4) text += '\n'
+  }
+  return text
+}
+
 export const trainingPresets: TrainingPreset[] = [
   {
     id: 'lorem-ipsum',
@@ -72,5 +90,10 @@ export const trainingPresets: TrainingPreset[] = [
     id: 'text',
     name: 'Text',
     data: `Internationalization and localization often begin with standardization and normalization. The organization prioritized optimization, visualization, and customization to improve usability and scalability. Reliability and adaptability were central to maintainability, encouraging interoperability and reusability across the application. In this configuration, synchronization and serialization supported automation, while flexibility and stability ensured long-term sustainability and compatibility.`
+  },
+  {
+    id: 'large',
+    name: 'Large Text (25k+ chars)',
+    data: generateLargeText()
   }
 ]
