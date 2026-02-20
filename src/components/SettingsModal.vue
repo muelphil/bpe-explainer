@@ -94,13 +94,13 @@ const handleCancel = () => {
               <div class="flex gap-3">
                 <button
                   @click="applyPreset('llm')"
-                  class="flex-1 px-4 py-2 text-sm font-medium rounded-lg border-2 border-primary-500 text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors"
+                  class="flex-1 px-4 py-2 text-sm font-medium rounded-lg bg-primary-500 text-white hover:bg-primary-600 transition-colors"
                 >
                   Apply LLM BPE
                 </button>
                 <button
                   @click="applyPreset('original')"
-                  class="flex-1 px-4 py-2 text-sm font-medium rounded-lg border-2 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                  class="flex-1 px-4 py-2 text-sm font-medium rounded-lg bg-primary-500 text-white hover:bg-primary-600 transition-colors"
                 >
                   Apply Original BPE
                 </button>

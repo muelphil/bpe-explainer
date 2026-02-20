@@ -2,6 +2,7 @@ import {reactive} from 'vue'
 import type {BPEState, BPESettings, Token, VocabEntry, PairFrequency, Step} from './types'
 import {getTokenColor} from '../utils/tokenColor'
 import {canMergePair} from './mergeRestrictions'
+import { SettingsService } from './SettingsService'
 
 export class BPEService {
   private state: BPEState
@@ -10,26 +11,25 @@ export class BPEService {
   private playIntervalId: number | null = null
 
   constructor() {
+    // Load settings from localStorage
+    const savedSettings = SettingsService.load()
+    
     this.state = reactive({
       trainingData: '',
       tokens: [],
       vocabulary: [],
       currentStep: 0,
       steps: [],
-      settings: {
-        initialVocab: 'bytes',
-        breakCondition: 'maxVocabSize',
-        maxVocabSize: 512,
-        playSpeed: 500,
-        darkMode: false,
-        mergingRestriction: 'llm' // LLM mode is now the default
-      },
+      settings: savedSettings,
       frequencies: [],
       compressionRatio: 1,
       isPlaying: false,
       highlightedPairs: new Set(),
       highlightedTokenContent: null
     }) as BPEState
+    
+    // Apply settings (e.g., dark mode)
+    SettingsService.apply(savedSettings)
   }
 
   getState(): BPEState {
@@ -41,6 +41,10 @@ export class BPEService {
    */
   updateSettings(settings: Partial<BPESettings>): void {
     Object.assign(this.state.settings, settings)
+    // Save to localStorage
+    SettingsService.save(this.state.settings)
+    // Apply settings
+    SettingsService.apply(this.state.settings)
   }
 
   /**
@@ -274,10 +278,21 @@ export class BPEService {
       if (shouldStop || mostFrequent === null) {
         const compressionRatio = this.state.trainingData.length / workingTokens.length
         const compressionPercentage = ((1 - 1 / compressionRatio) * 100).toFixed(1)
+        
+        // Determine stop reason
+        let stopReason = ''
+        if (this.state.settings.breakCondition === 'maxVocabSize' && 
+            workingVocab.length >= this.state.settings.maxVocabSize) {
+          stopReason = `Reached maximum vocabulary size (${this.state.settings.maxVocabSize})`
+        } else if (this.state.settings.breakCondition === 'noFrequentPairs' || 
+                   mostFrequent === null || mostFrequent.frequency === 1) {
+          stopReason = 'No more frequent pairs (all pairs have frequency 1)'
+        }
+        
         steps.push({
           stepNumber,
           type: 'complete',
-          description: `Algorithm complete (Compression Rate: ${compressionPercentage}%)`,
+          description: `Algorithm complete. ${stopReason}. Compression Rate: ${compressionPercentage}%`,
           tokensSnapshot: this.cloneTokens(workingTokens),
           vocabularySnapshot: this.cloneVocabulary(workingVocab)
         })

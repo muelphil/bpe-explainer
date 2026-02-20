@@ -31,6 +31,16 @@ const tokensUsed = computed(() => {
   return uniqueTokenIds.size
 })
 
+// Get set of token IDs currently used in training data
+const usedTokenIds = computed(() => {
+  return new Set(tokens.value.map(t => t.id))
+})
+
+// Check if a token is used in the current training data
+const isTokenUsed = (tokenId: number): boolean => {
+  return usedTokenIds.value.has(tokenId)
+}
+
 const handleTokenHover = (content: string | null) => {
   emit('hoverToken', content)
 }
@@ -68,7 +78,8 @@ const isTokenHighlighted = (tokenContent: string, hoveredTokenContent: string | 
           :key="token.id"
           class="token-wrapper"
           :class="{
-            'highlight-single': isTokenHighlighted(token.content, hoveredTokenContent)
+            'highlight-single': isTokenHighlighted(token.content, hoveredTokenContent),
+            'token-unused': !isTokenUsed(token.id)
           }"
           style="margin: 0; padding: 0;"
           @mouseenter="handleTokenHover(token.content)"

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue'
+import { ref, computed } from 'vue'
 import { useBPE } from './composables/useBPE'
 import MainView from './components/MainView.vue'
 import SettingsModal from './components/SettingsModal.vue'
@@ -78,15 +78,6 @@ const handleModeChange = (mode: { showSidebars: boolean, showControlPanel: boole
   showSidebars.value = mode.showSidebars
   showControlPanel.value = mode.showControlPanel
 }
-
-// Apply dark mode
-watch(() => settings.value.darkMode, (darkMode) => {
-  if (darkMode) {
-    document.documentElement.classList.add('dark')
-  } else {
-    document.documentElement.classList.remove('dark')
-  }
-}, { immediate: true })
 </script>
 
 <template>

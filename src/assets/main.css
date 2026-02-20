@@ -137,6 +137,11 @@
   display: none;
 }
 
+/* Unused token styling - slightly greyed out */
+.token-unused .token {
+  opacity: 0.4;
+}
+
 /* Single token highlight (vocabulary hover) */
 .highlight-single .token {
   background-color: var(--primary) !important;
