@@ -96,13 +96,13 @@ const handleCancel = () => {
                   @click="applyPreset('llm')"
                   class="flex-1 px-4 py-2 text-sm font-medium rounded-lg bg-primary-500 text-white hover:bg-primary-600 transition-colors"
                 >
-                  Apply LLM BPE
+                  LLM Vocab BPE
                 </button>
                 <button
                   @click="applyPreset('original')"
                   class="flex-1 px-4 py-2 text-sm font-medium rounded-lg bg-primary-500 text-white hover:bg-primary-600 transition-colors"
                 >
-                  Apply Original BPE
+                  Original BPE
                 </button>
               </div>
             </div>

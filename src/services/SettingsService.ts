@@ -7,7 +7,7 @@ const DEFAULT_SETTINGS: BPESettings = {
   breakCondition: 'maxVocabSize',
   maxVocabSize: 512,
   playSpeed: 500,
-  darkMode: false,
+  darkMode: true,
   mergingRestriction: 'llm'
 }
 

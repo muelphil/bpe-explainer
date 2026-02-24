@@ -1,3 +1,47 @@
+# Drafting 
+I now want you to plan an implementation for the full application, which should be used as an educational tool for explaining the generation of vocabularies for LLMs.
+It requires modular implementation of the different parts and the algorithm.
+
+# BPE Implementation requirements
+* Left side: main big token view, where users can put their training data, which will get tokenized and merged. Please reuse and adjust the TokenView you implemented for this.
+* Right side: different visualization and controls
+    * Frequency of tokens
+        * list of token combinations and their frequency in text, descending by frequency
+        * Collapsed view: Highest occurring token combination + how often
+        * Hovering over token pairs in this view should highlight the token pairs in the main big token view
+    * Vocabulary
+        * List of all tokens in the vocabulary, displayed as tokens (as visualized in the token view), but smaller, starting from the smallest token
+        * Collapsed view: Size of vocabulary and Last added token
+        * Compression Ratio
+        * hovering tokens should highlight them in the text view on the left
+    * Step
+        * Collapsed view: Next step, including highlighting
+        * Steps: Start Tokenization, selection of highest frequency token pair, Merge, Break condition reached
+    * Controls - next, play, previous
+        * previous does next step in a timed interval, speed configurable in the settings
+* Settings icon in the lower right corner of the main big token view, opens settings modal, allowing user to set settings such as play speed, initial vocabulary (based on trainig data characters or all bytes, dark-mode, ...)
+
+On the Right side, the 3 control/visualization sections, which are stacked vertically, all should have a collapsible header, where the header has styling setting it apart. The header contains the collapsible information.
+
+To achieve implementation, please implement a typescript service, that is responsible for orchestrating the whole thing and makes all important variables accessible, such as the current state of the vocabulary. It will be inserted into each of the components, so that the main big token view and the right side visualization and control views can all be implemented as modular views.
+
+Store for each step which token was added, so that steps are reversible. Please implement the functions necessary to carry out each of the steps (basically the byte pair algorithm) as modular function or functions, which identify the next step. They should be modular and not responsible for any visualization.
+
+Please use Tailwind CSS, lucide icons and a modern slightly techy styling for the application.
+
+---
+
+1. Initial vocabulary: This should be a setting in the settings, with options being "characters from training data" and "256 bytes", defaulting to "characters from training data"
+2. Previous step behavior: It should recompute the state before the last step that was executed in the step stack, before the current step. This obviously needs to update everything. When the algorithm starts, the steps need to be precomputed to be shown in the associated control panel, with a descriptive message for each step. It should allow the user to jump to specific steps.
+3. Break condition: This should be configurable in the options, being able to choose from max vocab size (default, let user set size, llm bpe) / no frequency higher than 1 (no pair is appearing more often than once, original bpe)
+4. Frequency list: It should show possible token combinations, going from highest to lowest frequency, capped to 20 pairs. Per pair it should display the 2 tokens and the frequency they occur in (how often it is currently found in the tokenized training data, based on the current vocabulary)
+4. Play speed range: 100ms-3000ms between steps
+
+
+---
+
+# Actual Prompts 
+
 You are in an empty Vue project. I want to implement a demo for byte-pair encoding, where users can visualize and comprehend the byte pair encoding algorithm for the creation of vocabularies for large language models.
 
 For this, I want to have different views that let the user provide settings, view steps in the algorithm, view the current vocabulary etc.
