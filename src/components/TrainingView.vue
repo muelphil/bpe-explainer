@@ -20,7 +20,7 @@ const tokenLines = computed(() => {
 
   tokens.value.forEach((token, index) => {
     currentLine.push(token)
-    
+
     if (token.content.includes('\n')) {
       lines.push({ tokens: [...currentLine], lineIndex: lineIndex++ })
       currentLine = []

@@ -6,14 +6,29 @@ const emit = defineEmits<{
   startTraining: [trainingData: string]
 }>()
 
-const selectedPresetId = ref<string | null>('lorem-ipsum')
-const trainingData = ref('')
+const LS_CUSTOM_DATA = 'bpe-custom-training-data'
+const LS_SELECTED_PRESET = 'bpe-selected-preset'
 
-// Initialize with default preset
-const defaultPreset = trainingPresets.find(p => p.id === selectedPresetId.value)
-if (defaultPreset) {
-  trainingData.value = defaultPreset.data
+const savedPresetId = localStorage.getItem(LS_SELECTED_PRESET)
+const savedCustomData = localStorage.getItem(LS_CUSTOM_DATA)
+
+// Restore: custom data takes priority if present, otherwise restore last preset
+let initialPresetId: string | null
+let initialData: string
+
+if (savedCustomData !== null) {
+  initialPresetId = null
+  initialData = savedCustomData
+} else {
+  // Fall back to saved preset id, or the default
+  const presetId = savedPresetId ?? 'lorem-ipsum'
+  const preset = trainingPresets.find(p => p.id === presetId) ?? trainingPresets.find(p => p.id === 'lorem-ipsum')
+  initialPresetId = preset?.id ?? null
+  initialData = preset?.data ?? ''
 }
+
+const selectedPresetId = ref<string | null>(initialPresetId)
+const trainingData = ref(initialData)
 
 const selectPreset = (presetId: string) => {
   selectedPresetId.value = presetId
@@ -21,17 +36,26 @@ const selectPreset = (presetId: string) => {
   if (preset) {
     trainingData.value = preset.data
   }
+  // Save selected preset; remove any stored custom data
+  localStorage.setItem(LS_SELECTED_PRESET, presetId)
+  localStorage.removeItem(LS_CUSTOM_DATA)
 }
 
 const handleInput = () => {
-  // Deselect preset when user edits
+  // Deselect preset visually when user edits — don't save yet
   selectedPresetId.value = null
 }
 
 const handleStartTraining = () => {
-  if (trainingData.value.trim()) {
-    emit('startTraining', trainingData.value)
+  if (!trainingData.value.trim()) return
+
+  // Persist state: save custom data if no preset is active, otherwise preset ID is already saved
+  if (selectedPresetId.value === null) {
+    localStorage.setItem(LS_CUSTOM_DATA, trainingData.value)
+    localStorage.removeItem(LS_SELECTED_PRESET)
   }
+
+  emit('startTraining', trainingData.value)
 }
 
 // Expose method to trigger start training from parent
