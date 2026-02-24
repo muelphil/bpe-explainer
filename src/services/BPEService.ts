@@ -340,6 +340,16 @@ export class BPEService {
     let stepNumber = 1
     let iteration = 0
 
+    // Helper: snapshot the current freqMap into the compact format stored on steps
+    const snapshotFreqMap = (): Array<{pair: [string, string], frequency: number}> =>
+      Array.from(freqMap.values())
+        .sort((a, b) => b.frequency - a.frequency)
+        .slice(0, 20)
+        .map(e => ({ pair: e.pair, frequency: e.frequency }))
+
+    // Attach initial frequencies to step 0
+    steps[0].pairFrequencies = snapshotFreqMap()
+
     while (iteration < MAX_ITERATIONS) {
       // Find most frequent pair (linear scan of the map; map is much smaller than N)
       let maxEntry: PrecomputeFreqEntry | null = null
@@ -371,6 +381,7 @@ export class BPEService {
           stepNumber,
           type: 'complete',
           description: `${stopReason}, Compression Rate: ${compressionPercentage}%`,
+          pairFrequencies: snapshotFreqMap(),
           tokenCount
         })
         break
@@ -385,6 +396,7 @@ export class BPEService {
         description: `Select most frequent pair: "${pair[0]}" + "${pair[1]}" (frequency: ${maxEntry!.frequency})`,
         selectedPair: pair,
         highlightPair: pair,
+        pairFrequencies: snapshotFreqMap(),
         tokenCount
       })
       stepNumber++
@@ -499,6 +511,7 @@ export class BPEService {
         mergedPair: pair,
         addedVocabEntry: {...newVocabEntry},
         highlightTokenContent: newContent,
+        pairFrequencies: snapshotFreqMap(),
         tokenCount
       })
       stepNumber++
@@ -513,6 +526,7 @@ export class BPEService {
         stepNumber,
         type: 'complete',
         description: `Step limit reached (${MAX_ITERATIONS} iterations), Compression Rate: ${compressionPercentage}%`,
+        pairFrequencies: snapshotFreqMap(),
         tokenCount
       })
     }
@@ -571,9 +585,6 @@ export class BPEService {
     this.state.tokens = tokens
     this.state.vocabulary = vocab
 
-    // Compute frequencies and compression directly from reconstructed tokens to
-    // avoid reading back through the Vue reactive proxy (which could have timing issues)
-    this.state.frequencies = this.calculateFrequenciesForTokens(tokens)
     this.state.compressionRatio = tokens.length > 0 ? this.state.trainingData.length / tokens.length : 1
   }
 

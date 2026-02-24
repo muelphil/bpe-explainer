@@ -37,6 +37,9 @@ export interface Step {
   // Metadata (always present for easy access)
   tokenCount: number // Number of tokens at this step
   
+  // Precomputed pair frequencies for this step (top 20, no positions needed for display)
+  pairFrequencies?: Array<{pair: [string, string], frequency: number}>
+  
   highlightPair?: [string, string] // Pair to highlight for this step (select/merge)
   highlightTokenContent?: string // Token content to highlight (for merged result)
 }

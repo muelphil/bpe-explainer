@@ -12,7 +12,9 @@ export function useBPE() {
   const currentStep = computed(() => state.currentStep)
   const tokens = computed(() => state.tokens)
   const vocabulary = computed(() => state.vocabulary)
-  const frequencies = computed(() => state.frequencies.slice(0, 20)) // Top 20
+  // Derive frequencies from precomputed step data — always exactly correct for the
+  // current step, no reactive dependency on state.tokens needed.
+  const frequencies = computed(() => state.steps[state.currentStep]?.pairFrequencies ?? [])
   const compressionRatio = computed(() => state.compressionRatio)
   const steps = computed(() => state.steps)
   const isPlaying = computed(() => state.isPlaying)
