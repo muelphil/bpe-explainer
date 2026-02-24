@@ -39,7 +39,8 @@ const tokenLines = computed(() => {
 const getGlobalIndex = (lineIndex: number, tokenIndexInLine: number): number => {
   let globalIndex = 0
   for (let i = 0; i < lineIndex; i++) {
-    globalIndex += tokenLines.value[i].tokens.length
+    // Guard against stale lineIndex during DynamicScroller re-renders (step transitions)
+    globalIndex += tokenLines.value[i]?.tokens.length ?? 0
   }
   return globalIndex + tokenIndexInLine
 }

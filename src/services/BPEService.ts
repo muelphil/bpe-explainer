@@ -1,8 +1,30 @@
-import {reactive} from 'vue'
+import {reactive, markRaw} from 'vue'
 import type {BPEState, BPESettings, Token, VocabEntry, PairFrequency, Step} from './types'
 import {getTokenColor} from '../utils/tokenColor'
 import {canMergePair} from './mergeRestrictions'
 import { SettingsService } from './SettingsService'
+
+// ---------------------------------------------------------------------------
+// Private types for precomputeSteps() incremental algorithm (Finding 2)
+// ---------------------------------------------------------------------------
+type PrecomputeNode = {
+  content: string
+  id: number
+  color: string
+  prev: PrecomputeNode | null
+  next: PrecomputeNode | null
+  deleted: boolean
+}
+
+type PrecomputeFreqEntry = {
+  pair: [string, string]
+  frequency: number
+  /** Head node (left token) of each occurrence of this pair in the linked list. */
+  headNodes: PrecomputeNode[]
+}
+
+// Maximum BPE iterations allowed regardless of break condition (Finding 8)
+const MAX_ITERATIONS = 2_000
 
 export class BPEService {
   private state: BPEState
@@ -108,19 +130,35 @@ export class BPEService {
    * Tokenize training data into initial tokens
    */
   private tokenizeTrainingData(trainingData: string): void {
-    this.state.tokens = trainingData.split('').map(char => {
-      // Find the vocabulary entry for this character
-      const vocabEntry = this.state.vocabulary.find(v => v.content === char)
-      if (!vocabEntry) {
+    // Build a Map for O(1) lookup instead of O(V) find() per character (Finding 5)
+    const vocabMap = new Map<string, VocabEntry>()
+    for (const entry of this.state.vocabulary) {
+      vocabMap.set(entry.content, entry)
+    }
+
+    const tokens: Token[] = []
+    // Use for...of to correctly iterate Unicode code points (not UTF-16 code units)
+    for (const char of trainingData) {
+      const vocabEntry = vocabMap.get(char)
+      if (vocabEntry) {
+        tokens.push({ id: vocabEntry.id, content: char, color: vocabEntry.color, skipAnimation: true })
+      } else if (this.state.settings.initialVocab === 'bytes') {
+        // Character falls outside the 256-byte range (charCode > 255).
+        // Encode as UTF-8 bytes and map each byte to its vocabulary entry.
+        const encoded = new TextEncoder().encode(char)
+        for (const byte of encoded) {
+          const byteChar = String.fromCharCode(byte)
+          const byteEntry = vocabMap.get(byteChar)
+          if (!byteEntry) {
+            throw new Error(`Byte 0x${byte.toString(16)} not found in vocabulary`)
+          }
+          tokens.push({ id: byteEntry.id, content: byteChar, color: byteEntry.color, skipAnimation: true })
+        }
+      } else {
         throw new Error(`Character "${char}" not found in vocabulary`)
       }
-      return {
-        id: vocabEntry.id, // Use vocabulary ID, not sequential position
-        content: char,
-        color: vocabEntry.color,
-        skipAnimation: true
-      }
-    })
+    }
+    this.state.tokens = tokens
   }
 
   /**
@@ -212,17 +250,8 @@ export class BPEService {
         })
         i += 2 // Skip both tokens
       } else {
-        // Ensure existing token uses vocabulary ID
-        const currentToken = this.state.tokens[i]
-        const vocabEntry = this.state.vocabulary.find(v => v.content === currentToken.content)
-        if (vocabEntry && currentToken) {
-          newTokens.push({
-            ...currentToken,
-            id: vocabEntry.id
-          })
-        } else if (currentToken) {
-          newTokens.push(currentToken)
-        }
+        const token = this.state.tokens[i]
+        if (token) newTokens.push(token)
         i++
       }
     }
@@ -245,14 +274,18 @@ export class BPEService {
   }
 
   /**
-   * Precompute all steps for the algorithm
-   * Uses delta-based approach: only step 0 stores full snapshots,
-   * subsequent steps store only the merge deltas
+   * Precompute all steps for the algorithm.
+   *
+   * Uses a doubly-linked list + incremental frequency-map approach (Finding 2):
+   * instead of rescanning all N tokens every step, only the O(occurrences)
+   * pairs adjacent to each merge site are updated.  No full token array is
+   * rebuilt per step; deltas are stored as (mergedPair, addedVocabEntry).
    */
   precomputeSteps(): void {
     const steps: Step[] = []
+    const restriction = this.state.settings.mergingRestriction
 
-    // Step 0: Initial tokenization (full snapshot)
+    // Step 0: initial tokenization snapshot (full clone, done only once)
     const initialTokens = this.cloneTokens(this.state.tokens)
     steps.push({
       stepNumber: 0,
@@ -263,65 +296,102 @@ export class BPEService {
       tokenCount: initialTokens.length
     })
 
+    // ── Build doubly-linked list from initial tokens ──────────────────────────
+    let listHead: PrecomputeNode | null = null
+    let listTail: PrecomputeNode | null = null
+    for (const token of this.state.tokens) {
+      const node: PrecomputeNode = {
+        content: token.content,
+        id: token.id,
+        color: token.color,
+        prev: listTail,
+        next: null,
+        deleted: false
+      }
+      if (listTail) listTail.next = node
+      else listHead = node
+      listTail = node
+    }
+
+    // ── Working vocab: Map for O(1) lookup + size counter ────────────────────
+    const workingVocabMap = new Map<string, VocabEntry>()
+    for (const entry of this.state.vocabulary) {
+      workingVocabMap.set(entry.content, entry)
+    }
+    let workingVocabSize = this.state.vocabulary.length
+
+    // ── Build initial frequency map with headNodes ───────────────────────────
+    // Each entry stores the head (left) node of every occurrence of that pair,
+    // enabling targeted incremental updates instead of a full rescan.
+    const freqMap = new Map<string, PrecomputeFreqEntry>()
+    for (let node = listHead; node?.next; node = node.next) {
+      if (!canMergePair(node.content, node.next.content, restriction)) continue
+      const key = `${node.content}|${node.next.content}`
+      const entry = freqMap.get(key)
+      if (entry) {
+        entry.frequency++
+        entry.headNodes.push(node)
+      } else {
+        freqMap.set(key, { pair: [node.content, node.next.content], frequency: 1, headNodes: [node] })
+      }
+    }
+
+    let tokenCount = this.state.tokens.length
     let stepNumber = 1
+    let iteration = 0
 
-    // Create a working copy of state for computing steps
-    const workingTokens = this.cloneTokens(this.state.tokens)
-    const workingVocab = this.cloneVocabulary(this.state.vocabulary)
+    while (iteration < MAX_ITERATIONS) {
+      // Find most frequent pair (linear scan of the map; map is much smaller than N)
+      let maxEntry: PrecomputeFreqEntry | null = null
+      for (const entry of freqMap.values()) {
+        if (!maxEntry || entry.frequency > maxEntry.frequency) maxEntry = entry
+      }
 
-    while (true) {
-      // Calculate frequencies on working copy
-      const frequencies = this.calculateFrequenciesForTokens(workingTokens)
-      const mostFrequent = frequencies.length > 0 ? frequencies[0] : null
+      // ── Check break conditions ─────────────────────────────────────────────
+      const vocabFull =
+        this.state.settings.breakCondition === 'maxVocabSize' &&
+        workingVocabSize >= this.state.settings.maxVocabSize
+      const noPairs =
+        this.state.settings.breakCondition === 'noFrequentPairs' &&
+        (maxEntry === null || maxEntry.frequency <= 1)
+      const exhausted = maxEntry === null
 
-      // Check break condition
-      const shouldStop =
-        (this.state.settings.breakCondition === 'maxVocabSize' &&
-          workingVocab.length >= this.state.settings.maxVocabSize) ||
-        (this.state.settings.breakCondition === 'noFrequentPairs' &&
-          (mostFrequent === null || mostFrequent.frequency === 1))
-
-      if (shouldStop || mostFrequent === null) {
-        const compressionRatio = this.state.trainingData.length / workingTokens.length
+      if (vocabFull || noPairs || exhausted) {
+        const compressionRatio = this.state.trainingData.length / tokenCount
         const compressionPercentage = ((1 - 1 / compressionRatio) * 100).toFixed(1)
-
-        // Determine stop reason
-        let stopReason = ''
-        if (this.state.settings.breakCondition === 'maxVocabSize' &&
-            workingVocab.length >= this.state.settings.maxVocabSize) {
+        let stopReason: string
+        if (vocabFull) {
           stopReason = `Reached maximum vocabulary size (${this.state.settings.maxVocabSize})`
-        } else if (this.state.settings.breakCondition === 'noFrequentPairs' ||
-                   mostFrequent === null || mostFrequent.frequency === 1) {
+        } else if (iteration >= MAX_ITERATIONS) {
+          stopReason = `Step limit reached (${MAX_ITERATIONS} iterations)`
+        } else {
           stopReason = 'All pairs have frequency 1'
         }
-
-        // Complete step - no delta, as it doesn't change state
         steps.push({
           stepNumber,
           type: 'complete',
           description: `${stopReason}, Compression Rate: ${compressionPercentage}%`,
-          tokenCount: workingTokens.length
+          tokenCount
         })
         break
       }
 
-      // Selection step - no delta, as it doesn't change state
-      const pair = mostFrequent.pair
+      const pair = maxEntry!.pair
+
+      // ── Select step (reads state only, no mutation) ───────────────────────
       steps.push({
         stepNumber,
         type: 'select',
-        description: `Select most frequent pair: "${pair[0]}" + "${pair[1]}" (frequency: ${mostFrequent.frequency})`,
+        description: `Select most frequent pair: "${pair[0]}" + "${pair[1]}" (frequency: ${maxEntry!.frequency})`,
         selectedPair: pair,
-        highlightPair: pair, // Highlight the selected pair
-        tokenCount: workingTokens.length
+        highlightPair: pair,
+        tokenCount
       })
       stepNumber++
 
-      // Merge step - store delta (pair merged + vocab entry added)
+      // ── Get or create vocab entry for merged content ──────────────────────
       const newContent = pair[0] + pair[1]
-
-      // Get or create vocabulary entry
-      let newVocabEntry = workingVocab.find(v => v.content === newContent)
+      let newVocabEntry = workingVocabMap.get(newContent)
       if (!newVocabEntry) {
         newVocabEntry = {
           id: this.nextVocabId++,
@@ -329,62 +399,126 @@ export class BPEService {
           color: getTokenColor(newContent),
           addedAtStep: stepNumber
         }
-        workingVocab.push(newVocabEntry)
+        workingVocabMap.set(newContent, newVocabEntry)
+        workingVocabSize++
       }
 
-      // Perform merge on working tokens
-      const newTokens: Token[] = []
-      let i = 0
-      while (i < workingTokens.length) {
-        if (
-          i < workingTokens.length - 1 &&
-          workingTokens[i].content === pair[0] &&
-          workingTokens[i + 1].content === pair[1]
-        ) {
-          newTokens.push({
-            id: newVocabEntry.id,
-            content: newContent,
-            color: newVocabEntry.color,
-            skipAnimation: true
-          })
-          i += 2
-        } else {
-          // Ensure token uses vocabulary ID
-          const currentToken = workingTokens[i]
-          const vocabEntry = workingVocab.find(v => v.content === currentToken.content)
-          if (vocabEntry && currentToken) {
-            newTokens.push({
-              ...currentToken,
-              id: vocabEntry.id
-            })
-          } else if (currentToken) {
-            newTokens.push(currentToken)
+      // ── Incremental merge: update linked list + freq map ──────────────────
+      const [A, B] = pair
+      const abEntry = freqMap.get(`${A}|${B}`)!
+      const headNodes = abEntry.headNodes.slice() // snapshot before mutation
+      let mergeCount = 0
+
+      for (const nodeA of headNodes) {
+        // Node may have been consumed by a previous merge in this same pass
+        // (possible when pair overlaps, e.g. (a,a) in [a,a,a])
+        if (nodeA.deleted) continue
+        const nodeB = nodeA.next
+        if (!nodeB || nodeB.deleted || nodeB.content !== B) continue
+
+        const prevNode = nodeA.prev
+        const nextNode = nodeB.next
+
+        // Remove left context pair (prevNode.content, A)
+        if (prevNode && !prevNode.deleted) {
+          const leftKey = `${prevNode.content}|${A}`
+          const leftEntry = freqMap.get(leftKey)
+          if (leftEntry) {
+            leftEntry.frequency--
+            const idx = leftEntry.headNodes.indexOf(prevNode)
+            if (idx !== -1) leftEntry.headNodes.splice(idx, 1)
+            if (leftEntry.frequency <= 0) freqMap.delete(leftKey)
           }
-          i++
         }
+
+        // Remove right context pair (B, nextNode.content)
+        if (nextNode && !nextNode.deleted) {
+          const rightKey = `${B}|${nextNode.content}`
+          const rightEntry = freqMap.get(rightKey)
+          if (rightEntry) {
+            rightEntry.frequency--
+            const idx = rightEntry.headNodes.indexOf(nodeB)
+            if (idx !== -1) rightEntry.headNodes.splice(idx, 1)
+            if (rightEntry.frequency <= 0) freqMap.delete(rightKey)
+          }
+        }
+
+        // Create merged node and re-link
+        const nodeAB: PrecomputeNode = {
+          content: newContent,
+          id: newVocabEntry.id,
+          color: newVocabEntry.color,
+          prev: prevNode,
+          next: nextNode,
+          deleted: false
+        }
+        if (prevNode) prevNode.next = nodeAB
+        else listHead = nodeAB
+        if (nextNode) nextNode.prev = nodeAB
+        nodeA.deleted = true
+        nodeB.deleted = true
+
+        // Add new left context pair (prevNode.content, AB)
+        if (prevNode && !prevNode.deleted && canMergePair(prevNode.content, newContent, restriction)) {
+          const newLeftKey = `${prevNode.content}|${newContent}`
+          const entry = freqMap.get(newLeftKey)
+          if (entry) {
+            entry.frequency++
+            entry.headNodes.push(prevNode)
+          } else {
+            freqMap.set(newLeftKey, { pair: [prevNode.content, newContent], frequency: 1, headNodes: [prevNode] })
+          }
+        }
+
+        // Add new right context pair (AB, nextNode.content)
+        if (nextNode && !nextNode.deleted && canMergePair(newContent, nextNode.content, restriction)) {
+          const newRightKey = `${newContent}|${nextNode.content}`
+          const entry = freqMap.get(newRightKey)
+          if (entry) {
+            entry.frequency++
+            entry.headNodes.push(nodeAB)
+          } else {
+            freqMap.set(newRightKey, { pair: [newContent, nextNode.content], frequency: 1, headNodes: [nodeAB] })
+          }
+        }
+
+        mergeCount++
       }
 
-      // Store merge step with delta information
+      // Remove the fully-merged pair from the map
+      freqMap.delete(`${A}|${B}`)
+      tokenCount -= mergeCount
+
+      // ── Merge step delta (only what's needed for reconstruction) ─────────
       steps.push({
         stepNumber,
         type: 'merge',
-        description: `Merged "${pair[0]}" + "${pair[1]}" → "${newContent}"`,
+        description: `Merged "${A}" + "${B}" → "${newContent}"`,
         selectedPair: pair,
         addedToken: newVocabEntry,
-        // Delta fields for reconstruction
         mergedPair: pair,
-        addedVocabEntry: {...newVocabEntry}, // Clone to avoid reference issues
-        highlightTokenContent: newContent, // Highlight the newly merged token
-        tokenCount: newTokens.length
+        addedVocabEntry: {...newVocabEntry},
+        highlightTokenContent: newContent,
+        tokenCount
       })
       stepNumber++
-
-      workingTokens.splice(0, workingTokens.length, ...newTokens)
+      iteration++
     }
 
-    this.state.steps = steps
-    
-    // Clear cache since we have new steps
+    // Handle MAX_ITERATIONS cap: push complete step if loop exited via counter
+    if (iteration >= MAX_ITERATIONS && steps[steps.length - 1]?.type !== 'complete') {
+      const compressionRatio = this.state.trainingData.length / tokenCount
+      const compressionPercentage = ((1 - 1 / compressionRatio) * 100).toFixed(1)
+      steps.push({
+        stepNumber,
+        type: 'complete',
+        description: `Step limit reached (${MAX_ITERATIONS} iterations), Compression Rate: ${compressionPercentage}%`,
+        tokenCount
+      })
+    }
+
+    // markRaw prevents Vue from deeply proxying the immutable steps array (Finding 9)
+    this.state.steps = markRaw(steps)
     this.stepCache.clear()
   }
 
@@ -437,7 +571,10 @@ export class BPEService {
     this.state.tokens = tokens
     this.state.vocabulary = vocab
 
-    this.updateFrequenciesAndCompression()
+    // Compute frequencies and compression directly from reconstructed tokens to
+    // avoid reading back through the Vue reactive proxy (which could have timing issues)
+    this.state.frequencies = this.calculateFrequenciesForTokens(tokens)
+    this.state.compressionRatio = tokens.length > 0 ? this.state.trainingData.length / tokens.length : 1
   }
 
   /**

@@ -3,6 +3,46 @@
  * These functions determine which token pairs can be merged based on different modes
  */
 
+// ---------------------------------------------------------------------------
+// Token-type cache (Finding 3)
+// ---------------------------------------------------------------------------
+// Each unique token content is classified once and stored here, replacing
+// repeated regex calls (4–7 per pair) with a single Map lookup.
+
+const enum TT {
+  Newline   = 0,
+  Whitespace = 1,
+  Number    = 2,
+  Letter    = 3,
+  Symbol    = 4,
+  Mixed     = 5,
+}
+
+type TokenTypeInfo = {
+  t: TT
+  /** Whether the content starts with an ASCII letter or digit. */
+  startsAlpha: boolean
+}
+
+const tokenTypeCache = new Map<string, TokenTypeInfo>()
+
+function getTokenTypeInfo(content: string): TokenTypeInfo {
+  const cached = tokenTypeCache.get(content)
+  if (cached !== undefined) return cached
+
+  let t: TT
+  if (/^[\n]+$/.test(content))             t = TT.Newline
+  else if (/^[ \t]+$/.test(content))       t = TT.Whitespace
+  else if (/^[0-9]+$/.test(content))       t = TT.Number
+  else if (/^[a-zA-Z]+$/.test(content))    t = TT.Letter
+  else if (/^[^a-zA-Z0-9\s]+$/.test(content)) t = TT.Symbol
+  else                                     t = TT.Mixed
+
+  const info: TokenTypeInfo = { t, startsAlpha: /^[a-zA-Z0-9]/.test(content) }
+  tokenTypeCache.set(content, info)
+  return info
+}
+
 /**
  * None mode: No restrictions - any adjacent tokens can be merged
  */
@@ -22,62 +62,34 @@ export function canMergeNoneMode(token1: string, token2: string): boolean {
  * 6. Mixed tokens (already merged, e.g., "hello123") can join with alphanumeric
  */
 export function canMergeLLMMode(token1: string, token2: string): boolean {
+  const { t: t1 } = getTokenTypeInfo(token1)
+  const { t: t2, startsAlpha: t2StartsAlpha } = getTokenTypeInfo(token2)
+
   // Rule 1: Newlines can ONLY join with other newlines
-  const token1HasNewline = token1.includes('\n')
-  const token2HasNewline = token2.includes('\n')
-
-  if (token1HasNewline || token2HasNewline) {
-    // Both must consist ONLY of newlines (any number: \n, \n\n, etc.)
-    const token1OnlyNewlines = /^[\n]+$/.test(token1)
-    const token2OnlyNewlines = /^[\n]+$/.test(token2)
-    return token1OnlyNewlines && token2OnlyNewlines
+  if (t1 === TT.Newline || t2 === TT.Newline) {
+    return t1 === TT.Newline && t2 === TT.Newline
   }
 
-  // Rule 2: Non-newline whitespace (spaces, tabs) can join together
-  const isToken1Whitespace = /^[ \t]+$/.test(token1) // Only spaces/tabs, not newlines
-  const isToken2Whitespace = /^[ \t]+$/.test(token2)
-
-  if(isToken1Whitespace && token1.length > 1 && !isToken2Whitespace){
-    return false;
+  // Rule 2: Whitespace handling
+  if (t1 === TT.Whitespace) {
+    if (token1.length > 1 && t2 !== TT.Whitespace) return false
+    if (t2 === TT.Whitespace) return true
+    // single-char whitespace + non-whitespace falls through to mixed rule
   }
-
-  if (isToken1Whitespace && isToken2Whitespace) {
-    return true
-  }
-
-  // Classify tokens as pure numbers, pure letters, pure symbols, or mixed
-  const token1IsPureNumber = /^[0-9]+$/.test(token1)
-  const token2IsPureNumber = /^[0-9]+$/.test(token2)
-  const token1IsPureLetter = /^[a-zA-Z]+$/.test(token1)
-  const token2IsPureLetter = /^[a-zA-Z]+$/.test(token2)
-  const token1IsPureSymbol = /^[^a-zA-Z0-9\s]+$/.test(token1) // Not alphanumeric, not whitespace
-  const token2IsPureSymbol = /^[^a-zA-Z0-9\s]+$/.test(token2)
+  if (t2 === TT.Whitespace) return false // non-whitespace left + whitespace right
 
   // Rule 3: Pure numbers can only join with pure numbers
-  if (token1IsPureNumber && !token2IsPureNumber) {
-    return false
-  }
+  if (t1 === TT.Number) return t2 === TT.Number
 
   // Rule 4: Pure letters can only join with pure letters
-  if (token1IsPureLetter && !token2IsPureLetter) {
-    return false
-  }
+  if (t1 === TT.Letter) return t2 === TT.Letter
 
   // Rule 5: Pure symbols can only join with pure symbols
-  if (token1IsPureSymbol && !token2IsPureSymbol) {
-    return false
-  }
+  if (t1 === TT.Symbol) return t2 === TT.Symbol
 
-  // If left token is whitespace (already handled above) or mixed,
+  // Left is whitespace (single-char, fell through) or mixed:
   // right token must start with alphanumeric
-  if (!token1IsPureNumber && !token1IsPureLetter && !token1IsPureSymbol) {
-    // Left is whitespace or mixed token
-    return /^[a-zA-Z0-9]/.test(token2)
-  }
-
-  // If we get here, both tokens are of the same pure type
-  // (both numbers, both letters, or both symbols)
-  return true
+  return t2StartsAlpha
 }
 
 /**
