@@ -82,8 +82,8 @@ const handleCancel = () => {
                 </label>
                 <button
                   class="group relative"
-                  @mouseenter="$event => $event.currentTarget.querySelector('.tooltip').classList.remove('opacity-0')"
-                  @mouseleave="$event => $event.currentTarget.querySelector('.tooltip').classList.add('opacity-0')"
+                  @mouseenter="$event => ($event.currentTarget as HTMLElement).querySelector('.tooltip')?.classList.remove('opacity-0')"
+                  @mouseleave="$event => ($event.currentTarget as HTMLElement).querySelector('.tooltip')?.classList.add('opacity-0')"
                 >
                   <Info :size="16" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300" />
                   <span class="tooltip absolute right-0 top-6 w-72 p-2 bg-slate-900 dark:bg-slate-700 text-white text-xs rounded opacity-0 transition-opacity pointer-events-none z-10">
@@ -115,8 +115,8 @@ const handleCancel = () => {
                 </label>
                 <button
                   class="group relative"
-                  @mouseenter="$event => $event.currentTarget.querySelector('.tooltip').classList.remove('opacity-0')"
-                  @mouseleave="$event => $event.currentTarget.querySelector('.tooltip').classList.add('opacity-0')"
+                  @mouseenter="$event => ($event.currentTarget as HTMLElement).querySelector('.tooltip')?.classList.remove('opacity-0')"
+                  @mouseleave="$event => ($event.currentTarget as HTMLElement).querySelector('.tooltip')?.classList.add('opacity-0')"
                 >
                   <Info :size="16" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300" />
                   <span class="tooltip absolute right-0 top-6 w-64 p-2 bg-slate-900 dark:bg-slate-700 text-white text-xs rounded opacity-0 transition-opacity pointer-events-none z-10">
@@ -141,8 +141,8 @@ const handleCancel = () => {
                 </label>
                 <button
                   class="group relative"
-                  @mouseenter="$event => $event.currentTarget.querySelector('.tooltip').classList.remove('opacity-0')"
-                  @mouseleave="$event => $event.currentTarget.querySelector('.tooltip').classList.add('opacity-0')"
+                  @mouseenter="$event => ($event.currentTarget as HTMLElement).querySelector('.tooltip')?.classList.remove('opacity-0')"
+                  @mouseleave="$event => ($event.currentTarget as HTMLElement).querySelector('.tooltip')?.classList.add('opacity-0')"
                 >
                   <Info :size="16" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300" />
                   <span class="tooltip absolute right-0 top-6 w-64 p-2 bg-slate-900 dark:bg-slate-700 text-white text-xs rounded opacity-0 transition-opacity pointer-events-none z-10">
@@ -167,8 +167,8 @@ const handleCancel = () => {
                 </label>
                 <button
                   class="group relative"
-                  @mouseenter="$event => $event.currentTarget.querySelector('.tooltip').classList.remove('opacity-0')"
-                  @mouseleave="$event => $event.currentTarget.querySelector('.tooltip').classList.add('opacity-0')"
+                  @mouseenter="$event => ($event.currentTarget as HTMLElement).querySelector('.tooltip')?.classList.remove('opacity-0')"
+                  @mouseleave="$event => ($event.currentTarget as HTMLElement).querySelector('.tooltip')?.classList.add('opacity-0')"
                 >
                   <Info :size="16" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300" />
                   <span class="tooltip absolute right-0 top-6 w-64 p-2 bg-slate-900 dark:bg-slate-700 text-white text-xs rounded opacity-0 transition-opacity pointer-events-none z-10">
@@ -193,8 +193,8 @@ const handleCancel = () => {
                 </label>
                 <button
                   class="group relative"
-                  @mouseenter="$event => $event.currentTarget.querySelector('.tooltip').classList.remove('opacity-0')"
-                  @mouseleave="$event => $event.currentTarget.querySelector('.tooltip').classList.add('opacity-0')"
+                  @mouseenter="$event => ($event.currentTarget as HTMLElement).querySelector('.tooltip')?.classList.remove('opacity-0')"
+                  @mouseleave="$event => ($event.currentTarget as HTMLElement).querySelector('.tooltip')?.classList.add('opacity-0')"
                 >
                   <Info :size="16" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300" />
                   <span class="tooltip absolute right-0 top-6 w-64 p-2 bg-slate-900 dark:bg-slate-700 text-white text-xs rounded opacity-0 transition-opacity pointer-events-none z-10">
@@ -223,8 +223,8 @@ const handleCancel = () => {
                 </label>
                 <button
                   class="group relative"
-                  @mouseenter="$event => $event.currentTarget.querySelector('.tooltip').classList.remove('opacity-0')"
-                  @mouseleave="$event => $event.currentTarget.querySelector('.tooltip').classList.add('opacity-0')"
+                  @mouseenter="$event => ($event.currentTarget as HTMLElement).querySelector('.tooltip')?.classList.remove('opacity-0')"
+                  @mouseleave="$event => ($event.currentTarget as HTMLElement).querySelector('.tooltip')?.classList.add('opacity-0')"
                 >
                   <Info :size="16" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300" />
                   <span class="tooltip absolute right-0 top-6 w-64 p-2 bg-slate-900 dark:bg-slate-700 text-white text-xs rounded opacity-0 transition-opacity pointer-events-none z-10">

@@ -67,7 +67,7 @@ defineExpose({
 <template>
   <div class="flex flex-col h-full">
     <!-- Content -->
-    <div class="flex-1 overflow-y-auto px-6 py-6 flex flex-col">
+    <div class="flex-1 overflow-y-auto px-2 sm:px-6 py-2 sm:py-6 flex flex-col">
       <div class="w-full flex flex-col flex-1">
         <!-- Message -->
         <p class="text-slate-600 dark:text-slate-400 mb-4">
@@ -108,7 +108,7 @@ defineExpose({
     </div>
 
     <!-- Start Training Button - Fixed at bottom -->
-    <div class="px-6 pb-6">
+    <div class="px-2 sm:px-6 pb-2 sm:pb-6">
       <div class="w-full">
         <button
           @click="handleStartTraining"

@@ -83,7 +83,7 @@ const isPairRight = (globalIndex: number, hoveredPair: [string, string] | null):
     <DynamicScroller
       :items="tokenLines"
       :min-item-size="30"
-      class="flex-1 p-6"
+      class="flex-1 p-2 sm:p-6"
       key-field="lineIndex"
     >
       <template #default="{ item, index, active }">
@@ -101,8 +101,8 @@ const isPairRight = (globalIndex: number, hoveredPair: [string, string] | null):
                 class="token-wrapper"
                 :class="{
                   'highlight-single': isTokenHighlightedSingle(token, hoveredTokenContent),
-                  'highlight-left': isPairLeft(getGlobalIndex(item.lineIndex, tokenIndex), hoveredPair),
-                  'highlight-right': isPairRight(getGlobalIndex(item.lineIndex, tokenIndex), hoveredPair),
+                  'highlight-left': isPairLeft(getGlobalIndex(item.lineIndex, tokenIndex as number), hoveredPair),
+                  'highlight-right': isPairRight(getGlobalIndex(item.lineIndex, tokenIndex as number), hoveredPair),
                 }"
               >
                 <span

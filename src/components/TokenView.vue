@@ -121,8 +121,8 @@ function canMerge(): boolean {
 
   // Check that all pairs are adjacent
   for (let i = 0; i < selectedIndices.value.length; i += 2) {
-    const idx1 = selectedIndices.value[i]
-    const idx2 = selectedIndices.value[i + 1]
+    const idx1 = selectedIndices.value[i]!
+    const idx2 = selectedIndices.value[i + 1]!
     if (idx2 !== idx1 + 1) return false
   }
 
@@ -135,14 +135,14 @@ async function mergeTokens() {
   // Extract all pairs to merge
   const pairs: [number, number][] = []
   for (let i = 0; i < selectedIndices.value.length; i += 2) {
-    pairs.push([selectedIndices.value[i], selectedIndices.value[i + 1]])
+    pairs.push([selectedIndices.value[i]!, selectedIndices.value[i + 1]!])
   }
 
   // Calculate new colors for all pairs
   const mergeData = pairs.map(([idx1, idx2]) => {
-    const newContent = tokens.value[idx1].content + tokens.value[idx2].content
+    const newContent = tokens.value[idx1]!.content + tokens.value[idx2]!.content
     return {
-      indices: [idx1, idx2],
+      indices: [idx1, idx2] as [number, number],
       content: newContent,
       color: getTokenColor(newContent)
     }
@@ -157,7 +157,7 @@ async function mergeTokens() {
   // Merge all pairs (process in reverse order to maintain indices)
   let newTokens = [...tokens.value]
   for (let i = mergeData.length - 1; i >= 0; i--) {
-    const { indices: [idx1, idx2], content, color } = mergeData[i]
+    const { indices: [idx1, idx2], content, color } = mergeData[i]!
     const newToken: Token = {
       id: nextTokenId++,
       content,
@@ -183,10 +183,10 @@ function getMergingColor(index: number): string {
 
   // Find which pair this index belongs to
   for (let i = 0; i < selectedIndices.value.length; i += 2) {
-    const idx1 = selectedIndices.value[i]
-    const idx2 = selectedIndices.value[i + 1]
+    const idx1 = selectedIndices.value[i]!
+    const idx2 = selectedIndices.value[i + 1]!
     if (index === idx1 || index === idx2) {
-      const newContent = tokens.value[idx1].content + tokens.value[idx2].content
+      const newContent = tokens.value[idx1]!.content + tokens.value[idx2]!.content
       return getTokenColor(newContent)
     }
   }
@@ -224,11 +224,11 @@ const isInSelection = (index: number) => {
   return selectedIndices.value.includes(index)
 }
 
-const getSelectionPairEnd = (startIndex: number) => {
+const getSelectionPairEnd = (startIndex: number): number => {
   // Find the pair end for this start index
   for (let i = 0; i < selectedIndices.value.length; i += 2) {
     if (selectedIndices.value[i] === startIndex) {
-      return selectedIndices.value[i + 1]
+      return selectedIndices.value[i + 1]!
     }
   }
   return startIndex
@@ -236,6 +236,7 @@ const getSelectionPairEnd = (startIndex: number) => {
 
 const isTokenSelected = (index: number) => selectedIndices.value.includes(index)
 const isTokenMerging = (index: number) => mergingIndices.value.includes(index)
+const getTokenAt = (index: number) => tokens.value[index] as Token
 
 const isMergingLeft = (index: number) => {
   // Check if this index is the left token of any merging pair
@@ -308,14 +309,14 @@ const isMergingRight = (index: number) => {
             >
               <span
                 class="token"
-                :class="{ 'skip-animation': tokens[getSelectionPairEnd(index)].skipAnimation }"
+                :class="{ 'skip-animation': getTokenAt(getSelectionPairEnd(index)).skipAnimation }"
                 :style="{
-                  backgroundColor: getMergingColor(getSelectionPairEnd(index)) || tokens[getSelectionPairEnd(index)].color,
+                  backgroundColor: getMergingColor(getSelectionPairEnd(index)) || getTokenAt(getSelectionPairEnd(index)).color,
                   animationDuration: `${animationDuration}ms`
                 }"
               >
-                <span class="token-content">{{ displayTokenContent(tokens[getSelectionPairEnd(index)].content) }}</span>
-                <span class="token-id">{{ tokens[getSelectionPairEnd(index)].id }}</span>
+                <span class="token-content">{{ displayTokenContent(getTokenAt(getSelectionPairEnd(index)).content) }}</span>
+                <span class="token-id">{{ getTokenAt(getSelectionPairEnd(index)).id }}</span>
               </span>
             </span>
           </span>

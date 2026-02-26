@@ -185,8 +185,8 @@ export class BPEService {
     const frequencyMap = new Map<string, PairFrequency>()
 
     for (let i = 0; i < this.state.tokens.length - 1; i++) {
-      const token1 = this.state.tokens[i].content
-      const token2 = this.state.tokens[i + 1].content
+      const token1 = this.state.tokens[i]!.content
+      const token2 = this.state.tokens[i + 1]!.content
 
       // Check if this pair can be merged based on current restriction mode
       if (!canMergePair(token1, token2, this.state.settings.mergingRestriction)) {
@@ -218,7 +218,7 @@ export class BPEService {
    */
   findMostFrequentPair(): PairFrequency | null {
     const frequencies = this.calculateFrequencies()
-    return frequencies.length > 0 ? frequencies[0] : null
+    return frequencies.length > 0 ? frequencies[0]! : null
   }
 
   /**
@@ -238,8 +238,8 @@ export class BPEService {
     while (i < this.state.tokens.length) {
       if (
         i < this.state.tokens.length - 1 &&
-        this.state.tokens[i].content === token1 &&
-        this.state.tokens[i + 1].content === token2
+        this.state.tokens[i]!.content === token1 &&
+        this.state.tokens[i + 1]!.content === token2
       ) {
         // Merge this pair
         newTokens.push({
@@ -348,7 +348,7 @@ export class BPEService {
         .map(e => ({ pair: e.pair, frequency: e.frequency }))
 
     // Attach initial frequencies to step 0
-    steps[0].pairFrequencies = snapshotFreqMap()
+    steps[0]!.pairFrequencies = snapshotFreqMap()
 
     while (iteration < MAX_ITERATIONS) {
       // Find most frequent pair (linear scan of the map; map is much smaller than N)
@@ -543,8 +543,8 @@ export class BPEService {
     const frequencyMap = new Map<string, PairFrequency>()
 
     for (let i = 0; i < tokens.length - 1; i++) {
-      const token1 = tokens[i].content
-      const token2 = tokens[i + 1].content
+      const token1 = tokens[i]!.content
+      const token2 = tokens[i + 1]!.content
 
       // Check if this pair can be merged based on current restriction mode
       if (!canMergePair(token1, token2, this.state.settings.mergingRestriction)) {
@@ -693,7 +693,7 @@ export class BPEService {
     const positions: number[][] = []
 
     for (let i = 0; i < this.state.tokens.length - 1; i++) {
-      const pairKey = `${this.state.tokens[i].content}|${this.state.tokens[i + 1].content}`
+      const pairKey = `${this.state.tokens[i]!.content}|${this.state.tokens[i + 1]!.content}`
       if (this.state.highlightedPairs.has(pairKey)) {
         positions.push([i, i + 1])
       }
@@ -727,8 +727,8 @@ export class BPEService {
     while (i < tokens.length) {
       if (
         i < tokens.length - 1 &&
-        tokens[i].content === token1 &&
-        tokens[i + 1].content === token2
+        tokens[i]!.content === token1 &&
+        tokens[i + 1]!.content === token2
       ) {
         // Merge this pair
         newTokens.push({
@@ -740,7 +740,7 @@ export class BPEService {
         i += 2 // Skip both tokens
       } else {
         // Keep existing token
-        newTokens.push({...tokens[i]})
+        newTokens.push({...tokens[i]!})
         i++
       }
     }
@@ -764,7 +764,7 @@ export class BPEService {
 
     // Step 0 always has full snapshot
     if (targetStep === 0) {
-      const step0 = this.state.steps[0]
+      const step0 = this.state.steps[0]!
       const result = {
         tokens: this.cloneTokens(step0.tokensSnapshot!),
         vocab: this.cloneVocabulary(step0.vocabularySnapshot!)
@@ -780,21 +780,21 @@ export class BPEService {
     // Find the nearest checkpoint (every 20 steps or step 0)
     const CHECKPOINT_INTERVAL = 20
     let startStep = Math.floor(targetStep / CHECKPOINT_INTERVAL) * CHECKPOINT_INTERVAL
-    
+
     // If checkpoint is not 0 and not cached, start from 0
     if (startStep > 0 && !this.stepCache.has(startStep)) {
       startStep = 0
     }
 
     // Get starting state (will return clones from cache)
-    let { tokens, vocab } = startStep === 0 
+    let { tokens, vocab } = startStep === 0
       ? this.reconstructStep(0)
       : this.reconstructStep(startStep) // Use reconstructStep to get clones
 
     // Apply deltas from startStep+1 to targetStep
     for (let i = startStep + 1; i <= targetStep; i++) {
-      const step = this.state.steps[i]
-      
+      const step = this.state.steps[i]!
+
       if (step.type === 'merge' && step.mergedPair && step.addedVocabEntry) {
         // Add new vocab entry
         vocab.push({...step.addedVocabEntry})

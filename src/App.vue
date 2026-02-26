@@ -18,6 +18,7 @@ const hoveredPair = ref<[string, string] | null>(null)
 const hoveredTokenContent = ref<string | null>(null)
 const showSidebars = ref(false)
 const showControlPanel = ref(false)
+const showFrequencySteps = ref(false)
 
 // Per-panel expansion state (start collapsed on mobile)
 const frequencyExpanded = ref(!isMobile.value)
@@ -25,7 +26,9 @@ const vocabularyExpanded = ref(!isMobile.value)
 const stepsExpanded = ref(!isMobile.value)
 
 const anyPanelExpanded = computed(() =>
-  frequencyExpanded.value || vocabularyExpanded.value || stepsExpanded.value
+  (showFrequencySteps.value && frequencyExpanded.value) ||
+  vocabularyExpanded.value ||
+  (showFrequencySteps.value && stepsExpanded.value)
 )
 
 // Computed properties for highlighting - user hover takes priority, then step highlighting
@@ -85,62 +88,62 @@ const handleGoToStep = (stepNumber: number) => {
   goToStep(stepNumber)
 }
 
-const handleModeChange = (mode: { showSidebars: boolean, showControlPanel: boolean }) => {
+const handleModeChange = (mode: { showSidebars: boolean, showControlPanel: boolean, showFrequencySteps: boolean }) => {
   showSidebars.value = mode.showSidebars
   showControlPanel.value = mode.showControlPanel
+  showFrequencySteps.value = mode.showFrequencySteps
 }
 </script>
 
 <template>
-  <div class="h-screen w-screen bg-slate-50 dark:bg-slate-900 overflow-hidden flex flex-col sm:flex-row">
-    <!-- Main View -->
-    <div
-      class="sm:flex-1 flex flex-col overflow-hidden"
-      :class="isMobile && showSidebars && anyPanelExpanded ? 'flex-shrink-0' : 'flex-1'"
+  <div class="h-screen w-screen bg-slate-50 dark:bg-slate-900 overflow-hidden flex flex-col">
+    <MainView
+      class="flex-1 overflow-hidden min-h-0"
+      :hoveredPair="hoveredPair"
+      :hoveredTokenContent="hoveredTokenContent"
+      :effectiveHoveredPair="effectiveHoveredPair"
+      :effectiveHoveredTokenContent="effectiveHoveredTokenContent"
+      :mobileContentHidden="isMobile && showSidebars && anyPanelExpanded"
+      @openSettings="handleOpenSettings"
+      @hoverPair="handlePairHover"
+      @hoverToken="handleTokenHover"
+      @goToStep="handleGoToStep"
+      @modeChange="handleModeChange"
     >
-      <MainView
-        :hoveredPair="hoveredPair"
-        :hoveredTokenContent="hoveredTokenContent"
-        :effectiveHoveredPair="effectiveHoveredPair"
-        :effectiveHoveredTokenContent="effectiveHoveredTokenContent"
-        :mobileContentHidden="isMobile && showSidebars && anyPanelExpanded"
-        @openSettings="handleOpenSettings"
-        @hoverPair="handlePairHover"
-        @hoverToken="handleTokenHover"
-        @goToStep="handleGoToStep"
-        @modeChange="handleModeChange"
-      />
-    </div>
+      <!-- Sidebar: full-width below content on mobile, fixed w-96 on the right on desktop -->
+      <template #sidebar>
+        <div
+          v-if="showSidebars"
+          class="w-full sm:w-96 flex flex-col overflow-hidden border-t sm:border-t-0 sm:border-l border-slate-200 dark:border-slate-700"
+          :class="isMobile && anyPanelExpanded ? 'flex-1' : 'flex-shrink-0'"
+        >
+          <div class="flex-1 flex flex-col overflow-hidden">
+            <FrequencyPanel
+              v-if="showFrequencySteps"
+              :hoveredPair="effectiveHoveredPair"
+              :initialExpanded="!isMobile"
+              @hoverPair="handlePairHover"
+              @expandedChange="(v) => frequencyExpanded = v"
+            />
+            <VocabularyPanel
+              :hoveredTokenContent="effectiveHoveredTokenContent"
+              :initialExpanded="!isMobile"
+              @hoverToken="handleTokenHover"
+              @expandedChange="(v) => vocabularyExpanded = v"
+            />
+            <StepPanel
+              v-if="showFrequencySteps"
+              :initialExpanded="!isMobile"
+              @goToStep="handleGoToStep"
+              @change="(v) => stepsExpanded = v"
+            />
+          </div>
 
-    <!-- Sidebars (shown in training and validation modes) -->
-    <div
-      v-if="showSidebars"
-      class="w-full sm:w-96 flex flex-col overflow-hidden border-t sm:border-t-0 sm:border-l border-slate-200 dark:border-slate-700"
-      :class="isMobile && anyPanelExpanded ? 'flex-1' : 'flex-shrink-0 sm:flex-1'"
-    >
-      <div class="flex-1 flex flex-col overflow-hidden">
-        <FrequencyPanel
-          :hoveredPair="effectiveHoveredPair"
-          :initialExpanded="!isMobile"
-          @hoverPair="handlePairHover"
-          @expandedChange="(v) => frequencyExpanded = v"
-        />
-        <VocabularyPanel
-          :hoveredTokenContent="effectiveHoveredTokenContent"
-          :initialExpanded="!isMobile"
-          @hoverToken="handleTokenHover"
-          @expandedChange="(v) => vocabularyExpanded = v"
-        />
-        <StepPanel
-          :initialExpanded="!isMobile"
-          @goToStep="handleGoToStep"
-          @change="(v) => stepsExpanded = v"
-        />
-      </div>
-
-      <!-- Control panel at bottom (only in training mode) -->
-      <ControlPanel v-if="showControlPanel" />
-    </div>
+          <!-- Control panel at bottom (only in training mode) -->
+          <ControlPanel v-if="showControlPanel" />
+        </div>
+      </template>
+    </MainView>
 
     <!-- Settings Modal -->
     <SettingsModal

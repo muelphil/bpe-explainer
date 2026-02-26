@@ -60,12 +60,12 @@ const compressionPercentage = computed(() => {
   <div class="flex flex-col h-full">
     <!-- Input Section (33%) -->
     <div class="flex flex-col overflow-hidden" style="flex: 0 0 33%">
-      <div class="px-6 py-4">
+      <div class="px-2 sm:px-6 py-2 sm:py-4">
         <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">
           Input
         </h2>
       </div>
-      <div class="flex-1 px-6 pb-4 overflow-y-auto">
+      <div class="flex-1 px-2 sm:px-6 pb-2 sm:pb-4 overflow-y-auto">
         <div
           ref="editableDiv"
           contenteditable="true"
@@ -78,7 +78,7 @@ const compressionPercentage = computed(() => {
 
     <!-- Tokenized Output Section (66%) -->
     <div class="flex flex-col overflow-hidden border-t border-slate-200 dark:border-slate-700" style="flex: 0 0 67%">
-      <div class="px-6 py-4">
+      <div class="px-2 sm:px-6 py-2 sm:py-4">
         <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">
           Tokenized Input
           <span class="text-sm font-normal text-slate-600 dark:text-slate-400">
@@ -86,7 +86,7 @@ const compressionPercentage = computed(() => {
           </span>
         </h2>
       </div>
-      <div class="flex-1 px-6 pb-4 overflow-y-auto">
+      <div class="flex-1 px-2 sm:px-6 pb-2 sm:pb-4 overflow-y-auto">
         <div class="token-container">
           <template v-if="tokenizationResult.tokens.length === 0">
             <span class="text-slate-400 dark:text-slate-500 italic text-sm">

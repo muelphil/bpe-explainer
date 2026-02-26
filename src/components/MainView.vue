@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import {ref, computed} from 'vue'
-import {Settings} from 'lucide-vue-next'
+import {ref, computed, onMounted, onUnmounted} from 'vue'
+import {Settings, ChevronDown} from 'lucide-vue-next'
 import {useBPE} from '../composables/useBPE'
 import {useIsMobile} from '../composables/useIsMobile'
 import TrainingDataView from './TrainingDataView.vue'
@@ -24,10 +24,16 @@ const emit = defineEmits<{
   hoverPair: [pair: [string, string] | null]
   hoverToken: [content: string | null]
   goToStep: [stepNumber: number]
-  modeChange: [mode: { showSidebars: boolean, showControlPanel: boolean }]
+  modeChange: [mode: { showSidebars: boolean, showControlPanel: boolean, showFrequencySteps: boolean }]
 }>()
 
 type ViewMode = 'training-data' | 'training' | 'validation'
+
+const modeLabels: Record<ViewMode, string> = {
+  'training-data': 'Training Data',
+  'training': 'Training',
+  'validation': 'Validation',
+}
 
 const {initialize, state} = useBPE()
 const { isMobile } = useIsMobile()
@@ -35,44 +41,72 @@ const { isMobile } = useIsMobile()
 const currentMode = ref<ViewMode>('training-data')
 const isTrainingDataDefined = ref(false)
 const trainingDataViewRef = ref<InstanceType<typeof TrainingDataView> | null>(null)
+const isDropdownOpen = ref(false)
+const dropdownRef = ref<HTMLDivElement | null>(null)
 
 const handleStartTraining = (trainingData: string) => {
   initialize(trainingData)
   isTrainingDataDefined.value = true
   currentMode.value = 'training'
-  emit('modeChange', {showSidebars: true, showControlPanel: true})
+  emit('modeChange', {showSidebars: true, showControlPanel: true, showFrequencySteps: true})
 }
 
 const switchToMode = (mode: ViewMode) => {
   if (mode === 'training-data') {
-    // Going back to training data resets everything
     currentMode.value = mode
-    emit('modeChange', {showSidebars: false, showControlPanel: false})
+    emit('modeChange', {showSidebars: false, showControlPanel: false, showFrequencySteps: false})
   } else if (mode === 'training' && isTrainingDataDefined.value) {
     currentMode.value = mode
-    emit('modeChange', {showSidebars: true, showControlPanel: true})
+    emit('modeChange', {showSidebars: true, showControlPanel: true, showFrequencySteps: true})
   } else if (mode === 'training' && !isTrainingDataDefined.value && currentMode.value === 'training-data') {
-    // If clicking Training button while in training-data mode, trigger start training
     if (trainingDataViewRef.value) {
       trainingDataViewRef.value.triggerStartTraining()
     }
   } else if (mode === 'validation' && isTrainingDataDefined.value) {
     currentMode.value = mode
-    emit('modeChange', {showSidebars: true, showControlPanel: false})
+    emit('modeChange', {showSidebars: true, showControlPanel: false, showFrequencySteps: false})
   }
+}
+
+const handleMobileModeSelect = (mode: ViewMode) => {
+  switchToMode(mode)
+  isDropdownOpen.value = false
 }
 
 const isButtonEnabled = (mode: ViewMode) => {
   if (mode === 'training-data') return true
-  if (mode === 'training') return true // Always enabled - triggers start training if needed
+  if (mode === 'training') return true
   return isTrainingDataDefined.value
 }
 
-// Emit mode change on mount
-import {onMounted} from 'vue'
+const modes = ['training-data', 'training', 'validation'] as const satisfies readonly ViewMode[]
+
+const getModeClass = (mode: ViewMode, variant: 'button' | 'dropdown') => {
+  if (currentMode.value === mode) return 'bg-primary-500 text-white'
+  if (!isButtonEnabled(mode)) {
+    const base = variant === 'dropdown' ? 'bg-white dark:bg-slate-800' : 'bg-slate-100 dark:bg-slate-800'
+    return `${base} text-slate-400 dark:text-slate-600 cursor-not-allowed`
+  }
+  if (variant === 'dropdown') {
+    return 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
+  }
+  return 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600'
+}
+
+
+const handleClickOutside = (e: MouseEvent) => {
+  if (dropdownRef.value && !dropdownRef.value.contains(e.target as Node)) {
+    isDropdownOpen.value = false
+  }
+}
 
 onMounted(() => {
-  emit('modeChange', {showSidebars: false, showControlPanel: false})
+  emit('modeChange', {showSidebars: false, showControlPanel: false, showFrequencySteps: false})
+  document.addEventListener('click', handleClickOutside)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside)
 })
 
 const showControlPanel = computed(() => {
@@ -93,46 +127,48 @@ const showControlPanel = computed(() => {
       </div>
 
       <!-- Mode Navigation and Settings Buttons -->
-      <div class="flex gap-2 flex-shrink-0">
+      <div class="flex gap-2 flex-shrink-0 items-center">
+
+        <!-- Desktop: mode buttons via v-for -->
         <button
-          @click="switchToMode('training-data')"
-          :disabled="!isButtonEnabled('training-data')"
-          :class="[
-            'px-4 py-1.5 rounded-md text-sm font-medium transition-all',
-            currentMode === 'training-data'
-              ? 'bg-primary-500 text-white'
-              : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600',
-            !isButtonEnabled('training-data') && 'opacity-50 cursor-not-allowed'
-          ]"
+          v-for="mode in modes"
+          :key="mode"
+          class="hidden sm:block px-4 py-1.5 rounded-md text-sm font-medium transition-all"
+          @click="switchToMode(mode)"
+          :disabled="!isButtonEnabled(mode)"
+          :class="getModeClass(mode, 'button')"
         >
-          Training Data
+          {{ modeLabels[mode] }}
         </button>
-        <button
-          @click="switchToMode('training')"
-          :disabled="!isButtonEnabled('training')"
-          :class="[
-            'px-4 py-1.5 rounded-md text-sm font-medium transition-all',
-            currentMode === 'training'
-              ? 'bg-primary-500 text-white'
-              : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600',
-            !isButtonEnabled('training') && 'opacity-50 cursor-not-allowed'
-          ]"
-        >
-          Training
-        </button>
-        <button
-          @click="switchToMode('validation')"
-          :disabled="!isButtonEnabled('validation')"
-          :class="[
-            'px-4 py-1.5 rounded-md text-sm font-medium transition-all',
-            currentMode === 'validation'
-              ? 'bg-primary-500 text-white'
-              : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600',
-            !isButtonEnabled('validation') && 'opacity-50 cursor-not-allowed'
-          ]"
-        >
-          Validation
-        </button>
+
+        <!-- Mobile: dropdown -->
+        <div ref="dropdownRef" class="relative sm:hidden">
+          <button
+            @click.stop="isDropdownOpen = !isDropdownOpen"
+            class="px-3 py-1.5 rounded-md text-sm font-medium transition-all flex items-center gap-1.5 bg-primary-500 text-white"
+          >
+            {{ modeLabels[currentMode] }}
+            <ChevronDown :size="14" class="transition-transform" :class="{ 'rotate-180': isDropdownOpen }" />
+          </button>
+
+          <!-- Dropdown menu -->
+          <div
+            v-if="isDropdownOpen"
+            class="absolute right-0 top-full mt-1 z-50 flex flex-col rounded-md overflow-hidden shadow-lg border border-slate-200 dark:border-slate-600"
+          >
+            <button
+              v-for="mode in modes"
+              :key="mode"
+              @click.stop="handleMobileModeSelect(mode)"
+              :disabled="!isButtonEnabled(mode)"
+              class="px-4 py-2 text-sm font-medium text-left transition-colors whitespace-nowrap"
+              :class="getModeClass(mode, 'dropdown')"
+            >
+              {{ modeLabels[mode] }}
+            </button>
+          </div>
+        </div>
+
         <button
           @click="emit('openSettings')"
           class="px-4 py-1.5 rounded-md text-sm font-medium transition-all bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600 flex items-center gap-2"
@@ -143,24 +179,32 @@ const showControlPanel = computed(() => {
       </div>
     </div>
 
-    <!-- Main Content -->
-    <div v-show="!mobileContentHidden" class="flex-1 overflow-hidden flex flex-col">
-    <TrainingDataView
-      v-if="currentMode === 'training-data'"
-      ref="trainingDataViewRef"
-      @startTraining="handleStartTraining"
-      class="flex-1 overflow-hidden"
-    />
-    <TrainingView
-      v-else-if="currentMode === 'training'"
-      :hoveredPair="effectiveHoveredPair"
-      :hoveredTokenContent="effectiveHoveredTokenContent"
-      class="flex-1 overflow-hidden"
-    />
-    <ValidationView
-      v-else-if="currentMode === 'validation'"
-      class="flex-1 overflow-hidden"
-    />
+    <!-- Content row: training/validation view + sidebar (side-by-side on desktop) -->
+    <div class="flex-1 flex flex-col sm:flex-row overflow-hidden min-h-0">
+
+      <!-- Training / Validation content -->
+      <div v-show="!mobileContentHidden" class="flex-1 overflow-hidden flex flex-col min-h-0">
+        <TrainingDataView
+          v-if="currentMode === 'training-data'"
+          ref="trainingDataViewRef"
+          @startTraining="handleStartTraining"
+          class="flex-1 overflow-hidden"
+        />
+        <TrainingView
+          v-else-if="currentMode === 'training'"
+          :hoveredPair="effectiveHoveredPair"
+          :hoveredTokenContent="effectiveHoveredTokenContent"
+          class="flex-1 overflow-hidden"
+        />
+        <ValidationView
+          v-else-if="currentMode === 'validation'"
+          class="flex-1 overflow-hidden"
+        />
+      </div>
+
+      <!-- Sidebar slot (panels on desktop right, panels below on mobile) -->
+      <slot name="sidebar" />
+
     </div>
   </div>
 </template>
