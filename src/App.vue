@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useBPE } from './composables/useBPE'
+import { useIsMobile } from './composables/useIsMobile'
 import MainView from './components/MainView.vue'
 import SettingsModal from './components/SettingsModal.vue'
 import FrequencyPanel from './components/FrequencyPanel.vue'
@@ -10,12 +11,22 @@ import ControlPanel from './components/ControlPanel.vue'
 import type { BPESettings } from './services/types'
 
 const { initialize, updateSettings, goToStep, state, settings, currentStepData } = useBPE()
+const { isMobile } = useIsMobile()
 
 const isSettingsOpen = ref(false)
 const hoveredPair = ref<[string, string] | null>(null)
 const hoveredTokenContent = ref<string | null>(null)
 const showSidebars = ref(false)
 const showControlPanel = ref(false)
+
+// Per-panel expansion state (start collapsed on mobile)
+const frequencyExpanded = ref(!isMobile.value)
+const vocabularyExpanded = ref(!isMobile.value)
+const stepsExpanded = ref(!isMobile.value)
+
+const anyPanelExpanded = computed(() =>
+  frequencyExpanded.value || vocabularyExpanded.value || stepsExpanded.value
+)
 
 // Computed properties for highlighting - user hover takes priority, then step highlighting
 const effectiveHoveredPair = computed(() => {
@@ -81,14 +92,18 @@ const handleModeChange = (mode: { showSidebars: boolean, showControlPanel: boole
 </script>
 
 <template>
-  <div class="h-screen w-screen bg-slate-50 dark:bg-slate-900 overflow-hidden flex">
+  <div class="h-screen w-screen bg-slate-50 dark:bg-slate-900 overflow-hidden flex flex-col sm:flex-row">
     <!-- Main View -->
-    <div class="flex-1 flex flex-col overflow-hidden">
+    <div
+      class="sm:flex-1 flex flex-col overflow-hidden"
+      :class="isMobile && showSidebars && anyPanelExpanded ? 'flex-shrink-0' : 'flex-1'"
+    >
       <MainView
         :hoveredPair="hoveredPair"
         :hoveredTokenContent="hoveredTokenContent"
         :effectiveHoveredPair="effectiveHoveredPair"
         :effectiveHoveredTokenContent="effectiveHoveredTokenContent"
+        :mobileContentHidden="isMobile && showSidebars && anyPanelExpanded"
         @openSettings="handleOpenSettings"
         @hoverPair="handlePairHover"
         @hoverToken="handleTokenHover"
@@ -97,18 +112,30 @@ const handleModeChange = (mode: { showSidebars: boolean, showControlPanel: boole
       />
     </div>
 
-    <!-- Right Sidebars (shown in training and validation modes) -->
-    <div v-if="showSidebars" class="w-96 flex flex-col overflow-hidden border-l border-slate-200 dark:border-slate-700">
+    <!-- Sidebars (shown in training and validation modes) -->
+    <div
+      v-if="showSidebars"
+      class="w-full sm:w-96 flex flex-col overflow-hidden border-t sm:border-t-0 sm:border-l border-slate-200 dark:border-slate-700"
+      :class="isMobile && anyPanelExpanded ? 'flex-1' : 'flex-shrink-0 sm:flex-1'"
+    >
       <div class="flex-1 flex flex-col overflow-hidden">
-        <FrequencyPanel 
+        <FrequencyPanel
           :hoveredPair="effectiveHoveredPair"
-          @hoverPair="handlePairHover" 
+          :initialExpanded="!isMobile"
+          @hoverPair="handlePairHover"
+          @expandedChange="(v) => frequencyExpanded = v"
         />
-        <VocabularyPanel 
+        <VocabularyPanel
           :hoveredTokenContent="effectiveHoveredTokenContent"
-          @hoverToken="handleTokenHover" 
+          :initialExpanded="!isMobile"
+          @hoverToken="handleTokenHover"
+          @expandedChange="(v) => vocabularyExpanded = v"
         />
-        <StepPanel @goToStep="handleGoToStep" />
+        <StepPanel
+          :initialExpanded="!isMobile"
+          @goToStep="handleGoToStep"
+          @change="(v) => stepsExpanded = v"
+        />
       </div>
 
       <!-- Control panel at bottom (only in training mode) -->

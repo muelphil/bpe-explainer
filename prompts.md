@@ -250,5 +250,22 @@ I would like to try something out regarding the StepPanel. Adjust it as followin
 * in uncollapsed mode, scroll the current step to the top
 * in collapsed mode, do the same, but disable scroll and set the height of the list to exactly one item, so it shows the current step
 
+---
+The app has 3 control panels on the right side as a sidenav: Frequencies of Pairs, Vocabulary and Steps, as well as the play/pause/next panel at the very bottom. Each of them has 2 states: uncollapsed, showing full information and collapsed, showing only crucial information (not no info!) - the highest frequency pair for frequency, the amount of tokens in the vocabulary for vocabulary and the current step (via scroll and set height) for the steps.
 
+Please apply changes to make this app responsive, so it can be shown on mobile. Make the following adjustments that apply mobile only:
+* shorten the title from Byte-Pair Encoding Visualizer to "BPE"
+* make the sidenav appear under the training/ validation view intead of on the right. Make the sidenav use up 100% of the width. When one or multiple sidenavs are uncollapsed, they should take up the full height under the header down to the bottom of the page, basically hiding the traning view/ validation view. When all panels are collapsed (only showing their critical information), the panels should be bottom aligned and reveal the training data view above the panels and under the header. The training view should take up the rest of the height.
+* On mobile, the headers should start of collapsed, for the user to manually uncollapse them.
+
+Plan how to implement this. Consider different ways (display flex, display, grid, ...). Use modern css with easy and elegant solutions. Make sure that the app in desktop mode stays mostly the same.
+
+---
+
+
+There are some minor things that require retouching.
+* on mobile, the training and validation view should use p-2 instead of p-6 -- strictly on mobile only
+* The layout of the main app on desktop is changed and needs to be fixed. On mobile, it correctly stacked: Header, Training View, Control panels. On desktop, the header needs to use the full width, underneath it needs to vertically split between training/validation view nad sidenav on the right side. The sidenav had a max width (w-96) -- it should not grow beyond this on desktop. On mobile, full width was correct.
+
+This should be achievable by not having header, training and sidenav views on the same level, but putting training and sidenav in a container that uses the rest of the height and then split among these, using flex direction column on mobile and flex direction row on desktop
 

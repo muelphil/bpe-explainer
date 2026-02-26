@@ -5,12 +5,18 @@ import { ChevronDown } from 'lucide-vue-next'
 const props = defineProps<{
   title: string
   criticalPadding?: boolean // Default true
+  initialExpanded?: boolean // Default true
 }>()
 
-const isExpanded = ref(true)
+const emit = defineEmits<{
+  change: [expanded: boolean]
+}>()
+
+const isExpanded = ref(props.initialExpanded !== false)
 
 const toggle = () => {
   isExpanded.value = !isExpanded.value
+  emit('change', isExpanded.value)
 }
 const detailsSlotExists = () => !!slots.details
 

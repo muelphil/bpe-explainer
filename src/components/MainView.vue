@@ -2,6 +2,7 @@
 import {ref, computed} from 'vue'
 import {Settings} from 'lucide-vue-next'
 import {useBPE} from '../composables/useBPE'
+import {useIsMobile} from '../composables/useIsMobile'
 import TrainingDataView from './TrainingDataView.vue'
 import TrainingView from './TrainingView.vue'
 import ValidationView from './ValidationView.vue'
@@ -15,6 +16,7 @@ defineProps<{
   hoveredTokenContent: string | null
   effectiveHoveredPair: [string, string] | null
   effectiveHoveredTokenContent: string | null
+  mobileContentHidden?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -28,6 +30,7 @@ const emit = defineEmits<{
 type ViewMode = 'training-data' | 'training' | 'validation'
 
 const {initialize, state} = useBPE()
+const { isMobile } = useIsMobile()
 
 const currentMode = ref<ViewMode>('training-data')
 const isTrainingDataDefined = ref(false)
@@ -84,8 +87,9 @@ const showControlPanel = computed(() => {
     <div class="px-6 py-4 flex items-center justify-between gap-4">
       <div class="header-gradient">
         <h1 class="header-title">
-          Byte-Pair Encoding Visualizer
-        </h1>
+            <span class="sm:hidden">BPE</span>
+            <span class="hidden sm:inline">Byte-Pair Encoding Visualizer</span>
+          </h1>
       </div>
 
       <!-- Mode Navigation and Settings Buttons -->
@@ -140,6 +144,7 @@ const showControlPanel = computed(() => {
     </div>
 
     <!-- Main Content -->
+    <div v-show="!mobileContentHidden" class="flex-1 overflow-hidden flex flex-col">
     <TrainingDataView
       v-if="currentMode === 'training-data'"
       ref="trainingDataViewRef"
@@ -156,6 +161,7 @@ const showControlPanel = computed(() => {
       v-else-if="currentMode === 'validation'"
       class="flex-1 overflow-hidden"
     />
+    </div>
   </div>
 </template>
 

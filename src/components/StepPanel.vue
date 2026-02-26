@@ -6,15 +6,21 @@ import { displayTokenContent, getTokenColor } from '../utils/tokenColor'
 
 const emit = defineEmits<{
   goToStep: [stepNumber: number]
+  change: [expanded: boolean]
+}>()
+
+const props = defineProps<{
+  initialExpanded?: boolean // Default true
 }>()
 
 const { steps, currentStep, currentStepData } = useBPE()
 
 const stepsContainerRef = ref<HTMLDivElement | null>(null)
-const isExpanded = ref(true)
+const isExpanded = ref(props.initialExpanded !== false)
 
 const toggle = () => {
   isExpanded.value = !isExpanded.value
+  emit('change', isExpanded.value)
 }
 
 const handleStepClick = (stepNumber: number) => {
