@@ -18,12 +18,12 @@ const emit = defineEmits<{
 const localSettings = ref<BPESettings>({ ...props.settings })
 
 // Preset type
-type PresetType = 'original' | 'llm'
+type PresetType = 'compression' | 'byteLevelBPE'
 
 // Apply preset
 const applyPreset = (preset: PresetType) => {
-  if (preset === 'original') {
-    localSettings.value.initialVocab = 'characters'
+  if (preset === 'compression') {
+    localSettings.value.initialVocab = 'bytes'
     localSettings.value.breakCondition = 'noFrequentPairs'
     localSettings.value.mergingRestriction = 'none'
   } else {
@@ -60,7 +60,7 @@ const handleCancel = () => {
         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
         @click.self="handleCancel"
       >
-        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-hidden">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-hidden" style="display: flex;flex-direction: column;">
           <!-- Header -->
           <div class="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-700">
             <h2 class="text-xl font-semibold text-slate-900 dark:text-slate-100">Settings</h2>
@@ -87,22 +87,22 @@ const handleCancel = () => {
                 >
                   <Info :size="16" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300" />
                   <span class="tooltip absolute right-0 top-6 w-72 p-2 bg-slate-900 dark:bg-slate-700 text-white text-xs rounded opacity-0 transition-opacity pointer-events-none z-10">
-                    Original BPE (1994) was designed for text compression. LLM BPE uses modern adjustments for building vocabularies for large language models based on training data.
+                    Compression BPE (1994) was designed for text compression. Byte-Level BPE uses modern adjustments for building vocabularies for large language models based on training data.
                   </span>
                 </button>
               </div>
               <div class="flex gap-3">
                 <button
-                  @click="applyPreset('llm')"
+                  @click="applyPreset('byteLevelBPE')"
                   class="flex-1 px-4 py-2 text-sm font-medium rounded-lg bg-primary-500 text-white hover:bg-primary-600 transition-colors"
                 >
-                  LLM Vocab BPE
+                  Byte-Level BPE
                 </button>
                 <button
-                  @click="applyPreset('original')"
+                  @click="applyPreset('compression')"
                   class="flex-1 px-4 py-2 text-sm font-medium rounded-lg bg-primary-500 text-white hover:bg-primary-600 transition-colors"
                 >
-                  Original BPE
+                  Compression BPE
                 </button>
               </div>
             </div>
@@ -120,15 +120,15 @@ const handleCancel = () => {
                 >
                   <Info :size="16" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300" />
                   <span class="tooltip absolute right-0 top-6 w-64 p-2 bg-slate-900 dark:bg-slate-700 text-white text-xs rounded opacity-0 transition-opacity pointer-events-none z-10">
-                    Characters uses only the unique characters from your training data. All 256 bytes starts with the complete byte vocabulary.
+                     Unicode Chars uses only the unique characters from your training data. Bytes starts with all 256 byte values as the initial vocabulary.
                   </span>
                 </button>
               </div>
               <ButtonGroup
                 v-model="localSettings.initialVocab"
                 :options="[
-                  { value: 'bytes', label: 'All 256 Bytes' },
-                  { value: 'characters', label: 'Characters' },
+                  { value: 'bytes', label: 'Bytes' },
+                  { value: 'unicodeChars', label: 'Unicode Chars' },
                 ]"
               />
             </div>
@@ -179,17 +179,18 @@ const handleCancel = () => {
               <ButtonGroup
                 v-model="localSettings.breakCondition"
                 :options="[
-                  { value: 'maxVocabSize', label: 'Max Vocabulary Size' },
-                  { value: 'noFrequentPairs', label: 'No Frequent Pairs' }
+                  { value: 'maxVocabSize', label: 'Max Vocab Size' },
+                  { value: 'noFrequentPairs', label: 'No Frequent Pairs' },
+                  { value: 'compression', label: 'Compression' }
                 ]"
               />
             </div>
 
             <!-- Max Vocab Size -->
-            <div class="space-y-3">
+            <div v-if="localSettings.breakCondition === 'maxVocabSize'" class="space-y-3">
               <div class="flex items-center justify-between">
                 <label class="text-sm font-medium text-slate-900 dark:text-slate-100">
-                  Maximum Vocabulary Size
+                  Max Vocab Size
                 </label>
                 <button
                   class="group relative"
@@ -207,8 +208,33 @@ const handleCancel = () => {
                 type="number"
                 min="10"
                 max="10000"
-                :disabled="localSettings.breakCondition !== 'maxVocabSize'"
-                class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+                class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              />
+            </div>
+
+            <!-- Target Compression Rate -->
+            <div v-if="localSettings.breakCondition === 'compression'" class="space-y-3">
+              <div class="flex items-center justify-between">
+                <label class="text-sm font-medium text-slate-900 dark:text-slate-100">
+                  Target Compression Rate (%)
+                </label>
+                <button
+                  class="group relative"
+                  @mouseenter="$event => ($event.currentTarget as HTMLElement).querySelector('.tooltip')?.classList.remove('opacity-0')"
+                  @mouseleave="$event => ($event.currentTarget as HTMLElement).querySelector('.tooltip')?.classList.add('opacity-0')"
+                >
+                  <Info :size="16" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300" />
+                  <span class="tooltip absolute right-0 top-6 w-64 p-2 bg-slate-900 dark:bg-slate-700 text-white text-xs rounded opacity-0 transition-opacity pointer-events-none z-10">
+                    The algorithm stops when the compression percentage reaches this value. 50% means the token count is halved compared to the initial tokenization.
+                  </span>
+                </button>
+              </div>
+              <input
+                v-model.number="localSettings.targetCompressionRate"
+                type="number"
+                min="1"
+                max="99"
+                class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
             </div>
 
@@ -263,7 +289,7 @@ const handleCancel = () => {
           </div>
 
           <!-- Footer -->
-          <div class="flex gap-3 p-6 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900">
+          <div class="flex gap-3 p-6 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900" style="flex: 0 0 auto;">
             <button
               @click="handleCancel"
               class="flex-1 px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"

@@ -89,6 +89,18 @@ const handleGoToStep = (stepNumber: number) => {
 }
 
 const handleModeChange = (mode: { showSidebars: boolean, showControlPanel: boolean, showFrequencySteps: boolean }) => {
+  // Reset expansion refs for panels that are about to unmount (v-if becomes false),
+  // so that when they remount they match their initialExpanded prop (collapsed on mobile).
+  if (!mode.showSidebars) {
+    // All panels unmount
+    frequencyExpanded.value = !isMobile.value
+    vocabularyExpanded.value = !isMobile.value
+    stepsExpanded.value = !isMobile.value
+  } else if (!mode.showFrequencySteps) {
+    // FrequencyPanel and StepPanel unmount (validation mode)
+    frequencyExpanded.value = !isMobile.value
+    stepsExpanded.value = !isMobile.value
+  }
   showSidebars.value = mode.showSidebars
   showControlPanel.value = mode.showControlPanel
   showFrequencySteps.value = mode.showFrequencySteps

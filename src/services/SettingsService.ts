@@ -6,6 +6,7 @@ const DEFAULT_SETTINGS: BPESettings = {
   initialVocab: 'bytes',
   breakCondition: 'maxVocabSize',
   maxVocabSize: 512,
+  targetCompressionRate: 50,
   playSpeed: 500,
   darkMode: true,
   mergingRestriction: 'llm'
@@ -20,6 +21,10 @@ export class SettingsService {
       const stored = localStorage.getItem(SETTINGS_KEY)
       if (stored) {
         const parsed = JSON.parse(stored)
+        // Migrate old 'characters' value to 'unicodeChars'
+        if (parsed.initialVocab === 'characters') {
+          parsed.initialVocab = 'unicodeChars'
+        }
         // Merge with defaults to handle any missing keys
         return { ...DEFAULT_SETTINGS, ...parsed }
       }

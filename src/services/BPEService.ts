@@ -101,7 +101,7 @@ export class BPEService {
    * Create initial vocabulary based on settings
    */
   private createInitialVocabulary(trainingData: string): void {
-    if (this.state.settings.initialVocab === 'characters') {
+    if (this.state.settings.initialVocab === 'unicodeChars') {
       // Get unique characters from training data
       const uniqueChars = new Set(trainingData.split(''))
       uniqueChars.forEach(char => {
@@ -143,7 +143,6 @@ export class BPEService {
       if (vocabEntry) {
         tokens.push({ id: vocabEntry.id, content: char, color: vocabEntry.color, skipAnimation: true })
       } else if (this.state.settings.initialVocab === 'bytes') {
-        // Character falls outside the 256-byte range (charCode > 255).
         // Encode as UTF-8 bytes and map each byte to its vocabulary entry.
         const encoded = new TextEncoder().encode(char)
         for (const byte of encoded) {
@@ -266,6 +265,10 @@ export class BPEService {
   private shouldStop(): boolean {
     if (this.state.settings.breakCondition === 'maxVocabSize') {
       return this.state.vocabulary.length >= this.state.settings.maxVocabSize
+    } else if (this.state.settings.breakCondition === 'compression') {
+      const ratio = this.state.trainingData.length / this.state.tokens.length
+      const compressionPct = (1 - 1 / ratio) * 100
+      return compressionPct >= this.state.settings.targetCompressionRate
     } else {
       // noFrequentPairs: stop when all pairs have frequency of 1
       const mostFrequent = this.findMostFrequentPair()
@@ -364,14 +367,22 @@ export class BPEService {
       const noPairs =
         this.state.settings.breakCondition === 'noFrequentPairs' &&
         (maxEntry === null || maxEntry.frequency <= 1)
+      const compressionReached = (() => {
+        if (this.state.settings.breakCondition !== 'compression') return false
+        const ratio = this.state.trainingData.length / tokenCount
+        const pct = (1 - 1 / ratio) * 100
+        return pct >= this.state.settings.targetCompressionRate
+      })()
       const exhausted = maxEntry === null
 
-      if (vocabFull || noPairs || exhausted) {
+      if (vocabFull || noPairs || compressionReached || exhausted) {
         const compressionRatio = this.state.trainingData.length / tokenCount
         const compressionPercentage = ((1 - 1 / compressionRatio) * 100).toFixed(1)
         let stopReason: string
         if (vocabFull) {
           stopReason = `Reached maximum vocabulary size (${this.state.settings.maxVocabSize})`
+        } else if (compressionReached) {
+          stopReason = `Reached target compression rate (${this.state.settings.targetCompressionRate}%)`
         } else if (iteration >= MAX_ITERATIONS) {
           stopReason = `Step limit reached (${MAX_ITERATIONS} iterations)`
         } else {

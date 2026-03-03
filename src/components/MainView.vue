@@ -121,7 +121,7 @@ const showControlPanel = computed(() => {
     <div class="px-6 py-4 flex items-center justify-between gap-4">
       <div class="header-gradient">
         <h1 class="header-title">
-            <span class="sm:hidden">BPE</span>
+            <span class="sm:hidden">BPE Vis</span>
             <span class="hidden sm:inline">Byte-Pair Encoding Visualizer</span>
           </h1>
       </div>

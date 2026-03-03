@@ -45,9 +45,10 @@ export interface Step {
 }
 
 export interface BPESettings {
-  initialVocab: 'characters' | 'bytes'
-  breakCondition: 'maxVocabSize' | 'noFrequentPairs'
+  initialVocab: 'unicodeChars' | 'bytes'
+  breakCondition: 'maxVocabSize' | 'noFrequentPairs' | 'compression'
   maxVocabSize: number
+  targetCompressionRate: number // percentage 0-100
   playSpeed: number // milliseconds
   darkMode: boolean
   mergingRestriction: 'none' | 'llm' // 'llm' = spaces can only be joined to the right

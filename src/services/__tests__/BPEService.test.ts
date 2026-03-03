@@ -20,7 +20,7 @@ describe('BPEService', () => {
     })
 
     it('should create vocabulary from unique characters', () => {
-      service.initialize('abc', { initialVocab: 'characters' })
+      service.initialize('abc', { initialVocab: 'unicodeChars' })
       
       const state = service.getState()
       expect(state.vocabulary.length).toBe(3)
@@ -66,7 +66,7 @@ describe('BPEService', () => {
   describe('Step Navigation', () => {
     beforeEach(() => {
       service.initialize('aaabbb', { 
-        initialVocab: 'characters', 
+        initialVocab: 'unicodeChars', 
         breakCondition: 'maxVocabSize',
         maxVocabSize: 10 
       })
