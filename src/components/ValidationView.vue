@@ -3,6 +3,8 @@ import { ref, computed, watch } from 'vue'
 import { useBPE } from '../composables/useBPE'
 import { bpeService } from '../services/BPEService'
 import { displayTokenContent } from '../utils/tokenColor'
+import TokenMergeTree from './TokenMergeTree.vue'
+import type { MergeNode } from './TokenMergeTree.vue'
 
 const { state } = useBPE()
 
@@ -15,6 +17,40 @@ const tokenizationResult = computed(() => {
     ? bpeService.tokenizeInput(inputText.value)
     : { tokens: [], hasErrors: false, compressionRatio: 1 }
 })
+
+// Build a map from merged token content → [leftPart, rightPart] for hierarchy reconstruction
+const mergeMap = computed(() => {
+  const map = new Map<string, [string, string]>()
+  for (const step of state.steps) {
+    if (step.type === 'merge' && step.mergedPair && step.addedVocabEntry) {
+      map.set(step.addedVocabEntry.content, step.mergedPair as [string, string])
+    }
+  }
+  return map
+})
+
+// Recursively build a binary merge tree for a token content string
+function buildMergeTree(content: string, map: Map<string, [string, string]>): MergeNode {
+  const merge = map.get(content)
+  if (!merge) return { content }
+  return {
+    content,
+    left: buildMergeTree(merge[0], map),
+    right: buildMergeTree(merge[1], map),
+  }
+}
+
+// One merge tree per token in the current tokenization result
+const tokenTrees = computed<MergeNode[]>(() => {
+  const map = mergeMap.value
+  return tokenizationResult.value.tokens.map(token => buildMergeTree(token.content, map))
+})
+
+// Returns the max depth of a merge tree (0 = leaf/single char, 1 = one merge, 2+ = nested)
+function treeDepth(node: MergeNode): number {
+  if (!node.left) return 0
+  return 1 + Math.max(treeDepth(node.left), treeDepth(node.right!))
+}
 
 const handleInput = (event: Event) => {
   if (editableDiv.value) {
@@ -104,7 +140,7 @@ const compressionPercentage = computed(() => {
                 class="token"
                 :style="token.id !== -1 && token.color ? { backgroundColor: token.color } : {}"
               >
-                {{ displayTokenContent(token.content) }}
+                <TokenMergeTree v-if="treeDepth(tokenTrees[index]!) >= 2" :node="tokenTrees[index]!" :depth="0" /><template v-else>{{ displayTokenContent(token.content) }}</template>
                 <span class="token-id">{{ token.id === -1 ? '?' : token.id }}</span>
               </span>
             </span>
@@ -124,3 +160,30 @@ const compressionPercentage = computed(() => {
     </div>
   </div>
 </template>
+
+<style scoped>
+/*
+ * Equalize token heights within each flex row:
+ * 1. Stretch all token-wrappers to the height of the tallest token in the row.
+ * 2. token-wrapper becomes a flex column so it can pass its height down to .token.
+ * 3. .token grows to fill the wrapper and centers its content vertically,
+ *    so that shallow tokens (no inner merge structure) appear the same height
+ *    as deeply-merged tokens whose nested borders add vertical space.
+ */
+.token-container {
+  align-items: stretch;
+}
+
+.token-wrapper {
+  display: flex;
+  align-items: stretch;
+}
+
+.token {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex: 1;
+  gap: 2px;
+}
+</style>
