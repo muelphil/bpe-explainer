@@ -27,21 +27,27 @@ const lastAddedToken = computed(() => {
   return null
 })
 
-// Count unique tokens currently used in the token array
-const tokensUsed = computed(() => {
-  const uniqueTokenIds = new Set(tokens.value.map(t => t.id))
-  return uniqueTokenIds.size
+// Derive both usedTokenIds set and count in a single pass over the token array
+const usedTokensInfo = computed(() => {
+  const ids = new Set<number>()
+  for (const t of tokens.value) ids.add(t.id)
+  return ids
 })
 
+// Count unique tokens currently used in the token array
+const tokensUsed = computed(() => usedTokensInfo.value.size)
+
 // Get set of token IDs currently used in training data
-const usedTokenIds = computed(() => {
-  return new Set(tokens.value.map(t => t.id))
-})
+const usedTokenIds = computed(() => usedTokensInfo.value)
 
 // Check if a token is used in the current training data
 const isTokenUsed = (tokenId: number): boolean => {
   return usedTokenIds.value.has(tokenId)
 }
+
+const longestTokenLength = computed(() =>
+  vocabulary.value.reduce((max, v) => Math.max(max, v.content.length), 0)
+)
 
 const handleTokenHover = (content: string | null) => {
   emit('hoverToken', content)
@@ -88,7 +94,8 @@ const isTokenHighlighted = (tokenContent: string, hoveredTokenContent: string | 
           @mouseleave="handleTokenHover(null)"
         >
           <span
-            class="token relative group cursor-pointer transition-all hover:scale-110 hover:z-10 hover:shadow-lg"
+            class="token relative group cursor-pointer hover:scale-110 hover:z-10 hover:shadow-lg"
+            style="transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;"
             :style="token.color ? { backgroundColor: token.color } : {}"
           >
             <span class="token-content">{{ displayTokenContent(token.content) }}</span>
@@ -113,7 +120,7 @@ const isTokenHighlighted = (tokenContent: string, hoveredTokenContent: string | 
         <div class="flex justify-between mt-1">
           <span>Longest Token:</span>
           <span class="font-semibold font-mono">
-            {{ Math.max(...vocabulary.map(v => v.content.length), 0) }} chars
+            {{ longestTokenLength }} chars
           </span>
         </div>
       </div>

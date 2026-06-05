@@ -11,39 +11,32 @@ defineProps<{
 
 const {tokens} = useBPE()
 
-// Group tokens into lines based on newlines for virtual scrolling
-// Each "line" is an array of tokens between newlines
-const tokenLines = computed(() => {
-  const lines: Array<{ tokens: typeof tokens.value, lineIndex: number }> = []
-  let currentLine: typeof tokens.value = []
+// Group tokens into lines based on newlines for virtual scrolling.
+// Stores index ranges instead of copying token sub-arrays to avoid
+// allocating one new array per line per step change.
+const tokenLineRanges = computed(() => {
+  const ranges: Array<{ startIndex: number; endIndex: number; lineIndex: number }> = []
+  const toks = tokens.value
+  let lineStart = 0
   let lineIndex = 0
 
-  tokens.value.forEach((token, index) => {
-    currentLine.push(token)
-
-    if (token.content.includes('\n')) {
-      lines.push({ tokens: [...currentLine], lineIndex: lineIndex++ })
-      currentLine = []
+  for (let i = 0; i < toks.length; i++) {
+    if (toks[i]!.content.includes('\n')) {
+      ranges.push({ startIndex: lineStart, endIndex: i + 1, lineIndex: lineIndex++ })
+      lineStart = i + 1
     }
-  })
-
-  // Add remaining tokens as last line
-  if (currentLine.length > 0) {
-    lines.push({ tokens: currentLine, lineIndex: lineIndex })
   }
 
-  return lines
+  if (lineStart < toks.length) {
+    ranges.push({ startIndex: lineStart, endIndex: toks.length, lineIndex: lineIndex })
+  }
+
+  return ranges
 })
 
-// Get global index for a token within a line
-const getGlobalIndex = (lineIndex: number, tokenIndexInLine: number): number => {
-  let globalIndex = 0
-  for (let i = 0; i < lineIndex; i++) {
-    // Guard against stale lineIndex during DynamicScroller re-renders (step transitions)
-    globalIndex += tokenLines.value[i]?.tokens.length ?? 0
-  }
-  return globalIndex + tokenIndexInLine
-}
+// O(1) global index: just add the line's start offset to the in-line index.
+const getGlobalIndex = (item: { startIndex: number }, tokenIndexInLine: number): number =>
+  item.startIndex + tokenIndexInLine
 
 // Check if a token should be highlighted (single token from vocabulary)
 const isTokenHighlightedSingle = (token: {
@@ -81,7 +74,7 @@ const isPairRight = (globalIndex: number, hoveredPair: [string, string] | null):
   <div class="flex-1 flex flex-col bg-white dark:bg-slate-800 overflow-hidden">
     <!-- Token Display Area with Virtual Scrolling -->
     <DynamicScroller
-      :items="tokenLines"
+      :items="tokenLineRanges"
       :min-item-size="30"
       class="flex-1 p-2 sm:p-6"
       key-field="lineIndex"
@@ -90,19 +83,17 @@ const isPairRight = (globalIndex: number, hoveredPair: [string, string] | null):
         <DynamicScrollerItem
           :item="item"
           :active="active"
-          :size-dependencies="[
-            item.tokens.length,
-          ]"
+          :size-dependencies="[item.endIndex - item.startIndex]"
           :data-index="index"
         >
           <div class="token-container">
-            <template v-for="(token, tokenIndex) in item.tokens" :key="`${token.id}-${tokenIndex}`">
+            <template v-for="(token, tokenIndex) in tokens.slice(item.startIndex, item.endIndex)" :key="`${token.id}-${tokenIndex}`">
               <span
                 class="token-wrapper"
                 :class="{
                   'highlight-single': isTokenHighlightedSingle(token, hoveredTokenContent),
-                  'highlight-left': isPairLeft(getGlobalIndex(item.lineIndex, tokenIndex as number), hoveredPair),
-                  'highlight-right': isPairRight(getGlobalIndex(item.lineIndex, tokenIndex as number), hoveredPair),
+                  'highlight-left': isPairLeft(getGlobalIndex(item, tokenIndex as number), hoveredPair),
+                  'highlight-right': isPairRight(getGlobalIndex(item, tokenIndex as number), hoveredPair),
                 }"
               >
                 <span

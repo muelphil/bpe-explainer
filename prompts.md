@@ -269,3 +269,31 @@ There are some minor things that require retouching.
 
 This should be achievable by not having header, training and sidenav views on the same level, but putting training and sidenav in a container that uses the rest of the height and then split among these, using flex direction column on mobile and flex direction row on desktop
 
+---
+
+I wanted to change the color theme of the app, which is specified in main.css using variables under :root.
+However, I found that while most of the app uses the color scheme defined there, some parts of the view instead use tailwind color scheme or hardcoded colors. I noted several instances of this (non-exhaustive list):
+* rgb(59 130 246
+* rgb(37 99 235
+* rgb(59 130 246
+* linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+* rgb(59 130 246
+* rgb(29 78 216
+* --tw-gradient-to: #2563eb var(--tw-gradient-to-position);
+* bg-slate-200
+* .to-primary-600
+* rgb(203 213 225
+* .bg-primary-50
+* bg-yellow-900
+
+Please go over the views and check on the styling. If the colors the styling is using is already defined as variable in main.css, then use it instead of hardcoded/ tailwind colors. If it is not defined, extract it to the main.css :root segment first as a new variable. Also extract the colors used to highlight different types of steps in the Steps view, using variable names that describe the steps rather than the exact color used to represent the steps.
+
+Be surgical and exact.
+
+TODO: This is not good, the stack should be:
+* color definition in css via variables, 
+* use darkMode: "class"
+* CSS variables in :root + .dark
+  * this must include different slates used
+* semantic Tailwind color mapping
+* separate surface palette from accent palette

@@ -30,7 +30,7 @@ export class BPEService {
   private state: BPEState
   private nextTokenId = 0
   private nextVocabId = 0
-  private playIntervalId: number | null = null
+  private playTimeoutId: number | null = null
   // Cache for reconstructed steps (stepNumber -> {tokens, vocab})
   private stepCache = new Map<number, { tokens: Token[], vocab: VocabEntry[] }>()
 
@@ -600,12 +600,35 @@ export class BPEService {
   }
 
   /**
-   * Go to next step
+   * Go to next step.
+   *
+   * Fast path for sequential forward navigation: applies the delta directly to
+   * state.tokens and state.vocabulary without going through reconstructStep().
+   * This eliminates the 3 O(N) token-array copies that reconstruction requires
+   * (clone-from-cache → applyMerge → clone-for-cache).
+   *
+   * previousStep() still uses goToStep() with full reconstruction because it
+   * is typically a manual action, not called in a tight loop.
    */
   nextStep(): void {
-    if (this.state.currentStep < this.state.steps.length - 1) {
-      this.goToStep(this.state.currentStep + 1)
+    const nextStepNumber = this.state.currentStep + 1
+    if (nextStepNumber >= this.state.steps.length) return
+
+    const step = this.state.steps[nextStepNumber]!
+    this.state.currentStep = nextStepNumber
+
+    if (step.type === 'merge' && step.mergedPair && step.addedVocabEntry) {
+      // Append the new vocab entry (reactive push to keep change minimal)
+      this.state.vocabulary.push({...step.addedVocabEntry})
+      // Replace tokens array with merged result
+      this.state.tokens = this.applyMerge(this.state.tokens, step.mergedPair, step.addedVocabEntry)
+      this.state.compressionRatio =
+        this.state.tokens.length > 0 ? this.state.trainingData.length / this.state.tokens.length : 1
+      // Invalidate any stale cache entry for this step so jumping back then
+      // forward produces a consistent result via reconstructStep.
+      this.stepCache.delete(nextStepNumber)
     }
+    // select / complete steps: no token/vocab state change needed
   }
 
   /**
@@ -618,19 +641,32 @@ export class BPEService {
   }
 
   /**
-   * Start auto-playing through steps
+   * Start auto-playing through steps.
+   *
+   * Uses a self-rescheduling setTimeout chain instead of setInterval so that
+   * the next step is only scheduled AFTER the current step (and any Vue
+   * rendering it triggers) completes.  setInterval would fire at fixed wall-
+   * clock intervals regardless of how long the previous step took, causing
+   * multiple steps to pile up when reconstruction is slow.
    */
   play(): void {
     if (this.state.isPlaying) return
 
     this.state.isPlaying = true
-    this.playIntervalId = window.setInterval(() => {
-      if (this.state.currentStep >= this.state.steps.length - 1) {
-        this.pause()
-      } else {
+
+    const scheduleNext = () => {
+      this.playTimeoutId = window.setTimeout(() => {
+        if (!this.state.isPlaying) return
+        if (this.state.currentStep >= this.state.steps.length - 1) {
+          this.pause()
+          return
+        }
         this.nextStep()
-      }
-    }, this.state.settings.playSpeed)
+        scheduleNext() // schedule next only after this step has been applied
+      }, this.state.settings.playSpeed)
+    }
+
+    scheduleNext()
   }
 
   /**
@@ -638,9 +674,9 @@ export class BPEService {
    */
   pause(): void {
     this.state.isPlaying = false
-    if (this.playIntervalId !== null) {
-      clearInterval(this.playIntervalId)
-      this.playIntervalId = null
+    if (this.playTimeoutId !== null) {
+      clearTimeout(this.playTimeoutId)
+      this.playTimeoutId = null
     }
   }
 
