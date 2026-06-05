@@ -166,8 +166,8 @@ showFrequencySteps.value = true
       <template #sidebar>
         <div
           v-if="showSidebars"
-          class="w-full sm:w-96 flex flex-col overflow-hidden border-t sm:border-t-0 sm:border-l border-slate-200 dark:border-slate-700"
-          :class="isMobile && anyPanelExpanded ? 'flex-1' : 'flex-shrink-0'"
+          class="flex flex-col overflow-hidden border-slate-200 dark:border-slate-700"
+          :class="[isMobile ? 'w-full border-t' : 'w-96 border-l', isMobile && anyPanelExpanded ? 'flex-1' : 'flex-shrink-0']"
         >
           <div class="flex-1 flex flex-col overflow-hidden">
             <FrequencyPanel

@@ -121,8 +121,8 @@ const showControlPanel = computed(() => {
     <div class="px-6 py-4 flex items-center justify-between gap-4">
       <div class="header-gradient">
         <h1 class="header-title">
-            <span class="sm:hidden">BPE Explainer</span>
-            <span class="hidden sm:inline">Byte-Pair Encoding Explainer</span>
+            <span v-if="isMobile">BPE Explainer</span>
+            <span v-else>Byte-Pair Encoding Explainer</span>
           </h1>
       </div>
 
@@ -133,16 +133,15 @@ const showControlPanel = computed(() => {
         <button
           v-for="mode in modes"
           :key="mode"
-          class="hidden sm:block px-4 py-1.5 rounded-md text-sm font-medium transition-all"
+          :class="[isMobile ? 'hidden' : 'block', 'px-4 py-1.5 rounded-md text-sm font-medium transition-all', getModeClass(mode, 'button')]"
           @click="switchToMode(mode)"
           :disabled="!isButtonEnabled(mode)"
-          :class="getModeClass(mode, 'button')"
         >
           {{ modeLabels[mode] }}
         </button>
 
         <!-- Mobile: dropdown -->
-        <div ref="dropdownRef" class="relative sm:hidden">
+        <div ref="dropdownRef" class="relative" :class="isMobile ? 'block' : 'hidden'">
           <button
             @click.stop="isDropdownOpen = !isDropdownOpen"
             class="px-3 py-1.5 rounded-md text-sm font-medium transition-all flex items-center gap-1.5 bg-primary-500 text-white"
@@ -181,7 +180,7 @@ const showControlPanel = computed(() => {
     </div>
 
     <!-- Content row: left panel (blog) + training/validation view + sidebar (side-by-side on desktop) -->
-    <div class="flex-1 flex flex-col sm:flex-row overflow-hidden min-h-0 relative">
+    <div class="flex-1 flex overflow-hidden min-h-0 relative" :class="isMobile ? 'flex-col' : 'flex-row'">
 
       <!-- Left panel slot (blog article, mobile overlay) -->
       <slot name="leftPanel" />

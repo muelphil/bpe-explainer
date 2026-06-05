@@ -19,7 +19,6 @@ function readStateFromEnv(): boolean {
   return true // default: open
 }
 
-// Initialize immediately (no onMounted) to avoid a visible layout jump
 const isOpen = ref(readStateFromEnv())
 
 function persistState(open: boolean) {
@@ -122,7 +121,7 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-/* Desktop: wrapper transitions flex-basis (no overflow-hidden here so close button isn't clipped) */
+/* Desktop: wrapper transitions flex-basis */
 .article-panel-wrapper {
   flex-basis: var(--basis);
   min-width: var(--min);
@@ -193,7 +192,6 @@ onUnmounted(() => {
   cursor: pointer;
   color: var(--text-secondary);
   overflow: hidden;
-  /* Start slightly off-screen so only partial circle protrudes */
   padding-left: 8px;
   padding-right: 10px;
   transition: padding-right 250ms ease, gap 250ms ease, background-color 150ms ease, color 150ms ease;
