@@ -1,12 +1,11 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
-import { ChevronLeft, BookOpen } from 'lucide-vue-next'
+import { ChevronLeft, BookOpen, FlaskConical } from 'lucide-vue-next'
 import { useIsMobile } from '../composables/useIsMobile'
 
 const { isMobile } = useIsMobile()
 
 const STORAGE_KEY = 'articleCollapsed'
-const ARTICLE_PANEL_WIDTH = 400
 
 function readStateFromEnv(): boolean {
   const hash = window.location.hash
@@ -59,11 +58,11 @@ onUnmounted(() => {
     <!-- Wrapper: relative positioning for the floating close button, no overflow clipping -->
     <div
       class="article-panel-wrapper flex-shrink-0 relative"
-      :style="{ width: isOpen ? `${ARTICLE_PANEL_WIDTH}px` : '0px' }"
+      :style="{ width: isOpen ? 'var(--article-panel-width)' : '0px' }"
     >
       <!-- Inner: overflow-hidden clips blog content during width transition -->
       <div class="article-panel-inner overflow-hidden border-r border-slate-200 dark:border-slate-700 h-full">
-        <div :style="{ width: `${ARTICLE_PANEL_WIDTH}px` }" class="h-full">
+        <div :style="{ width: 'var(--article-panel-width)' }" class="h-full">
           <slot />
         </div>
       </div>
@@ -103,10 +102,10 @@ onUnmounted(() => {
       <!-- Close button: floating on right edge of overlay -->
       <button
         class="article-collapse-btn article-collapse-btn--mobile"
-        aria-label="Collapse article"
+        aria-label="Open testing ground"
         @click="close"
       >
-        <ChevronLeft :size="18" />
+        <FlaskConical :size="18" />
       </button>
     </div>
 
@@ -195,7 +194,7 @@ onUnmounted(() => {
   overflow: hidden;
   /* Start slightly off-screen so only partial circle protrudes */
   padding-left: 8px;
-  padding-right: 0;
+  padding-right: 10px;
   transition: padding-right 250ms ease, gap 250ms ease, background-color 150ms ease, color 150ms ease;
 }
 

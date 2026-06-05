@@ -172,6 +172,7 @@ const showControlPanel = computed(() => {
         <button
           @click="emit('openSettings')"
           class="px-4 py-1.5 rounded-md text-sm font-medium transition-all bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600 flex items-center gap-2"
+          style="height: stretch;"
           title="Settings"
         >
           <Settings :size="16"/>

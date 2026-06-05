@@ -65,6 +65,9 @@
 
   /* Shadow Colors */
   --shadow-color: rgba(0, 0, 0, 0.1);
+
+  /* Layout */
+  --article-panel-width: 786px;
 }
 
 .dark {
