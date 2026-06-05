@@ -1,30 +1,11 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { onMounted, onUnmounted } from 'vue'
 import { ChevronLeft, BookOpen, FlaskConical } from 'lucide-vue-next'
 import { useIsMobile } from '../composables/useIsMobile'
+import { articleOpenState } from '../composables/useArticleOpen'
 
 const { isMobile } = useIsMobile()
-
-const STORAGE_KEY = 'articleCollapsed'
-
-function readStateFromEnv(): boolean {
-  const hash = window.location.hash
-  if (hash === '#article') return true
-  if (hash === '#app') return false
-
-  const stored = localStorage.getItem(STORAGE_KEY)
-  if (stored === 'true') return false
-  if (stored === 'false') return true
-
-  return true // default: open
-}
-
-const isOpen = ref(readStateFromEnv())
-
-function persistState(open: boolean) {
-  localStorage.setItem(STORAGE_KEY, open ? 'false' : 'true')
-  history.replaceState(null, '', open ? '#article' : '#app')
-}
+const { isOpen, persistState } = articleOpenState
 
 function open() {
   isOpen.value = true
@@ -43,6 +24,7 @@ function handleHashChange() {
 }
 
 onMounted(() => {
+  persistState(isOpen.value)
   window.addEventListener('hashchange', handleHashChange)
 })
 

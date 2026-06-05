@@ -3,6 +3,7 @@ import {ref, computed, onMounted, onUnmounted} from 'vue'
 import {Settings, ChevronDown} from 'lucide-vue-next'
 import {useBPE} from '../composables/useBPE'
 import {useIsMobile} from '../composables/useIsMobile'
+import {articleOpenState} from '../composables/useArticleOpen'
 import TrainingDataView from './TrainingDataView.vue'
 import TrainingView from './TrainingView.vue'
 import ValidationView from './ValidationView.vue'
@@ -82,7 +83,7 @@ const isButtonEnabled = (mode: ViewMode) => {
 const modes = ['training-data', 'training', 'validation'] as const satisfies readonly ViewMode[]
 
 const getModeClass = (mode: ViewMode, variant: 'button' | 'dropdown') => {
-  if (currentMode.value === mode) return 'bg-primary-500 text-white'
+  if (currentMode.value === mode) return 'bg-primary-500 text-white active'
   if (!isButtonEnabled(mode)) {
     const base = variant === 'dropdown' ? 'bg-white dark:bg-slate-800' : 'bg-slate-100 dark:bg-slate-800'
     return `${base} text-slate-400 dark:text-slate-600 cursor-not-allowed`
@@ -113,6 +114,8 @@ const showControlPanel = computed(() => {
   return currentMode.value === 'training'
 })
 
+const { isOpen: articleOpen } = articleOpenState
+
 </script>
 
 <template>
@@ -126,19 +129,21 @@ const showControlPanel = computed(() => {
           </h1>
       </div>
 
-      <!-- Mode Navigation and Settings Buttons -->
-      <div class="flex gap-2 flex-shrink-0 items-center">
+       <!-- Mode Navigation and Settings Buttons -->
+       <div class="flex gap-2 flex-shrink-0 items-center" :class="{ 'article-hidden': isMobile && articleOpen }">
 
-        <!-- Desktop: mode buttons via v-for -->
-        <button
-          v-for="mode in modes"
-          :key="mode"
-          :class="[isMobile ? 'hidden' : 'block', 'px-4 py-1.5 rounded-md text-sm font-medium transition-all', getModeClass(mode, 'button')]"
-          @click="switchToMode(mode)"
-          :disabled="!isButtonEnabled(mode)"
-        >
-          {{ modeLabels[mode] }}
-        </button>
+        <!-- Desktop: stepped mode navigation (hidden on mobile) -->
+        <div v-if="!isMobile" class="mode-steps flex">
+          <button
+            v-for="(mode, idx) in modes"
+            :key="mode"
+            class="mode-step relative"
+            :class="[getModeClass(mode, 'button'), isButtonEnabled(mode) ? '' : 'mode-step--disabled']"
+            @click="isButtonEnabled(mode) && switchToMode(mode)"
+          >
+            {{ modeLabels[mode] }}
+          </button>
+        </div>
 
         <!-- Mobile: dropdown -->
         <div ref="dropdownRef" class="relative" :class="isMobile ? 'block' : 'hidden'">
@@ -153,6 +158,7 @@ const showControlPanel = computed(() => {
           <!-- Dropdown menu -->
           <div
             v-if="isDropdownOpen"
+            style="z-index: 100;"
             class="absolute right-0 top-full mt-1 z-50 flex flex-col rounded-md overflow-hidden shadow-lg border border-slate-200 dark:border-slate-600"
           >
             <button
@@ -249,6 +255,87 @@ const showControlPanel = computed(() => {
   margin: 0;
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
   letter-spacing: 0.5px;
+}
+
+/* Hide nav bar when article overlay is open on mobile */
+.article-hidden {
+  display: none !important;
+}
+
+/* Stepped mode navigation */
+.mode-steps {
+  --step-chevron: 8px;
+  height: 34px;
+  overflow: visible;
+}
+
+.mode-step {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 34px;
+  padding: 0 16px;
+  border: none;
+  border-radius: 0;
+  font-size: 0.875rem;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+  z-index: 1;
+}
+
+/* First: rounded left, chevron point on right */
+.mode-step:first-child {
+  border-radius: 6px 0 0 6px;
+  clip-path: polygon(
+    0% 0%,
+    calc(100% - var(--step-chevron)) 0%,
+    100% 50%,
+    calc(100% - var(--step-chevron)) 100%,
+    0% 100%
+  );
+}
+
+/* Middle: chevron cutout on left (point inwards >), chevron point on right, negative margin to overlap */
+.mode-step:not(:first-child):not(:last-child) {
+  margin-left: calc(-1 * var(--step-chevron));
+  clip-path: polygon(
+    0% 0%,
+    var(--step-chevron) 50%,
+    0% 100%,
+    100% 100%,
+    calc(100% - var(--step-chevron)) 100%,
+    100% 50%,
+    calc(100% - var(--step-chevron)) 0%
+  );
+  padding-left: 20px;
+  padding-right: 18px;
+}
+
+/* Last: chevron cutout on left (point inwards >), rounded right, negative margin to overlap */
+.mode-step:last-child {
+  margin-left: calc(-1 * var(--step-chevron));
+  clip-path: polygon(
+    0% 0%,
+    var(--step-chevron) 50%,
+    0% 100%,
+    100% 100%,
+    100% 0%
+  );
+  padding-left: 20px;
+  border-radius: 0 6px 6px 0;
+}
+
+/* Active mode: higher z-index so chevron point overlays the next button */
+.mode-step.active {
+  z-index: 2;
+}
+
+.mode-step--disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 </style>
 
