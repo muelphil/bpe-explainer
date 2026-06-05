@@ -49,10 +49,11 @@ export function getTokenColor(content: string): string {
  * - Newlines shown as \n
  * - Tabs shown as \t
  * - Carriage returns shown as \r
+ * - C1 control codes (128-159) shown as \x80-\x9F
  */
 export function displayTokenContent(content: string): string {
   return content
-    .replace(/[\x00-\x1F]/g, (char) => {
+    .replace(/[\x00-\x1F\x80-\x9F]/g, (char) => {
       switch (char) {
         case '\n': return '\\n'
         case '\t': return '\\t'
