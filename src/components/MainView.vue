@@ -179,8 +179,11 @@ const showControlPanel = computed(() => {
       </div>
     </div>
 
-    <!-- Content row: training/validation view + sidebar (side-by-side on desktop) -->
-    <div class="flex-1 flex flex-col sm:flex-row overflow-hidden min-h-0">
+    <!-- Content row: left panel (blog) + training/validation view + sidebar (side-by-side on desktop) -->
+    <div class="flex-1 flex flex-col sm:flex-row overflow-hidden min-h-0 relative">
+
+      <!-- Left panel slot (blog article, mobile overlay) -->
+      <slot name="leftPanel" />
 
       <!-- Training / Validation content -->
       <div v-show="!mobileContentHidden" class="flex-1 overflow-hidden flex flex-col min-h-0">

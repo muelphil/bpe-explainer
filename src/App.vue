@@ -8,6 +8,8 @@ import FrequencyPanel from './components/FrequencyPanel.vue'
 import VocabularyPanel from './components/VocabularyPanel.vue'
 import StepPanel from './components/StepPanel.vue'
 import ControlPanel from './components/ControlPanel.vue'
+import ArticleVisualizationLayout from './components/ArticleVisualizationLayout.vue'
+import BlogArticle from './components/BlogArticle.vue'
 import type { BPESettings } from './services/types'
 
 const { initialize, updateSettings, goToStep, state, settings, currentStepData } = useBPE()
@@ -122,6 +124,13 @@ const handleModeChange = (mode: { showSidebars: boolean, showControlPanel: boole
       @goToStep="handleGoToStep"
       @modeChange="handleModeChange"
     >
+      <!-- Blog article panel (left of visualization on desktop, overlay on mobile) -->
+      <template #leftPanel>
+        <ArticleVisualizationLayout>
+          <BlogArticle />
+        </ArticleVisualizationLayout>
+      </template>
+
       <!-- Sidebar: full-width below content on mobile, fixed w-96 on the right on desktop -->
       <template #sidebar>
         <div
