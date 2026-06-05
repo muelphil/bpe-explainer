@@ -1,6 +1,6 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 
-const MOBILE_BREAKPOINT = '(max-width: 639px)'
+const MOBILE_BREAKPOINT = '(max-width: 875px)'
 
 export function useIsMobile() {
   const isMobile = ref(

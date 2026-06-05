@@ -57,14 +57,12 @@ onUnmounted(() => {
   <template v-if="!isMobile">
     <!-- Wrapper: relative positioning for the floating close button, no overflow clipping -->
     <div
-      class="article-panel-wrapper flex-shrink-0 relative"
-      :style="{ width: isOpen ? 'var(--article-panel-width)' : '0px' }"
+      class="article-panel-wrapper relative"
+      :style="{ '--basis': isOpen ? 'var(--article-panel-basis)' : '0px', '--min': isOpen ? 'var(--article-panel-min)' : '0px', '--max': isOpen ? 'var(--article-panel-max)' : '0px' }"
     >
       <!-- Inner: overflow-hidden clips blog content during width transition -->
-      <div class="article-panel-inner overflow-hidden border-r border-slate-200 dark:border-slate-700 h-full">
-        <div :style="{ width: 'var(--article-panel-width)' }" class="h-full">
-          <slot />
-        </div>
+      <div class="article-panel-inner overflow-hidden border-r border-slate-200 dark:border-slate-700 h-full flex-shrink-0">
+        <slot />
       </div>
 
       <!-- Collapse button: outside overflow-hidden, floats at right edge of wrapper -->
@@ -124,14 +122,17 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-/* Desktop: wrapper transitions width (no overflow-hidden here so close button isn't clipped) */
+/* Desktop: wrapper transitions flex-basis (no overflow-hidden here so close button isn't clipped) */
 .article-panel-wrapper {
-  transition: width 250ms ease;
+  flex-basis: var(--basis);
+  min-width: var(--min);
+  max-width: var(--max);
+  transition: flex-basis 250ms ease, min-width 250ms ease, max-width 250ms ease;
 }
 
-/* Inner panel: clips blog content during width transition */
+/* Inner panel: fills wrapper width */
 .article-panel-inner {
-  transition: width 250ms ease;
+  width: 100%;
 }
 
 /* Collapse button: circular, floats on right edge of panel */

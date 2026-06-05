@@ -68,6 +68,9 @@
 
   /* Layout */
   --article-panel-width: 786px;
+  --article-panel-basis: 33.333%;
+  --article-panel-min: 480px;
+  --article-panel-max: 820px;
 }
 
 .dark {

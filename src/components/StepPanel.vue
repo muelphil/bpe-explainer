@@ -245,7 +245,7 @@ watch([currentStep, isExpanded], async () => {
         minHeight: '0',
         height: isExpanded ? 'auto' : '78px',
         overflowY: isExpanded ? 'auto' : 'hidden',
-        overflowX: true
+        overflowX: 'hidden'
       }"
     >
       <button
