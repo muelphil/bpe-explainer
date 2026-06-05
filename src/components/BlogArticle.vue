@@ -8,7 +8,7 @@
 
       <!-- Title -->
       <header class="blog-article__header mb-8">
-        <h1 class="blog-article__title font-bold leading-tight" style="color: var(--text-primary); font-size:2rem;">
+        <h1 class="blog-article__title font-bold leading-tight" style="color: var(--text-primary); font-size:1.8rem;">
           Byte-Pair Encoding Explained: The Algorithm Powering Modern LLM Tokenization
         </h1>
         <p class="blog-article__subtitle text-sm mt-2 leading-relaxed" style="color: var(--text-secondary)">
