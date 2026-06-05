@@ -38,8 +38,8 @@ const modeLabels: Record<ViewMode, string> = {
 const {initialize, state} = useBPE()
 const { isMobile } = useIsMobile()
 
-const currentMode = ref<ViewMode>('training-data')
-const isTrainingDataDefined = ref(false)
+const currentMode = ref<ViewMode>('training')
+const isTrainingDataDefined = ref(true)
 const trainingDataViewRef = ref<InstanceType<typeof TrainingDataView> | null>(null)
 const isDropdownOpen = ref(false)
 const dropdownRef = ref<HTMLDivElement | null>(null)
@@ -101,7 +101,7 @@ const handleClickOutside = (e: MouseEvent) => {
 }
 
 onMounted(() => {
-  emit('modeChange', {showSidebars: false, showControlPanel: false, showFrequencySteps: false})
+  emit('modeChange', {showSidebars: true, showControlPanel: true, showFrequencySteps: true})
   document.addEventListener('click', handleClickOutside)
 })
 

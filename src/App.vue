@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { useBPE } from './composables/useBPE'
-import { useIsMobile } from './composables/useIsMobile'
+import {ref, computed, onMounted} from 'vue'
+import {useBPE} from './composables/useBPE'
+import {useIsMobile} from './composables/useIsMobile'
 import MainView from './components/MainView.vue'
 import SettingsModal from './components/SettingsModal.vue'
 import FrequencyPanel from './components/FrequencyPanel.vue'
@@ -10,10 +10,11 @@ import StepPanel from './components/StepPanel.vue'
 import ControlPanel from './components/ControlPanel.vue'
 import ArticleVisualizationLayout from './components/ArticleVisualizationLayout.vue'
 import BlogArticle from './components/BlogArticle.vue'
-import type { BPESettings } from './services/types'
+import {trainingPresets} from './data/trainingPresets'
+import type {BPESettings} from './services/types'
 
-const { initialize, updateSettings, goToStep, state, settings, currentStepData } = useBPE()
-const { isMobile } = useIsMobile()
+const {initialize, updateSettings, goToStep, state, settings, currentStepData} = useBPE()
+const {isMobile} = useIsMobile()
 
 const isSettingsOpen = ref(false)
 const hoveredPair = ref<[string, string] | null>(null)
@@ -69,7 +70,7 @@ const handleOpenSettings = () => {
 const handleSaveSettings = (newSettings: BPESettings) => {
   // Update settings first
   updateSettings(newSettings)
-  
+
   // Re-initialize if we have training data
   if (state.trainingData) {
     initialize(state.trainingData, newSettings)
@@ -90,7 +91,11 @@ const handleGoToStep = (stepNumber: number) => {
   goToStep(stepNumber)
 }
 
-const handleModeChange = (mode: { showSidebars: boolean, showControlPanel: boolean, showFrequencySteps: boolean }) => {
+const handleModeChange = (mode: {
+  showSidebars: boolean,
+  showControlPanel: boolean,
+  showFrequencySteps: boolean
+}) => {
   // Reset expansion refs for panels that are about to unmount (v-if becomes false),
   // so that when they remount they match their initialExpanded prop (collapsed on mobile).
   if (!mode.showSidebars) {
@@ -107,6 +112,32 @@ const handleModeChange = (mode: { showSidebars: boolean, showControlPanel: boole
   showControlPanel.value = mode.showControlPanel
   showFrequencySteps.value = mode.showFrequencySteps
 }
+
+/** Resolve training data from localStorage; fall back to the "text" preset. */
+function resolveTrainingData(): string {
+  const LS_CUSTOM = 'bpe-custom-training-data'
+  const LS_PRESET = 'bpe-selected-preset'
+
+  const custom = localStorage.getItem(LS_CUSTOM)
+  if (custom !== null) return custom
+
+  const presetId = localStorage.getItem(LS_PRESET)
+  if (presetId) {
+    const preset = trainingPresets.find(p => p.id === presetId)
+    if (preset) return preset.data
+  }
+
+  // Default: use the last preset in the list (Text)
+  const lastPreset = trainingPresets[trainingPresets.length - 1]
+  return lastPreset?.data ?? 'No Data'
+}
+
+// Start in training mode: initialize BPE with saved/default data
+const initialTrainingData = resolveTrainingData()
+initialize(initialTrainingData)
+showSidebars.value = true
+showControlPanel.value = true
+showFrequencySteps.value = true
 </script>
 
 <template>
@@ -127,7 +158,7 @@ const handleModeChange = (mode: { showSidebars: boolean, showControlPanel: boole
       <!-- Blog article panel (left of visualization on desktop, overlay on mobile) -->
       <template #leftPanel>
         <ArticleVisualizationLayout>
-          <BlogArticle />
+          <BlogArticle/>
         </ArticleVisualizationLayout>
       </template>
 
@@ -161,7 +192,7 @@ const handleModeChange = (mode: { showSidebars: boolean, showControlPanel: boole
           </div>
 
           <!-- Control panel at bottom (only in training mode) -->
-          <ControlPanel v-if="showControlPanel" />
+          <ControlPanel v-if="showControlPanel"/>
         </div>
       </template>
     </MainView>
