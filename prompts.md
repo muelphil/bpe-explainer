@@ -297,3 +297,9 @@ TODO: This is not good, the stack should be:
   * this must include different slates used
 * semantic Tailwind color mapping
 * separate surface palette from accent palette
+
+
+---
+
+
+This repository holds a visualization/explainer for byte pair encoding. We are aiming to submit this work to the IEEE vis conference VisXAI workshop on visualizations for explainable AI. currently the App contains the visualization only. For submitting, it also requires a blog entry that I have already written. As a first step, we need to make space for the blog entry. We need to create a new component that will hold the blog entry later on.
