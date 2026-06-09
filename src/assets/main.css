@@ -8,16 +8,16 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: rgb(248, 250, 252); /* slate-50 */
+  background: rgb(238, 240, 243); /* bg-secondary muted */
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgb(203, 213, 225); /* slate-300 */
+  background: rgb(195, 202, 215); /* muted neutral */
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgb(148, 163, 184); /* slate-400 */
+  background: rgb(155, 164, 182); /* muted hover */
 }
 
 .dark ::-webkit-scrollbar-track {
@@ -39,32 +39,32 @@
 /* Theme Variables */
 :root {
   /* Primary Colors */
-  --light-primary: rgb(147, 197, 253); /* blue-300 */
-  --primary: rgb(96, 165, 250); /* blue-400 */
+  --light-primary: rgb(191, 219, 254); /* primary-200 from tailwind */
+  --primary: rgb(96, 165, 250); /* primary-400 from tailwind */
 
-  /* Background Colors */
-  --bg-primary: rgb(255, 255, 255); /* white */
-  --bg-secondary: rgb(248, 250, 252); /* slate-50 */
-  --bg-tertiary: rgb(241, 245, 249); /* slate-100 */
-  --bg-hover: rgb(241, 245, 249); /* slate-100 */
-  --bg-active: rgb(226, 232, 240); /* slate-200 */
+  /* Background Colors - muted neutral tones, less harsh than pure white */
+  --bg-primary: rgb(245, 246, 248); /* muted cool grey, like a soft canvas */
+  --bg-secondary: rgb(238, 240, 243); /* slightly deeper neutral */
+  --bg-tertiary: rgb(228, 231, 236); /* subtle surface elevation */
+  --bg-hover: rgb(228, 231, 236); /* matches tertiary for hover */
+  --bg-active: rgb(215, 219, 226); /* muted active state */
 
-  /* Text Colors */
-  --text-primary: rgb(15, 23, 42); /* slate-900 */
-  --text-secondary: rgb(51, 65, 85); /* slate-700 */
-  --text-tertiary: rgb(100, 116, 139); /* slate-500 */
-  --text-muted: rgb(148, 163, 184); /* slate-400 */
+  /* Text Colors - softer, less contrast-heavy than slate-900 */
+  --text-primary: rgb(45, 50, 60); /* muted near-black, easier on eyes */
+  --text-secondary: rgb(65, 72, 88); /* softened secondary */
+  --text-tertiary: rgb(95, 103, 123); /* muted tertiary */
+  --text-muted: rgb(130, 140, 160); /* soft muted */
 
-  /* Border Colors */
-  --border-primary: rgb(226, 232, 240); /* slate-200 */
-  --border-secondary: rgb(203, 213, 225); /* slate-300 */
+  /* Border Colors - subtle, neutral */
+  --border-primary: rgb(215, 220, 228); /* soft border */
+  --border-secondary: rgb(200, 207, 218); /* slightly stronger border */
 
   /* Token ID Color */
-  --default-token-color: rgb(203, 213, 225);
-  --token-id-color: rgb(100, 116, 139); /* slate-500 */
+  --default-token-color: rgb(215, 220, 228);
+  --token-id-color: rgb(100, 108, 130); /* muted neutral */
 
   /* Shadow Colors */
-  --shadow-color: rgba(0, 0, 0, 0.1);
+  --shadow-color: rgba(0, 0, 0, 0.06);
 
   /* Layout */
   --article-panel-width: 786px;
