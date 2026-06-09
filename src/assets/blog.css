@@ -1,0 +1,160 @@
+/* Container */
+.blog-article {
+  background: var(--bg-primary);
+  font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+.blog-article__inner {
+  max-width: 100%;
+}
+
+/* Header */
+.blog-article__header {
+  border-bottom: 1px solid var(--border-primary);
+  padding-bottom: 1.5rem;
+}
+
+.blog-article__title {
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+}
+
+.blog-article__subtitle {
+  font-size: 1.05rem;
+  line-height: 1.65;
+}
+
+.blog-article__meta {
+  font-size: 0.8rem;
+}
+
+/* Special characters in subtitle */
+.blog-article__char {
+  font-family: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, monospace;
+  font-weight: 600;
+}
+
+/* Headings */
+.blog-article__h2 {
+  font-size: 1.5rem;
+  letter-spacing: -0.025em;
+  margin-top: 3.5rem;
+  margin-bottom: 1.25rem;
+  line-height: 1.3;
+}
+
+.blog-article__h3 {
+  font-size: 1.15rem;
+  letter-spacing: -0.015em;
+  margin-top: 2.5rem;
+  margin-bottom: 1rem;
+  line-height: 1.35;
+}
+
+/* Paragraphs */
+.blog-article__paragraph {
+  margin: 0 0 1em 0;
+  font-size: 1.05rem;
+  line-height: 1.75;
+}
+
+.blog-article__paragraph:last-child {
+  margin-bottom: 0;
+}
+
+/* Lists */
+.blog-article__list {
+  padding-left: 1.5rem;
+  list-style: disc;
+  font-size: 1.05rem;
+  line-height: 1.75;
+  margin-bottom: 1em;
+}
+
+.blog-article__olist {
+  padding-left: 1.5rem;
+  list-style: decimal;
+  font-size: 1.05rem;
+  line-height: 1.75;
+  margin-bottom: 1em;
+}
+
+/* Inline code */
+.blog-article__code {
+  font-family: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, monospace;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  background: var(--bg-tertiary);
+  padding: 0.2em 0.45em;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+/* Code block */
+.blog-article__codeblock {
+  background: var(--bg-secondary);
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--border-primary);
+  border-radius: 8px;
+  margin: 1.25rem 0 1.5rem;
+  overflow-x: auto;
+  font-family: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, monospace;
+  font-size: 0.9rem;
+  line-height: 1.7;
+  color: var(--text-secondary);
+}
+
+/* Figures */
+.blog-article__figure {
+  margin: 2rem 0;
+}
+
+.blog-article__image {
+  width: 100%;
+  border-radius: 8px;
+  display: block;
+}
+
+.blog-article__caption {
+  font-size: 0.85rem;
+  line-height: 1.55;
+  font-style: italic;
+  margin-top: 0.75rem;
+}
+
+/* Links */
+.blog-article__link {
+  color: var(--primary);
+  text-decoration: none;
+}
+
+.blog-article__link:hover {
+  text-decoration: underline;
+}
+
+/* References */
+.blog-article__refs {
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.blog-article__ref {
+  margin-bottom: 1rem;
+  color: var(--text-secondary);
+}
+
+.blog-article__ref:last-child {
+  margin-bottom: 0;
+}
+
+.blog-article__ref-authors {
+  font-style: italic;
+}
+
+.blog-article__ref-year {
+  font-weight: 600;
+}
+
+.blog-article__ref-title {
+  font-weight: 600;
+}
