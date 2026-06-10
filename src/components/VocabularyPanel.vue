@@ -101,12 +101,13 @@ const isTokenHighlighted = (tokenContent: string, hoveredTokenContent: string | 
             <span class="token-content">{{ displayTokenContent(token.content) }}</span>
             <span class="token-id">{{ token.id }}</span>
 
-            <!-- Tooltip on hover -->
+            <!-- Tooltip on hover (disabled: clips with overflow-hidden parent, needs rewrite)
             <span
               class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-900 dark:bg-slate-700 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-20">
               Token #{{ token.id }}
               <span v-if="token.addedAtStep > 0"> (Step {{ token.addedAtStep }})</span>
             </span>
+            -->
           </span>
         </span>
       </div>
