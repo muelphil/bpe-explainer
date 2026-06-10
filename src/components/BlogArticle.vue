@@ -4,6 +4,7 @@ import CharacterTokenization from './tokenization/CharacterTokenization.vue'
 import CharacterCombinations from './tokenization/CharacterCombinations.vue'
 import VocabularySpaces from './tokenization/VocabularySpaces.vue'
 import SubwordExample from './tokenization/SubwordExample.vue'
+import InfoCallout from './InfoCallout.vue'
 </script>
 
 <template>
@@ -331,21 +332,18 @@ import SubwordExample from './tokenization/SubwordExample.vue'
           that any input string can always be tokenized, regardless of what it contains.
         </p>
 
-        <div class="blog-article__infoblock">
-          <span class="blog-article__infoblock-icon">ℹ️</span>
-          <div>
-            <strong>Try it yourself:</strong> You can experiment with
-            <a
-              href="https://platform.openai.com/tokenizer"
-              target="_blank"
-              rel="noopener"
-              class="blog-article__link"
-            >OpenAI's Online Tokenizer</a>.
-            Try long technical terms from your field, deliberate typos, compound words, capitalization or
-            even emojis. Notice how familiar chunks reappear across words. That repetition is not
-            accidental, but what makes subword tokenization powerful.
-          </div>
-        </div>
+        <InfoCallout icon="ℹ️">
+          <strong>Try it yourself:</strong> You can experiment with
+          <a
+            href="https://platform.openai.com/tokenizer"
+            target="_blank"
+            rel="noopener"
+            class="blog-article__link"
+          >OpenAI's Online Tokenizer</a>.
+          Try long technical terms from your field, deliberate typos, compound words, capitalization or
+          even emojis. Notice how familiar chunks reappear across words. That repetition is not
+          accidental, but what makes subword tokenization powerful.
+        </InfoCallout>
       </section>
 
       <!-- Why Spaces Are Folded Into Tokens -->
