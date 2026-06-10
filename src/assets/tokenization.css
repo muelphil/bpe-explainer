@@ -187,3 +187,38 @@
 .token-highlight .token-id {
   color: rgba(255, 255, 255, 0.6) !important;
 }
+
+/* ── Subword example annotated ────────────────────────────────────────────── */
+.subword-example-annotated {
+  position: relative;
+  overflow: visible;
+  padding-top: 6rem;
+  padding-bottom: 5rem;
+}
+
+.token-annotation-area {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.token-row {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0;
+  align-items: center;
+}
+
+.token-row + .token-row {
+  margin-top: 4px;
+}
+
+.annotation {
+  position: absolute;
+  fill: currentColor;
+  color: var(--text-tertiary);
+  pointer-events: none;
+  z-index: 5;
+  overflow: visible;
+}
