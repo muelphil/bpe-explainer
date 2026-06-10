@@ -3,6 +3,7 @@ import AutoregressiveLLM from './tokenization/AutoregressiveLLM.vue'
 import CharacterTokenization from './tokenization/CharacterTokenization.vue'
 import CharacterCombinations from './tokenization/CharacterCombinations.vue'
 import VocabularySpaces from './tokenization/VocabularySpaces.vue'
+import SubwordExample from './tokenization/SubwordExample.vue'
 </script>
 
 <template>
@@ -85,6 +86,7 @@ import VocabularySpaces from './tokenization/VocabularySpaces.vue'
       <!-- Understanding the Sizes of Vocabularies -->
       <section class="blog-article__section mb-8">
         <h2 class="blog-article__h2 text-lg font-semibold mb-4" style="color: var(--text-primary)">
+          <!-- Here, add a graphic with the sentence “Tokenization divides text into smaller meaningful units — typically words or subwords.” -->
           Understanding the Sizes of Vocabularies
         </h2>
 
@@ -92,28 +94,33 @@ import VocabularySpaces from './tokenization/VocabularySpaces.vue'
           Before diving into the tradeoffs, it helps to establish some shared vocabulary (no pun intended):
         </p>
 
-        <ul class="blog-article__list text-sm leading-relaxed mt-3 space-y-2" style="color: var(--text-secondary)">
-          <li>
-            <strong>Tokens</strong> are the discrete units a language model processes and predicts. In text
-            models, a token might be a single character, part of a word, or an entire word, depending on
-            how the tokenizer splits the input.
-          </li>
-          <li>
-            <strong>Subwords</strong> are common fragments of words learned from patterns in the training
-            data, many of them aligning with meaningful parts like prefixes or suffixes. For example,
-            <code class="blog-article__code">ability</code> is a subword that may be used in the construction
-            of <code class="blog-article__code">applicability</code> and
-            <code class="blog-article__code">generalizability</code>.
-          </li>
-          <li>
-            <strong>Token IDs</strong> are the unique numerical identifiers for each token in the vocabulary.
-            After tokenization, the model works with these IDs, which identify the token regardless of
-            whether it represents a character, subword, or whole word.
-          </li>
-          <li>
-            <strong>Vocabulary</strong> is the complete set of tokens a model knows.
-          </li>
-        </ul>
+        <div class="blog-article__figure mt-4 mb-6">
+          <SubwordExample />
+        </div>
+
+        <p class="blog-article__paragraph text-sm leading-relaxed" style="color: var(--text-secondary)">
+          <strong>Tokens</strong> are the discrete units a language model processes and predicts. In text
+          models, a token might be a single character, part of a word, or an entire word, depending on
+          how the tokenizer splits the input.
+        </p>
+
+        <p class="blog-article__paragraph text-sm leading-relaxed" style="color: var(--text-secondary)">
+          <strong>Subwords</strong> are common fragments of words learned from patterns in the training
+          data, many of them aligning with meaningful parts like prefixes or suffixes. For example,
+          <code class="blog-article__code">ability</code> is a subword that may be used in the construction
+          of <code class="blog-article__code">applicability</code> and
+          <code class="blog-article__code">generalizability</code>.
+        </p>
+
+        <p class="blog-article__paragraph text-sm leading-relaxed" style="color: var(--text-secondary)">
+          <strong>Token IDs</strong> are the unique numerical identifiers for each token in the vocabulary.
+          After tokenization, the model works with these IDs, which identify the token regardless of
+          whether it represents a character, subword, or whole word.
+        </p>
+
+        <p class="blog-article__paragraph text-sm leading-relaxed" style="color: var(--text-secondary)">
+          <strong>Vocabulary</strong> is the complete set of tokens a model knows.
+        </p>
 
         <p class="blog-article__paragraph text-sm leading-relaxed mt-4" style="color: var(--text-secondary)">
           The goal of tokenization is to produce discrete units that carry semantic meaning. Later, these
@@ -344,7 +351,7 @@ import VocabularySpaces from './tokenization/VocabularySpaces.vue'
       <!-- Why Spaces Are Folded Into Tokens -->
       <section class="blog-article__section mb-8">
         <h3 class="blog-article__h3 text-base font-semibold mb-3" style="color: var(--text-primary)">
-          Extra: Why Spaces Are Folded Into Tokens
+          Why Spaces Are Folded Into Tokens
         </h3>
 
         <p class="blog-article__paragraph text-sm leading-relaxed" style="color: var(--text-secondary)">
@@ -357,12 +364,12 @@ import VocabularySpaces from './tokenization/VocabularySpaces.vue'
 
         <figure class="blog-article__figure mt-6 mb-6">
           <VocabularySpaces
-            :tokens="['A', ' man', ' walked', ' past', ' a', ' snow', 'man']"
-            :highlight="['man', ' man']"
+            :tokens="['A', '▁man', '▁walked', '▁past', '▁a', '▁snow', 'man']"
+            :highlight="['man', '▁man']"
           />
           <figcaption class="blog-article__caption text-xs leading-relaxed mt-2" style="color: var(--text-tertiary)">
             Leading spaces are part of the token.
-            <span class="token small"> man</span> and
+            <span class="token small">▁man</span> and
             <span class="token small">man</span> are two distinct vocabulary entries with different token IDs.
             The tokenizer encodes the boundary between words directly into the token itself.
           </figcaption>
@@ -548,30 +555,29 @@ import VocabularySpaces from './tokenization/VocabularySpaces.vue'
           purpose:
         </p>
 
-        <ul class="blog-article__list text-sm leading-relaxed mt-3 space-y-2" style="color: var(--text-secondary)">
-          <li>
-            <strong>Stop condition.</strong> Instead of merging until no pair occurs more than once,
-            training stops once the vocabulary reaches a <strong>target size</strong>. This is the
-            primary design knob: a larger vocabulary means fewer tokens per sequence, but more memory
-            and output-layer computation.
-          </li>
-          <li>
-            <strong>Base units.</strong> Depending on the tokenizer variant, training starts from
-            <strong>bytes or characters</strong>. This choice has significant downstream consequences
-            for vocabulary coverage and readability, as we will see in the variants below.
-          </li>
-          <li>
-            <strong>Whitespace and control symbols.</strong> Spaces, newlines, and non-printable
-            characters need special handling so that merge rules remain unambiguous. More on this below.
-          </li>
-          <li>
-            <strong>Special tokens.</strong> Special control tokens representing end-of-text markers,
-            user and system message delimiters and tool call boundaries are added <strong>after
-            training</strong> is complete. They are not part of the learned merge list and therefore
-            can never be produced by tokenizing ordinary user input — an important security and
-            correctness property.
-          </li>
-        </ul>
+
+        <p class="blog-article__paragraph text-sm leading-relaxed" style="color: var(--text-secondary)">
+          <strong>Stop condition.</strong> Instead of merging until no pair occurs more than once,
+          training stops once the vocabulary reaches a <strong>target size</strong>. This is the
+          primary design knob: a larger vocabulary means fewer tokens per sequence, but more memory
+          and output-layer computation.
+        </p>
+        <p class="blog-article__paragraph text-sm leading-relaxed" style="color: var(--text-secondary)">
+          <strong>Base units.</strong> Depending on the tokenizer variant, training starts from
+          <strong>bytes or characters</strong>. This choice has significant downstream consequences
+          for vocabulary coverage and readability, as we will see in the variants below.
+        </p>
+        <p class="blog-article__paragraph text-sm leading-relaxed" style="color: var(--text-secondary)">
+          <strong>Whitespace and control symbols.</strong> Spaces, newlines, and non-printable
+          characters need special handling so that merge rules remain unambiguous. More on this below.
+        </p>
+        <p class="blog-article__paragraph text-sm leading-relaxed" style="color: var(--text-secondary)">
+          <strong>Special tokens.</strong> Special control tokens representing end-of-text markers,
+          user and system message delimiters and tool call boundaries are added <strong>after
+          training</strong> is complete. They are not part of the learned merge list and therefore
+          can never be produced by tokenizing ordinary user input — an important security and
+          correctness property.
+        </p>
 
         <p class="blog-article__paragraph text-sm leading-relaxed mt-4" style="color: var(--text-secondary)">
           Despite these adjustments, the core BPE behavior carries over directly. Merges are applied
@@ -633,109 +639,6 @@ import VocabularySpaces from './tokenization/VocabularySpaces.vue'
           slightly more natural alignment with how words appear in human languages. For multilingual
           models especially, starting from characters rather than bytes can produce more interpretable
           merges.
-        </p>
-      </section>
-
-      <!-- Whitespace Replacement Characters -->
-      <section class="blog-article__section mb-8">
-        <h2 class="blog-article__h2 text-lg font-semibold mb-4" style="color: var(--text-primary)">
-          Whitespace Replacement Characters
-        </h2>
-
-        <p class="blog-article__paragraph text-sm leading-relaxed" style="color: var(--text-secondary)">
-          If you have ever inspected a tokenizer vocabulary directly or worked hands-on with LLM
-          tokenization output, you have almost certainly encountered unusual-looking characters taking
-          the place of spaces and newlines:
-          <code class="blog-article__code">▁</code>,
-          <code class="blog-article__code">Ġ</code>, and
-          <code class="blog-article__code">Ċ</code> are the most common. These are not accidents or
-          encoding errors. They exist for a principled reason rooted in how merge rules are stored.
-        </p>
-
-        <p class="blog-article__paragraph text-sm leading-relaxed mt-4" style="color: var(--text-secondary)">
-          When Sennrich et al. (2016) first repurposed BPE for NLP, the learned merge rules were
-          stored in a plain-text <code class="blog-article__code">merges.txt</code> file. Each line
-          represented one merge:
-        </p>
-
-        <!-- Code block for merge format -->
-        <pre class="blog-article__codeblock mt-3 mb-6"><code>left_token SPACE right_token NEWLINE</code></pre>
-
-        <p class="blog-article__paragraph text-sm leading-relaxed" style="color: var(--text-secondary)">
-          The format uses spaces to separate the two tokens being merged, and newlines to separate
-          individual merge rules. This creates a hard constraint: <strong>token strings themselves
-          cannot contain spaces or newlines</strong>. If they did, parsing the file would become
-          ambiguous, as you could no longer tell where one token ended and the separator began.
-        </p>
-
-        <p class="blog-article__paragraph text-sm leading-relaxed mt-4" style="color: var(--text-secondary)">
-          The solution is to replace whitespace characters with visible, non-whitespace Unicode symbols
-          before storing them. The two main tokenizer families handle this differently.
-        </p>
-      </section>
-
-      <!-- Why Ġ Represents a Space -->
-      <section class="blog-article__section mb-8">
-        <h3 class="blog-article__h3 text-base font-semibold mb-3" style="color: var(--text-primary)">
-          Why <code class="blog-article__code">Ġ</code> Represents a Space in GPT-Style Tokenizers
-        </h3>
-
-        <p class="blog-article__paragraph text-sm leading-relaxed" style="color: var(--text-secondary)">
-          This choice traces back to the byte-level BPE design introduced by Radford et al. (2019)
-          for GPT-2. Although byte-level BPE uses individual bytes as its base alphabet, the team
-          wanted vocabulary files to remain <strong>human-readable</strong>. So rather than storing
-          raw bytes, tokens are stored as Unicode characters.
-        </p>
-
-        <p class="blog-article__paragraph text-sm leading-relaxed mt-4" style="color: var(--text-secondary)">
-          The problem is that some bytes do not map cleanly to printable Unicode characters. The
-          solution was a remapping scheme: common printable ASCII and Latin-1 characters are preserved
-          as-is, while the remaining non-printable byte values are mapped to unused Unicode code points
-          starting at 256. This also includes spaces and newlines, that would break the format of the
-          file storing the merges, as detailed above.
-        </p>
-
-        <p class="blog-article__paragraph text-sm leading-relaxed mt-4" style="color: var(--text-secondary)">
-          Concretely:
-        </p>
-
-        <ul class="blog-article__list text-sm leading-relaxed mt-3 space-y-2" style="color: var(--text-secondary)">
-          <li>
-            <strong>Space (byte 32)</strong> is mapped to Unicode code point 288 → <strong>Ġ</strong>
-          </li>
-          <li>
-            <strong>Newline (byte 10)</strong> is mapped to Unicode code point 266 → <strong>Ċ</strong>
-          </li>
-        </ul>
-
-        <p class="blog-article__paragraph text-sm leading-relaxed mt-4" style="color: var(--text-secondary)">
-          The mapping is injective and reversible: by splitting any token string into its Unicode
-          characters and reversing the mapping from Unicode characters back to byte values, you can
-          recover the original byte sequence. The scheme guarantees a printable character, no collision
-          with standard ASCII, and a clean round-trip back to bytes — exactly what the file-backed
-          vocabulary format requires.
-        </p>
-      </section>
-
-      <!-- Why ▁ Represents a Space -->
-      <section class="blog-article__section mb-8">
-        <h3 class="blog-article__h3 text-base font-semibold mb-3" style="color: var(--text-primary)">
-          Why <code class="blog-article__code">▁</code> Represents a Space in SentencePiece Tokenizers
-        </h3>
-
-        <p class="blog-article__paragraph text-sm leading-relaxed" style="color: var(--text-secondary)">
-          SentencePiece uses a different approach. Rather than a byte-level remapping, it simply
-          replaces all whitespace characters with the <strong>lower one-eighth block</strong> character
-          <code class="blog-article__code">▁</code> (U+2581) before tokenization.
-        </p>
-
-        <p class="blog-article__paragraph text-sm leading-relaxed mt-4" style="color: var(--text-secondary)">
-          The motivation is stability: text preprocessing pipelines sometimes trim, collapse, or
-          normalize whitespace in inconsistent ways. By replacing spaces with a visible, safe
-          placeholder before any merges are applied, SentencePiece ensures that tokenization is stable
-          and reproducible regardless of external whitespace quirks. The
-          <code class="blog-article__code">▁</code> character was chosen because it is visually distinct
-          and very rare in natural text, making collisions with genuine input essentially impossible.
         </p>
       </section>
 
@@ -814,23 +717,6 @@ import VocabularySpaces from './tokenization/VocabularySpaces.vue'
           quality differences between BPE, WordPiece, and Unigram LM are small at scale, so the
           practical advantages of BPE — speed, predictability, and a long track record — have made it
           the default choice for most modern LLM tokenizers.
-        </p>
-      </section>
-
-      <!-- Your Turn -->
-      <section class="blog-article__section mb-8">
-        <h2 class="blog-article__h2 text-lg font-semibold mb-4" style="color: var(--text-primary)">
-          Your Turn!
-        </h2>
-
-        <p class="blog-article__paragraph text-sm leading-relaxed" style="color: var(--text-secondary)">
-          Now is a good moment to try the interactive visualizer! Now that we have covered the algorithm
-          in theory, step through the merge process and watch how the vocabulary gradually emerges from
-          the training data. Keep an eye on which fragments get merged first. You will often see common
-          subwords like <code class="blog-article__code">ing</code>,
-          <code class="blog-article__code">tion</code>, or
-          <code class="blog-article__code">pre</code> quickly turn into single tokens, while rarer
-          sequences remain split into smaller pieces.
         </p>
       </section>
 

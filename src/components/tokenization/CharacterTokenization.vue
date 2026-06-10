@@ -7,6 +7,12 @@ const props = withDefaults(defineProps<{
   text: 'I love chocolate cookies at work.'
 })
 
+function visSpaces(s: string){
+  if(s == " ")
+    return "▁"
+  return s
+}
+
 const sceneRef = ref<HTMLDivElement | null>(null)
 
 function tokenId(s: string): number {
@@ -27,7 +33,7 @@ onMounted(() => {
         class="token-wrapper char-token-wrapper"
       >
         <span class="token">
-          {{ ch }}
+          {{ visSpaces(ch) }}
           <span class="token-id">{{ tokenId(ch) }}</span>
         </span>
       </div>
