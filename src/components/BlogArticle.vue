@@ -16,35 +16,35 @@ import SubwordExample from './tokenization/SubwordExample.vue'
       <!-- ============================================= -->
 
       <!-- Title -->
-      <header class="blog-article__header mb-8">
-        <h1 class="blog-article__title font-bold leading-tight" style="color: var(--text-primary); font-size:1.8rem;">
+      <header class="blog-article__header">
+        <h1 class="blog-article__title">
           From Text to Tokens: The Balancing Act Behind LLM Vocabularies
         </h1>
-        <p class="blog-article__subtitle text-sm mt-2 leading-relaxed" style="color: var(--text-secondary)">
+        <p class="blog-article__subtitle">
           Before a large language model can generate a single word, it needs to convert raw text into tokens.
           This post works through the design space of tokenization vocabularies, going from character-level
           extremes to word-level pitfalls, to build intuition for why modern models settle on subword tokenization.
         </p>
-        <p class="blog-article__meta text-xs mt-3" style="color: var(--text-tertiary)">
+        <p class="blog-article__meta">
           Philip Müller &middot; Feb 27, 2026 &middot; 8 minute read
         </p>
       </header>
 
       <!-- Introduction -->
-      <section class="blog-article__section mb-8">
-        <p class="blog-article__paragraph text-sm leading-relaxed" style="color: var(--text-secondary)">
+      <section>
+        <p>
           Understanding how large language models work is crucial for both effective use and research.
           This post covers the very first step in the processing chain of an LLM: tokenization.
         </p>
       </section>
 
       <!-- What Are Transformers, Really? -->
-      <section class="blog-article__section mb-8">
-        <h2 class="blog-article__h2 text-lg font-semibold mb-4" style="color: var(--text-primary)">
+      <section>
+        <h2>
           What Are Transformers, Really?
         </h2>
 
-        <p class="blog-article__paragraph text-sm leading-relaxed" style="color: var(--text-secondary)">
+        <p>
           Transformers are named for the architecture's mechanism of transforming sequence representations via
           self-attention and feed-forward layers, replacing recurrence and convolution. While originally
           designed to translate text in one language into another, they were quickly adapted to solve all
@@ -54,19 +54,19 @@ import SubwordExample from './tokenization/SubwordExample.vue'
           sound wave, or — in the case of text — words, subwords, or even single characters.
         </p>
 
-        <p class="blog-article__paragraph text-sm leading-relaxed mt-4" style="color: var(--text-secondary)">
+        <p>
           Large language models are built on this same architecture. Fundamentally, they are
           <em>next-token predictors</em>: given a sequence of tokens, the model predicts the most likely
           next token based on context and learned internal representations, one after another.
         </p>
 
-        <figure class="blog-article__figure mt-6 mb-6">
+        <figure>
           <AutoregressiveLLM
             :start-tokens="['Paris', 'is', 'the']"
             :inferred-tokens="[' city', 'of', 'light', '.', '&lt;endoftext&gt;']"
             :speed="1"
           />
-          <figcaption class="blog-article__caption text-xs leading-relaxed mt-2" style="color: var(--text-tertiary)">
+          <figcaption>
             Autoregressive inference: the model processes a sequence of tokens and predicts the next token
             at each step. After each prediction, the newly generated token is appended to the sequence and
             fed back into the model as part of the context for the next forward pass. The visualization
@@ -74,7 +74,7 @@ import SubwordExample from './tokenization/SubwordExample.vue'
           </figcaption>
         </figure>
 
-        <p class="blog-article__paragraph text-sm leading-relaxed" style="color: var(--text-secondary)">
+        <p>
           The first step on this journey is tokenization: splitting raw text into the chunks that can be
           fed to the LLM. This post builds intuition for the tradeoffs of different vocabulary structures
           and sizes from first principles. In the next one, we will see how the frequency-based compression
@@ -84,27 +84,27 @@ import SubwordExample from './tokenization/SubwordExample.vue'
       </section>
 
       <!-- Understanding the Sizes of Vocabularies -->
-      <section class="blog-article__section mb-8">
-        <h2 class="blog-article__h2 text-lg font-semibold mb-4" style="color: var(--text-primary)">
+      <section>
+        <h2>
           <!-- Here, add a graphic with the sentence “Tokenization divides text into smaller meaningful units — typically words or subwords.” -->
           Understanding the Sizes of Vocabularies
         </h2>
 
-        <p class="blog-article__paragraph text-sm leading-relaxed" style="color: var(--text-secondary)">
+        <p>
           Before diving into the tradeoffs, it helps to establish some shared vocabulary (no pun intended):
         </p>
 
-        <div class="blog-article__figure mt-4 mb-6">
+        <div>
           <SubwordExample />
         </div>
 
-        <p class="blog-article__paragraph text-sm leading-relaxed" style="color: var(--text-secondary)">
+        <p>
           <strong>Tokens</strong> are the discrete units a language model processes and predicts. In text
           models, a token might be a single character, part of a word, or an entire word, depending on
           how the tokenizer splits the input.
         </p>
 
-        <p class="blog-article__paragraph text-sm leading-relaxed" style="color: var(--text-secondary)">
+        <p>
           <strong>Subwords</strong> are common fragments of words learned from patterns in the training
           data, many of them aligning with meaningful parts like prefixes or suffixes. For example,
           <code class="blog-article__code">ability</code> is a subword that may be used in the construction
@@ -112,24 +112,24 @@ import SubwordExample from './tokenization/SubwordExample.vue'
           <code class="blog-article__code">generalizability</code>.
         </p>
 
-        <p class="blog-article__paragraph text-sm leading-relaxed" style="color: var(--text-secondary)">
+        <p>
           <strong>Token IDs</strong> are the unique numerical identifiers for each token in the vocabulary.
           After tokenization, the model works with these IDs, which identify the token regardless of
           whether it represents a character, subword, or whole word.
         </p>
 
-        <p class="blog-article__paragraph text-sm leading-relaxed" style="color: var(--text-secondary)">
+        <p>
           <strong>Vocabulary</strong> is the complete set of tokens a model knows.
         </p>
 
-        <p class="blog-article__paragraph text-sm leading-relaxed mt-4" style="color: var(--text-secondary)">
+        <p>
           The goal of tokenization is to produce discrete units that carry semantic meaning. Later, these
           meanings are captured by learned vectors of fixed size, called embeddings. After tokenization and
           embedding, most of the computation an LLM performs to predict the next token operates on these
           embeddings.
         </p>
 
-        <p class="blog-article__paragraph text-sm leading-relaxed mt-4" style="color: var(--text-secondary)">
+        <p>
           Today, tokenizers are the only components trained independently <em>before</em> the otherwise
           end-to-end training pipelines of LLMs. Modern models use vocabularies ranging from tens of
           thousands of tokens to several hundred thousand in multilingual settings. As an example,
@@ -142,7 +142,7 @@ import SubwordExample from './tokenization/SubwordExample.vue'
           Deciding which tokens go into the vocabulary (and how many) is far from trivial.
         </p>
 
-        <p class="blog-article__paragraph text-sm leading-relaxed mt-4" style="color: var(--text-secondary)">
+        <p>
           As a software engineer, I like to evaluate edge cases to get a full picture of the tradeoffs at
           play. Working through the extremes is what really helped me understand why researchers chose the
           tokenization algorithms and vocabulary sizes most common in modern LLMs. So let's start there.
@@ -150,26 +150,26 @@ import SubwordExample from './tokenization/SubwordExample.vue'
       </section>
 
       <!-- Using Characters -->
-      <section class="blog-article__section mb-8">
-        <h3 class="blog-article__h3 text-base font-semibold mb-3" style="color: var(--text-primary)">
+      <section>
+        <h3>
           Using Characters (and Only Characters) as Tokens
         </h3>
 
-        <p class="blog-article__paragraph text-sm leading-relaxed" style="color: var(--text-secondary)">
+        <p>
           A simple edge case would be to use the alphabet as a vocabulary; essentially the same idea as
           ASCII (American Standard Code for Information Interchange), which was first developed to represent
           text as numbers for electronic communication.
         </p>
 
-        <figure class="blog-article__figure mt-6 mb-6">
+        <figure>
           <CharacterTokenization text="I love chocolate cookies at work." />
-          <figcaption class="blog-article__caption text-xs leading-relaxed mt-2" style="color: var(--text-tertiary)">
+          <figcaption>
             Character-level tokenization: each character becomes its own token. While maximally flexible,
             this results in very long sequences. Here, 25 characters produce 25 tokens.
           </figcaption>
         </figure>
 
-        <p class="blog-article__paragraph text-sm leading-relaxed" style="color: var(--text-secondary)">
+        <p>
           This approach has one genuine advantage: a small vocabulary reduces computation. In the final
           step of next-token prediction, the model computes a score (also called a <em>logit</em>) for
           every token in the vocabulary. It then applies a <em>softmax</em>, a function that converts these
@@ -178,7 +178,7 @@ import SubwordExample from './tokenization/SubwordExample.vue'
           vocabulary small saves real computation in these steps.
         </p>
 
-        <p class="blog-article__paragraph text-sm leading-relaxed mt-4" style="color: var(--text-secondary)">
+        <p>
           The problem is severe token inflation: one token per character. Because LLMs are autoregressive,
           every token requires its own full forward pass through the model. The same amount of computation
           is expended regardless of whether the generated token represents a single letter or an entire
@@ -186,13 +186,13 @@ import SubwordExample from './tokenization/SubwordExample.vue'
           making this approach prohibitively expensive at scale.
         </p>
 
-        <p class="blog-article__paragraph text-sm leading-relaxed mt-4" style="color: var(--text-secondary)">
+        <p>
           There is also the problem of context size. LLMs are limited in how many tokens they can attend to
           at once. With character-level tokens, the same amount of text consumes far more of that context
           budget, leaving less room for longer inputs or richer reasoning.
         </p>
 
-        <p class="blog-article__paragraph text-sm leading-relaxed mt-4" style="color: var(--text-secondary)">
+        <p>
           An even more fundamental issue is that this approach conflicts with the goal of tokenization: to
           produce units that carry semantic meaning, rich enough that the model can build useful
           representations around them. Single characters largely fail this test. The letter
@@ -204,29 +204,29 @@ import SubwordExample from './tokenization/SubwordExample.vue'
       </section>
 
       <!-- Using All Possible Word Tokens -->
-      <section class="blog-article__section mb-8">
-        <h3 class="blog-article__h3 text-base font-semibold mb-3" style="color: var(--text-primary)">
+      <section>
+        <h3>
           Using One Token for Every Single Word Imaginable
         </h3>
 
-        <p class="blog-article__paragraph text-sm leading-relaxed" style="color: var(--text-secondary)">
+        <p>
           At the other extreme: why not generate all possible tokens by enumerating every character
           combination up to a certain length from a base alphabet, effectively covering every word that
           could ever be written?
         </p>
 
-        <figure class="blog-article__figure mt-6 mb-6">
+        <figure>
           <CharacterCombinations
             alphabet="abcdefghijklmnopqrstuvwxyz"
             :rows="4"
           />
-          <figcaption class="blog-article__caption text-xs leading-relaxed mt-2" style="color: var(--text-tertiary)">
+          <figcaption>
             All possible tokens from character combinations of lengths 1–4. Even with just 26 letters, the
             vocabulary grows exponentially: 26 + 676 + 17,576 + 456,976 = 475,254 entries.
           </figcaption>
         </figure>
 
-        <p class="blog-article__paragraph text-sm leading-relaxed" style="color: var(--text-secondary)">
+        <p>
           The problem is that this vocabulary explodes exponentially. Using only the 26 lowercase letters
           of the Roman alphabet, all character combinations of up to five characters already yield over
           12.3 million distinct tokens. That's roughly 100 times the vocabulary sizes used in modern LLMs,
@@ -234,7 +234,7 @@ import SubwordExample from './tokenization/SubwordExample.vue'
           words.
         </p>
 
-        <p class="blog-article__paragraph text-sm leading-relaxed mt-4" style="color: var(--text-secondary)">
+        <p>
           Beyond the sheer size, the vast majority of these tokens would carry no semantic meaning. The
           sequence <code class="blog-article__code">zxqbw</code> is a valid combination, but there is
           nothing for a model to learn from it. A vocabulary saturated with meaningless entries is not just
@@ -243,19 +243,19 @@ import SubwordExample from './tokenization/SubwordExample.vue'
       </section>
 
       <!-- Using One Token Per Word -->
-      <section class="blog-article__section mb-8">
-        <h3 class="blog-article__h3 text-base font-semibold mb-3" style="color: var(--text-primary)">
+      <section>
+        <h3>
           Using One Token for Every Single Word
         </h3>
 
-        <p class="blog-article__paragraph text-sm leading-relaxed" style="color: var(--text-secondary)">
+        <p>
           The next idea is more intuitive: take the training corpus, extract every distinct word, and
           assign each one a unique token. This is the underlying idea behind many classical NLP systems:
           Bag of Words models, TF-IDF, Word2Vec and GloVe embeddings. Early neural language models all
           worked roughly along these lines.
         </p>
 
-        <p class="blog-article__paragraph text-sm leading-relaxed mt-4" style="color: var(--text-secondary)">
+        <p>
           The
           <a
             href="https://en.wikipedia.org/wiki/List_of_dictionaries_by_number_of_words"
@@ -272,18 +272,18 @@ import SubwordExample from './tokenization/SubwordExample.vue'
           becomes enormous.
         </p>
 
-        <p class="blog-article__paragraph text-sm leading-relaxed mt-4" style="color: var(--text-secondary)">
+        <p>
           Three distinct problems follow.
         </p>
 
-        <p class="blog-article__paragraph text-sm leading-relaxed mt-4" style="color: var(--text-secondary)">
+        <p>
           <strong>Size and memory.</strong> During training, for every token in the vocabulary the model
           learns a high dimensional vector capturing the semantic meaning of the token. If the vocabulary
           grows into the millions, the model's embedding and output projection matrices (which convert
           between token IDs and embedding vectors) becomes enormous.
         </p>
 
-        <p class="blog-article__paragraph text-sm leading-relaxed mt-4" style="color: var(--text-secondary)">
+        <p>
           <strong>Rare words.</strong> Including every word from a training corpus means including many
           that appear only a handful of times. The model sees too few examples of these tokens to learn
           meaningful representations for them. Their embeddings remain undertrained and noisy, contributing
@@ -297,7 +297,7 @@ import SubwordExample from './tokenization/SubwordExample.vue'
           >SolidGoldMagikarp token</a>.
         </p>
 
-        <p class="blog-article__paragraph text-sm leading-relaxed mt-4" style="color: var(--text-secondary)">
+        <p>
           <strong>Out-of-vocabulary words.</strong> Any word not seen during training has no token. Be it a
           simple typo or a woman descending from the sky trying to type
           <code class="blog-article__code">supercalifragilisticexpialidocious</code> — tokenization simply
@@ -306,18 +306,18 @@ import SubwordExample from './tokenization/SubwordExample.vue'
       </section>
 
       <!-- Subword Tokenization -->
-      <section class="blog-article__section mb-8">
-        <h3 class="blog-article__h3 text-base font-semibold mb-3" style="color: var(--text-primary)">
+      <section>
+        <h3>
           The Result: Subword Tokenization
         </h3>
 
-        <p class="blog-article__paragraph text-sm leading-relaxed" style="color: var(--text-secondary)">
+        <p>
           The approach that modern tokenizers converge on is subword tokenization: splitting text into
           words and subword units that are large enough to carry semantic meaning, while keeping the
           vocabulary to a manageable size.
         </p>
 
-        <p class="blog-article__paragraph text-sm leading-relaxed mt-4" style="color: var(--text-secondary)">
+        <p>
           The intuition is clean. If you know what a <code class="blog-article__code">book</code> is, and
           you know what a <code class="blog-article__code">store</code> is, then you already know what a
           <code class="blog-article__code">bookstore</code> is, even if you have never encountered the
@@ -325,15 +325,15 @@ import SubwordExample from './tokenization/SubwordExample.vue'
           new combinations of familiar pieces.
         </p>
 
-        <p class="blog-article__paragraph text-sm leading-relaxed mt-4" style="color: var(--text-secondary)">
+        <p>
           To ensure that tokenization never completely breaks (even on novel words, typos, or new emojis)
           modern tokenizers include all individual bytes in the vocabulary as a fallback. This guarantees
           that any input string can always be tokenized, regardless of what it contains.
         </p>
 
-        <div class="blog-article__codeblock mt-4 mb-4" style="display: flex; align-items: flex-start; gap: 0.75rem; font-size: 0.95rem;">
-          <span style="font-size: 1.3rem; line-height: 1.5; flex-shrink: 0;">ℹ️</span>
-          <div style="color: var(--text-secondary); line-height: 1.7;">
+        <div class="blog-article__infoblock">
+          <span class="blog-article__infoblock-icon">ℹ️</span>
+          <div>
             <strong>Try it yourself:</strong> You can experiment with
             <a
               href="https://platform.openai.com/tokenizer"
@@ -349,12 +349,12 @@ import SubwordExample from './tokenization/SubwordExample.vue'
       </section>
 
       <!-- Why Spaces Are Folded Into Tokens -->
-      <section class="blog-article__section mb-8">
-        <h3 class="blog-article__h3 text-base font-semibold mb-3" style="color: var(--text-primary)">
+      <section>
+        <h3>
           Why Spaces Are Folded Into Tokens
         </h3>
 
-        <p class="blog-article__paragraph text-sm leading-relaxed" style="color: var(--text-secondary)">
+        <p>
           When exploring the vocabularies of different LLMs, you will notice something: rather than a
           single space token, there are many tokens that come in both a space-prefixed and a non-space-prefixed
           form. The word <code class="blog-article__code">man</code> and
@@ -362,12 +362,12 @@ import SubwordExample from './tokenization/SubwordExample.vue'
           entries with distinct token IDs.
         </p>
 
-        <figure class="blog-article__figure mt-6 mb-6">
+        <figure>
           <VocabularySpaces
             :tokens="['A', '▁man', '▁walked', '▁past', '▁a', '▁snow', 'man']"
             :highlight="['man', '▁man']"
           />
-          <figcaption class="blog-article__caption text-xs leading-relaxed mt-2" style="color: var(--text-tertiary)">
+          <figcaption>
             Leading spaces are part of the token.
             <span class="token small">▁man</span> and
             <span class="token small">man</span> are two distinct vocabulary entries with different token IDs.
@@ -375,7 +375,7 @@ import SubwordExample from './tokenization/SubwordExample.vue'
           </figcaption>
         </figure>
 
-        <p class="blog-article__paragraph text-sm leading-relaxed" style="color: var(--text-secondary)">
+        <p>
           The reasoning is practical. A standalone space character carries almost no semantic meaning on its
           own, but naively including it as a separate token would roughly double the token count for most
           natural text, slowing down inference and cluttering up the context window that is fixed to a
@@ -384,7 +384,7 @@ import SubwordExample from './tokenization/SubwordExample.vue'
           in a single unit, as a separate token.
         </p>
 
-        <p class="blog-article__paragraph text-sm leading-relaxed mt-4" style="color: var(--text-secondary)">
+        <p>
           There is also a structural consequence for vocabulary construction: merging rules in most
           LLM-oriented implementations explicitly prohibit merges that result in tokens containing spaces
           at the end or in the middle of a word. This keeps word boundaries legible in the vocabulary
@@ -394,16 +394,16 @@ import SubwordExample from './tokenization/SubwordExample.vue'
       </section>
 
       <!-- The Core Tradeoff -->
-      <section class="blog-article__section mb-8">
-        <h2 class="blog-article__h2 text-lg font-semibold mb-4" style="color: var(--text-primary)">
+      <section>
+        <h2>
           The Core Tradeoff
         </h2>
 
-        <p class="blog-article__paragraph text-sm leading-relaxed" style="color: var(--text-secondary)">
+        <p>
           Tokenization sits at the intersection of three competing pressures:
         </p>
 
-        <ul class="blog-article__list text-sm leading-relaxed mt-3 space-y-2" style="color: var(--text-secondary)">
+        <ul>
           <li>
             <strong>Vocabulary size</strong> — Larger vocabularies increase memory and output-layer
             computation.
@@ -418,20 +418,20 @@ import SubwordExample from './tokenization/SubwordExample.vue'
           </li>
         </ul>
 
-        <p class="blog-article__paragraph text-sm leading-relaxed mt-4" style="color: var(--text-secondary)">
+        <p>
           Character-level tokenization minimizes vocabulary size but explodes sequence length.<br>
           Word-level tokenization minimizes sequence length but explodes vocabulary size and breaks on
           new words.<br>
           Subword tokenization balances both while preserving compositional meaning.
         </p>
 
-        <p class="blog-article__paragraph text-sm leading-relaxed mt-4" style="color: var(--text-secondary)">
+        <p>
           While we have now deduced the logic behind subword tokenization, vocabularies are not handpicked
           (that would be way too much work). Instead, good subwords emerge from an algorithmic process
           based on the frequencies in the training data.
         </p>
 
-        <p class="blog-article__paragraph text-sm leading-relaxed mt-4" style="color: var(--text-secondary)">
+        <p>
           In the next post, we will look at how modern tokenizers actually <em>learn</em> these subword
           units and why the specific algorithms used today are surprisingly elegant.
         </p>
@@ -441,28 +441,28 @@ import SubwordExample from './tokenization/SubwordExample.vue'
       <!-- POST 2: BPE Explained                         -->
       <!-- ============================================= -->
 
-      <hr style="border: none; border-top: 1px solid var(--border-primary); margin: 3rem 0;">
+      <hr class="blog-article__divider">
 
       <!-- Title -->
-      <header class="blog-article__header mb-8">
-        <h1 class="blog-article__title font-bold leading-tight" style="color: var(--text-primary); font-size:1.8rem;">
+      <header class="blog-article__header">
+        <h1 class="blog-article__title">
           Byte-Pair Encoding Explained: The Algorithm Powering Modern LLM Tokenization
         </h1>
-        <p class="blog-article__subtitle text-sm mt-2 leading-relaxed" style="color: var(--text-secondary)">
+        <p class="blog-article__subtitle">
           How does a tokenizer actually learn which subwords to put in its vocabulary? This article covers
           Byte-Pair Encoding: the compression algorithm from 1994 that was repurposed for modern LLMs,
           how it was adapted for neural language model training, how byte-level and character-level
           variants differ, and why tokenizer vocabularies contain strange-looking characters like
           <span class="blog-article__char">Ġ</span> and <span class="blog-article__char">▁</span>.
         </p>
-        <p class="blog-article__meta text-xs mt-3" style="color: var(--text-tertiary)">
+        <p class="blog-article__meta">
           Philip Müller &middot; Mar 8, 2026 &middot; 10 minute read
         </p>
       </header>
 
       <!-- Introduction -->
-      <section class="blog-article__section mb-8">
-        <p class="blog-article__paragraph text-sm leading-relaxed" style="color: var(--text-secondary)">
+      <section>
+        <p>
           In the previous post, we worked through the design space of tokenization vocabularies, going
           from character-level extremes to word-level pitfalls, arriving at subword tokenization as the
           principled middle ground. But we left open the question of how a tokenizer actually learns
@@ -470,7 +470,7 @@ import SubwordExample from './tokenization/SubwordExample.vue'
           a statistical process that runs over the training corpus before any language model training begins.
         </p>
 
-        <p class="blog-article__paragraph text-sm leading-relaxed mt-4" style="color: var(--text-secondary)">
+        <p>
           This post covers one of the most widely used algorithms behind that process:
           <strong>Byte-Pair Encoding</strong>, or BPE. Among the several approaches that exist (such as
           WordPiece and Unigram Language Models), BPE-based tokenizers are the most common in modern
@@ -478,7 +478,7 @@ import SubwordExample from './tokenization/SubwordExample.vue'
           model training, and what those strange-looking characters in tokenizer vocabularies actually mean.
         </p>
 
-        <p class="blog-article__paragraph text-sm leading-relaxed mt-4" style="color: var(--text-secondary)">
+        <p>
           To make the algorithm as concrete as possible, an interactive demo of the training process is
           built into this application. By default, it shows a version that closely resembles the algorithm
           as it is implemented in modern GPT-style tokenizers, but you can switch to the original
@@ -487,19 +487,19 @@ import SubwordExample from './tokenization/SubwordExample.vue'
       </section>
 
       <!-- The Original Byte-Pair Encoding -->
-      <section class="blog-article__section mb-8">
-        <h2 class="blog-article__h2 text-lg font-semibold mb-4" style="color: var(--text-primary)">
+      <section>
+        <h2>
           The Original Byte-Pair Encoding
         </h2>
 
-        <p class="blog-article__paragraph text-sm leading-relaxed" style="color: var(--text-secondary)">
+        <p>
           BPE was first described in 1994 by Philip Gage, not as a tokenization strategy, but as a
           method for <strong>compressing bytes</strong>. The goal was to optimize the byte-level storage
           size of text by replacing frequently recurring byte combinations with shorter representations,
           building a translation table in the process.
         </p>
 
-        <p class="blog-article__paragraph text-sm leading-relaxed mt-4" style="color: var(--text-secondary)">
+        <p>
           The algorithm works iteratively. Starting from individual bytes, it scans the input for the
           most frequently occurring pair of adjacent tokens and merges them into a single new token.
           This new token is added to the vocabulary, all occurrences of the pair in the text are
@@ -508,13 +508,13 @@ import SubwordExample from './tokenization/SubwordExample.vue'
         </p>
 
         <!-- Animation figure - references /merging_animation.avif from public/ -->
-        <figure class="blog-article__figure mt-6 mb-6">
+        <figure>
           <img
             src="/merging_animation.avif"
             alt="Animation showing how a tokenizer builds its vocabulary based on frequencies in the training data"
-            class="blog-article__image"
+
           >
-          <figcaption class="blog-article__caption text-xs leading-relaxed mt-2" style="color: var(--text-tertiary)">
+          <figcaption>
             Animation of the Byte-Pair Encoding Visualizer showing how a tokenizer builds its vocabulary
             based on frequencies in the training data. Because the training data contains many words
             ending in "ation," the algorithm repeatedly merges tokens until "ation" emerges as a
@@ -522,7 +522,7 @@ import SubwordExample from './tokenization/SubwordExample.vue'
           </figcaption>
         </figure>
 
-        <p class="blog-article__paragraph text-sm leading-relaxed" style="color: var(--text-secondary)">
+        <p>
           The algorithm continues until no pair of tokens appears more than once in the text (the
           natural break condition of the compression use case), or until a target compression rate is
           reached. The result is a vocabulary encoded as a translation table of all the merges applied,
@@ -530,19 +530,19 @@ import SubwordExample from './tokenization/SubwordExample.vue'
           original text, the receiver needs the vocabulary once, then the token IDs.
         </p>
 
-        <p class="blog-article__paragraph text-sm leading-relaxed mt-4" style="color: var(--text-secondary)">
+        <p>
           It is a simple and elegant algorithm, and that simplicity turns out to be one of the main
           reasons it has held up so well.
         </p>
       </section>
 
       <!-- Adapting BPE for LLM Tokenization -->
-      <section class="blog-article__section mb-8">
-        <h2 class="blog-article__h2 text-lg font-semibold mb-4" style="color: var(--text-primary)">
+      <section>
+        <h2>
           Adapting BPE for LLM Tokenization
         </h2>
 
-        <p class="blog-article__paragraph text-sm leading-relaxed" style="color: var(--text-secondary)">
+        <p>
           BPE was originally designed to minimize storage size. When Sennrich et al. (2016) proposed
           repurposing it for neural machine translation, the <strong>goal shifted</strong>: instead of
           compressing text as far as possible, the aim is to produce a fixed-size vocabulary that
@@ -550,28 +550,28 @@ import SubwordExample from './tokenization/SubwordExample.vue'
           text fluently, but not so many that memory and computation become unmanageable.
         </p>
 
-        <p class="blog-article__paragraph text-sm leading-relaxed mt-4" style="color: var(--text-secondary)">
+        <p>
           The algorithm is largely the same, but a few key adjustments make it work well for this new
           purpose:
         </p>
 
 
-        <p class="blog-article__paragraph text-sm leading-relaxed" style="color: var(--text-secondary)">
+        <p>
           <strong>Stop condition.</strong> Instead of merging until no pair occurs more than once,
           training stops once the vocabulary reaches a <strong>target size</strong>. This is the
           primary design knob: a larger vocabulary means fewer tokens per sequence, but more memory
           and output-layer computation.
         </p>
-        <p class="blog-article__paragraph text-sm leading-relaxed" style="color: var(--text-secondary)">
+        <p>
           <strong>Base units.</strong> Depending on the tokenizer variant, training starts from
           <strong>bytes or characters</strong>. This choice has significant downstream consequences
           for vocabulary coverage and readability, as we will see in the variants below.
         </p>
-        <p class="blog-article__paragraph text-sm leading-relaxed" style="color: var(--text-secondary)">
+        <p>
           <strong>Whitespace and control symbols.</strong> Spaces, newlines, and non-printable
           characters need special handling so that merge rules remain unambiguous. More on this below.
         </p>
-        <p class="blog-article__paragraph text-sm leading-relaxed" style="color: var(--text-secondary)">
+        <p>
           <strong>Special tokens.</strong> Special control tokens representing end-of-text markers,
           user and system message delimiters and tool call boundaries are added <strong>after
           training</strong> is complete. They are not part of the learned merge list and therefore
@@ -579,7 +579,7 @@ import SubwordExample from './tokenization/SubwordExample.vue'
           correctness property.
         </p>
 
-        <p class="blog-article__paragraph text-sm leading-relaxed mt-4" style="color: var(--text-secondary)">
+        <p>
           Despite these adjustments, the core BPE behavior carries over directly. Merges are applied
           greedily in the order they were learned. Common sequences tend to become single tokens, and
           rare sequences are split into smaller, more frequent subwords. The frequency-aware compression
@@ -589,25 +589,25 @@ import SubwordExample from './tokenization/SubwordExample.vue'
       </section>
 
       <!-- Byte-Level BPE (GPT-2) -->
-      <section class="blog-article__section mb-8">
-        <h3 class="blog-article__h3 text-base font-semibold mb-3" style="color: var(--text-primary)">
+      <section>
+        <h3>
           Byte-Level BPE (GPT-2)
         </h3>
 
-        <p class="blog-article__paragraph text-sm leading-relaxed" style="color: var(--text-secondary)">
+        <p>
           The variant introduced by Radford et al. (2019) for <strong>GPT-2</strong> takes byte-level
           BPE further by starting from all 256 possible byte values as the base alphabet. Before any
           merges are applied, the input text is converted to its UTF-8 byte representation.
         </p>
 
-        <p class="blog-article__paragraph text-sm leading-relaxed mt-4" style="color: var(--text-secondary)">
+        <p>
           This has one crucial advantage: <strong>universal coverage</strong>. Any string — emojis,
           rare scripts, novel words, deliberate typos — can always be tokenized, because every possible
           input ultimately decomposes into bytes, all of which are in the vocabulary. There is no
           out-of-vocabulary problem.
         </p>
 
-        <p class="blog-article__paragraph text-sm leading-relaxed mt-4" style="color: var(--text-secondary)">
+        <p>
           GPT-style byte-level BPE remains conceptually simple and scales cleanly to large corpora.
           It is the foundation of the tokenizers used in the GPT series and many models built on the
           same design.
@@ -615,26 +615,26 @@ import SubwordExample from './tokenization/SubwordExample.vue'
       </section>
 
       <!-- SentencePiece BPE (Meta, Mistral, Qwen) -->
-      <section class="blog-article__section mb-8">
-        <h3 class="blog-article__h3 text-base font-semibold mb-3" style="color: var(--text-primary)">
+      <section>
+        <h3>
           SentencePiece BPE (Meta, Mistral, Qwen)
         </h3>
 
-        <p class="blog-article__paragraph text-sm leading-relaxed" style="color: var(--text-secondary)">
+        <p>
           SentencePiece is a language-independent tokenization framework developed at Google in 2018.
           It implements both BPE and Unigram Language Model under a single, unified training pipeline.
           SentencePiece BPE is used in models like Meta's LLaMA, Mistral, and Alibaba's Qwen, and
           starts from <strong>Unicode characters</strong> instead of bytes.
         </p>
 
-        <p class="blog-article__paragraph text-sm leading-relaxed mt-4" style="color: var(--text-secondary)">
+        <p>
           Because Unicode characters are human-readable, the resulting vocabulary is much easier to
           inspect and reason about. The trade-off is that vocabulary sizes tend to be somewhat larger
           than byte-level BPE for equivalent coverage, because individual Unicode code points are a
           less compact base alphabet than raw bytes.
         </p>
 
-        <p class="blog-article__paragraph text-sm leading-relaxed mt-4" style="color: var(--text-secondary)">
+        <p>
           SentencePiece BPE trades off <strong>absolute universality</strong> for readability and a
           slightly more natural alignment with how words appear in human languages. For multilingual
           models especially, starting from characters rather than bytes can produce more interpretable
@@ -643,19 +643,19 @@ import SubwordExample from './tokenization/SubwordExample.vue'
       </section>
 
       <!-- How Tokenizers Split Text After Training -->
-      <section class="blog-article__section mb-8">
-        <h2 class="blog-article__h2 text-lg font-semibold mb-4" style="color: var(--text-primary)">
+      <section>
+        <h2>
           How Tokenizers Split Text After Training
         </h2>
 
-        <p class="blog-article__paragraph text-sm leading-relaxed" style="color: var(--text-secondary)">
+        <p>
           The output of the BPE training step is an ordered list of merge rules, which together define
           the vocabulary. When a tokenizer encounters a new string at inference time, such as a user's
           prompt, it does not run the training loop again. Instead, it applies the learned merges in
           a fast forward pass:
         </p>
 
-        <ol class="blog-article__olist text-sm leading-relaxed mt-3 space-y-2" style="color: var(--text-secondary)">
+        <ol>
           <li>
             <strong>Split into base units.</strong> For byte-level BPE, this means converting the input
             to its UTF-8 byte sequence and treating each byte as an individual token. For character-level
@@ -673,7 +673,7 @@ import SubwordExample from './tokenization/SubwordExample.vue'
           </li>
         </ol>
 
-        <p class="blog-article__paragraph text-sm leading-relaxed mt-4" style="color: var(--text-secondary)">
+        <p>
           The ordering of merge rules matters. A pair that was merged earlier in training due to higher
           frequency gets priority over pairs merged later. This is what gives BPE its greedy,
           frequency-aware character: common sequences collapse into single tokens early, while rare or
@@ -682,17 +682,17 @@ import SubwordExample from './tokenization/SubwordExample.vue'
       </section>
 
       <!-- Alternative Approaches -->
-      <section class="blog-article__section mb-8">
-        <h2 class="blog-article__h2 text-lg font-semibold mb-4" style="color: var(--text-primary)">
+      <section>
+        <h2>
           Alternative Approaches
         </h2>
 
-        <p class="blog-article__paragraph text-sm leading-relaxed" style="color: var(--text-secondary)">
+        <p>
           BPE is not the only subword tokenization algorithm, and it is worth briefly understanding
           the alternatives and why BPE has prevailed in practice.
         </p>
 
-        <p class="blog-article__paragraph text-sm leading-relaxed mt-4" style="color: var(--text-secondary)">
+        <p>
           <strong>WordPiece</strong> (2016, Google) is also a merge-based subword tokenizer, but the
           criterion for choosing which pair to merge is different. Rather than always picking the most
           frequent pair, WordPiece selects merges that <strong>maximize the improvement to the corpus
@@ -701,7 +701,7 @@ import SubwordExample from './tokenization/SubwordExample.vue'
           like BERT are trained. WordPiece is used in BERT and its derivatives.
         </p>
 
-        <p class="blog-article__paragraph text-sm leading-relaxed mt-4" style="color: var(--text-secondary)">
+        <p>
           <strong>Unigram Language Model</strong> (2018) takes the opposite approach entirely. Rather
           than starting small and merging up, it starts with a large candidate vocabulary and
           <strong>prunes it down</strong> by iteratively removing tokens whose removal least degrades
@@ -711,7 +711,7 @@ import SubwordExample from './tokenization/SubwordExample.vue'
           differently across training steps.
         </p>
 
-        <p class="blog-article__paragraph text-sm leading-relaxed mt-4" style="color: var(--text-secondary)">
+        <p>
           BPE has prevailed in practice largely due to its <strong>simplicity and scalability</strong>.
           It is straightforward to implement, easy to parallelize, and fast on very large corpora. The
           quality differences between BPE, WordPiece, and Unigram LM are small at scale, so the
@@ -721,8 +721,8 @@ import SubwordExample from './tokenization/SubwordExample.vue'
       </section>
 
       <!-- References -->
-      <section class="blog-article__section mb-8">
-        <h2 class="blog-article__h2 text-lg font-semibold mb-4" style="color: var(--text-primary)">
+      <section>
+        <h2>
           References
         </h2>
 
