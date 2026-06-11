@@ -122,7 +122,7 @@
   color: var(--text-secondary);
 }
 
-/* ── Info block (special div inside section) ──────────────────────────────── */
+/* ── Callout block ─────────────────────────────────────────────────────────── */
 .blog-article__infoblock {
   background: var(--bg-secondary);
   border: 1px solid var(--border-primary);
@@ -130,17 +130,32 @@
   padding: 1rem 1.25rem;
   margin: 1rem 0;
   display: flex;
-  align-items: flex-start;
-  gap: 0.75rem;
+  flex-direction: column;
+  gap: 0.5rem;
   font-size: 0.95rem;
   color: var(--text-secondary);
   line-height: 1.7;
 }
 
+.blog-article__infoblock-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .blog-article__infoblock-icon {
-  font-size: 1.3rem;
-  line-height: 1.5;
   flex-shrink: 0;
+  color: var(--text-secondary);
+}
+
+.blog-article__infoblock-title {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+}
+
+.blog-article__infoblock-content {
+  display: block;
 }
 
 /* ── Figures ───────────────────────────────────────────────────────────────── */
@@ -214,4 +229,11 @@
 
 .blog-article__ref-title {
   font-weight: 600;
+}
+
+
+span.note{
+  font-size: smaller;
+  font-style: italic;
+  color: var(--text-tertiary);
 }
