@@ -17,21 +17,18 @@ defineProps<{
       class="step-list__item"
       :class="{ 'step-list__item--last': index === steps.length - 1 }"
     >
-      <div class="step-list__marker">
-        <span class="step-list__number">
-          {{ index + 1 }}
-        </span>
+      <span class="step-list__number">
+        {{ index + 1 }}
+      </span>
 
-        <span
-          v-if="index !== steps.length - 1"
-          class="step-list__line"
-        />
-      </div>
+      <h4 class="step-list__title">{{ step.title }}</h4>
 
-      <div class="step-list__content">
-        <h4 class="step-list__title">{{ step.title }}</h4>
-        <p class="step-list__description" v-html="step.description"></p>
-      </div>
+      <span
+        v-if="index !== steps.length - 1"
+        class="step-list__line"
+      />
+
+      <p class="step-list__description" v-html="step.description"></p>
     </div>
   </div>
 </template>
@@ -44,24 +41,15 @@ defineProps<{
   padding: 0;
 }
 
-/* KEY FIX: switch to grid so we get full row height control */
 .step-list__item {
   display: grid;
-  grid-template-columns: 26px 1fr;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto;
   column-gap: 1rem;
-  position: relative;
+  row-gap: 0;
+  align-content: start;
 }
 
-/* marker column */
-.step-list__marker {
-  position: relative;
-  width: 26px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-/* circle */
 .step-list__number {
   display: flex;
   align-items: center;
@@ -74,45 +62,45 @@ defineProps<{
   font-weight: 700;
   font-size: 0.8rem;
   line-height: 1;
-  flex-shrink: 0;
-  z-index: 1;
-}
-
-/* connector line */
-.step-list__line {
-  position: absolute;
-  top: 26px;          /* starts right below circle */
-  bottom: 0;          /* stretches to bottom of row */
-  left: 50%;
-  transform: translateX(-50%);
-  width: 2px;
-  background: var(--border-secondary);
-}
-
-/* content */
-.step-list__content {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  padding-bottom: 1.5rem;
-}
-
-.step-list__item--last .step-list__content {
-  padding-bottom: 0;
+  grid-column: 1;
+  grid-row: 1;
+  align-self: center;
+  margin: 0;
 }
 
 .step-list__title {
   margin: 0;
+  padding: 0;
   font-weight: 700;
   font-size: 1.05rem;
   color: var(--text-primary);
-  line-height: 1.2;
+  line-height: 1;
+  grid-column: 2;
+  grid-row: 1;
+  align-self: center;
+}
+
+.step-list__line {
+  width: 2px;
+  min-height: 16px;
+  background: var(--border-secondary);
+  grid-column: 1;
+  grid-row: 2;
+  justify-self: center;
+  align-self: stretch;
 }
 
 .step-list__description {
   margin: 0;
-  font-size: 0.9em;
+  padding-top: 0.35rem;
+  font-size: 0.9rem;
   color: var(--text-secondary);
   line-height: 1.6;
+  grid-column: 2;
+  grid-row: 2;
+}
+
+.step-list__item:not(.step-list__item--last) .step-list__description {
+  margin-bottom: 1.5rem;
 }
 </style>
