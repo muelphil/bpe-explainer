@@ -61,19 +61,49 @@
 /* ── Header ────────────────────────────────────────────────────────────────── */
 .blog-article header {
   border-bottom: 1px solid var(--border-primary);
-  padding-bottom: 1.5rem;
+  padding-bottom: 2rem;
+  margin-bottom: 1rem;
 }
 
-/* Header children: first p after h1 = subtitle, last p = meta */
-.blog-article header h1 + p {
-  color: var(--text-secondary);
-  font-size: 1.05rem;
-  line-height: 1.65;
+.blog-article__title {
+  margin: 0 0 1rem;
+  padding: 0;
 }
 
-.blog-article header p:last-child {
+.blog-article .blog-article__authors {
+  margin: 0 0 0.2rem;
   color: var(--text-tertiary);
-  font-size: 0.8rem;
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.blog-article__authors sup {
+  font-size: 0.7rem;
+  vertical-align: super;
+  line-height: 0;
+}
+
+.blog-article .blog-article__affiliation {
+  margin: 0 0 1.5rem;
+  color: var(--text-tertiary);
+  font-size: 0.85rem;
+  font-style: italic;
+  line-height: 1.5;
+}
+
+.blog-article__affiliation sup {
+  font-size: 0.7rem;
+  vertical-align: super;
+  line-height: 0;
+  font-style: normal;
+}
+
+.blog-article .blog-article__subtitle {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 1rem;
+  line-height: 1.65;
 }
 
 /* ── Sections ──────────────────────────────────────────────────────────────── */
@@ -179,6 +209,7 @@
   line-height: 1.55;
   font-style: italic;
   margin-top: 0.75rem;
+  text-align: center;
 }
 
 /* ── Links ─────────────────────────────────────────────────────────────────── */

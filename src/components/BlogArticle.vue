@@ -54,6 +54,12 @@ const bpeTrainingSteps: StepItem[] = [
           From Text to Tokens: An Interactive Introduction to LLM Tokenization and Byte-Pair
           Encoding
         </h1>
+        <p class="blog-article__authors">
+          Philip Müller<sup>1</sup>, Peter Steinbach<sup>1</sup>
+        </p>
+        <p class="blog-article__affiliation">
+          <sup>1</sup>Helmholtz-Zentrum Dresden-Rossendorf
+        </p>
         <p class="blog-article__subtitle">
           Before a large language model can generate a single word, it needs to convert raw text
           into tokens.
@@ -64,9 +70,6 @@ const bpeTrainingSteps: StepItem[] = [
           repurposed to build the tokenizers that power modern LLMs. An interactive visualization
           embedded
           alongside this article lets you explore the algorithm hands-on as you read.
-        </p>
-        <p class="blog-article__meta">
-          Philip Müller &middot; 2026
         </p>
       </header>
 
