@@ -21,6 +21,15 @@ const goToEnd = () => {
     goToStep(steps.value.length - 1)
   }
 }
+
+const handleProgressClick = (event: MouseEvent) => {
+  if (steps.value.length === 0) return
+  const bar = (event.currentTarget as HTMLElement)
+  const rect = bar.getBoundingClientRect()
+  const ratio = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width))
+  const targetStep = Math.round(ratio * (steps.value.length - 1))
+  goToStep(targetStep)
+}
 </script>
 
 <template>
@@ -76,7 +85,10 @@ const goToEnd = () => {
       </div>
 
       <!-- Progress Indicator -->
-      <div class="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+      <div
+        class="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden cursor-pointer"
+        @click="handleProgressClick"
+      >
         <div
           class="h-full bg-gradient-to-r from-primary-400 to-primary-600 transition-all duration-300"
           :style="{ width: `${((currentStep + 1) / steps.length) * 100}%` }"
