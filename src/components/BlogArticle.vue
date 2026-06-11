@@ -55,7 +55,7 @@ const bpeTrainingSteps: StepItem[] = [
           Encoding
         </h1>
         <p class="blog-article__authors">
-          Philip Müller<sup>1</sup>, Peter Steinbach<sup>1</sup>
+          Philip Müller<sup>1</sup>, TODO<sup>1</sup>
         </p>
         <p class="blog-article__affiliation">
           <sup>1</sup>Helmholtz-Zentrum Dresden-Rossendorf
