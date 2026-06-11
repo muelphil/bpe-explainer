@@ -4,7 +4,39 @@ import CharacterTokenization from './tokenization/CharacterTokenization.vue'
 import CharacterCombinations from './tokenization/CharacterCombinations.vue'
 import SubwordExample from './tokenization/SubwordExample.vue'
 import Callout from './Callout.vue'
+import StepList from './StepList.vue'
+import type { StepItem } from './StepList.vue'
 import {Play, SkipForward} from "lucide-vue-next";
+
+const tokenizerSteps: StepItem[] = [
+  {
+    title: 'Split into base units.',
+    description: 'For byte-level BPE, this means converting the input to its UTF-8 byte sequence and treating each byte as an individual token. For character-level variants, the input is split into Unicode characters.'
+  },
+  {
+    title: 'Apply merges greedily in learned order.',
+    description: 'Starting from the first merge rule, the tokenizer scans the token sequence and replaces all occurrences of the learned pair with the merged token. Then it moves to the second merge rule, and so on.'
+  },
+  {
+    title: 'Stop when no more merges apply.',
+    description: 'Once the tokenizer has exhausted the merge list or no remaining adjacent pairs match any rule, the current token sequence is the final tokenization.'
+  }
+]
+
+const bpeTrainingSteps: StepItem[] = [
+  {
+    title: 'Initialize the vocabulary.',
+    description: 'The training data is split into base units, in case of Compression BPE the individual characters present in the trianing data, which form the starting vocabulary.'
+  },
+  {
+    title: 'Select and merge the most frequent pair.',
+    description: 'The algorithm finds the most frequently occurring pair of adjacent tokens. You can see and highlight these pairs in the <strong>Frequency of Pairs</strong> panel. The selected pair is merged into a new token, which gets added to the vocabulary tracked in the <strong>Vocabulary</strong> panel. All occurrences of the pair in the text are replaced.'
+  },
+  {
+    title: 'Repeat until the stop condition is reached.',
+    description: 'The algorithm continues until no pair of tokens appears more than once in the text (the natural break condition of the compression use case), or until a target compression rate is reached. Each step is logged chronologically in the <strong>Steps</strong> panel.'
+  }
+]
 </script>
 
 <template>
@@ -413,7 +445,7 @@ import {Play, SkipForward} from "lucide-vue-next";
           new combinations of familiar pieces.
         </p>
 
-        <Callout icon="info" title="Try it yourself">
+        <Callout icon="task" title="Try it yourself">
           You can experiment with
           <a
             href="https://platform.openai.com/tokenizer"
@@ -538,17 +570,7 @@ import {Play, SkipForward} from "lucide-vue-next";
           building a translation table in the process.
         </p>
 
-        <p>
-          The algorithm works iteratively. Starting from individual bytes, it scans the input for
-          the
-          most frequently occurring pair of adjacent tokens — visible at a glance in the
-          <strong>Frequency of Pairs</strong> panel. It then merges them into a single new token,
-          adding it to the tokenizer's vocabulary, which grows entry by entry in the
-          <strong>Vocabulary</strong> panel. All occurrences of the pair in the text are replaced,
-          and the process repeats. Each merge reduces the total number of tokens in the text by one
-          unit — the two most common neighbors collapse into one. Every decision is logged
-          chronologically in the <strong>Steps</strong> panel.
-        </p>
+        <StepList :steps="bpeTrainingSteps" />
 
         <Callout icon="task" title="Try it yourself">
 
@@ -758,29 +780,7 @@ import {Play, SkipForward} from "lucide-vue-next";
           a fast forward pass:
         </p>
 
-        <ol>
-          <li>
-            <strong>Split into base units.</strong> For byte-level BPE, this means converting the
-            input
-            to its UTF-8 byte sequence and treating each byte as an individual token. For
-            character-level
-            variants, the input is split into Unicode characters.
-          </li>
-          <li>
-            <strong>Apply merges greedily in learned order.</strong> Starting from the first merge
-            rule,
-            the tokenizer scans the token sequence and replaces all occurrences of the learned pair
-            with
-            the merged token. Then it moves to the second merge rule, and so on.
-          </li>
-          <li>
-            <strong>Stop when no more merges apply.</strong> Once the tokenizer has exhausted the
-            merge
-            list or no remaining adjacent pairs match any rule, the current token sequence is the
-            final
-            tokenization.
-          </li>
-        </ol>
+        <StepList :steps="tokenizerSteps" />
 
         <p>
           The ordering of merge rules matters. A pair that was merged earlier in training due to
