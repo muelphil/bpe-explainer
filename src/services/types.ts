@@ -45,7 +45,7 @@ export interface Step {
 }
 
 export interface BPESettings {
-  initialVocab: 'unicodeChars' | 'bytes'
+  initialVocab: 'presentChars' | 'bytes'
   breakCondition: 'maxVocabSize' | 'noFrequentPairs' | 'compression'
   maxVocabSize: number
   targetCompressionRate: number // percentage 0-100

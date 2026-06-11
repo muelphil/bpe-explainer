@@ -23,7 +23,7 @@ type PresetType = 'compression' | 'byteLevelBPE'
 // Apply preset
 const applyPreset = (preset: PresetType) => {
   if (preset === 'compression') {
-    localSettings.value.initialVocab = 'bytes'
+    localSettings.value.initialVocab = 'presentChars'
     localSettings.value.breakCondition = 'noFrequentPairs'
     localSettings.value.mergingRestriction = 'none'
   } else {
@@ -120,7 +120,7 @@ const handleCancel = () => {
                 >
                   <Info :size="16" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300" />
                   <span class="tooltip absolute right-0 top-6 w-64 p-2 bg-slate-900 dark:bg-slate-700 text-white text-xs rounded opacity-0 transition-opacity pointer-events-none z-10">
-                     Unicode Chars uses only the unique characters from your training data. Bytes starts with all 256 byte values as the initial vocabulary.
+                      Present Chars uses only the unique characters from your training data. Bytes starts with all 256 byte values as the initial vocabulary.
                   </span>
                 </button>
               </div>
@@ -128,7 +128,7 @@ const handleCancel = () => {
                 v-model="localSettings.initialVocab"
                 :options="[
                   { value: 'bytes', label: 'Bytes' },
-                  { value: 'unicodeChars', label: 'Unicode Chars' },
+                  { value: 'presentChars', label: 'Present Chars' },
                 ]"
               />
             </div>

@@ -101,7 +101,7 @@ export class BPEService {
    * Create initial vocabulary based on settings
    */
   private createInitialVocabulary(trainingData: string): void {
-    if (this.state.settings.initialVocab === 'unicodeChars') {
+    if (this.state.settings.initialVocab === 'presentChars') {
       // Get unique characters from training data
       const uniqueChars = new Set(trainingData.split(''))
       uniqueChars.forEach(char => {

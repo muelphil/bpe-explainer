@@ -21,9 +21,12 @@ export class SettingsService {
       const stored = localStorage.getItem(SETTINGS_KEY)
       if (stored) {
         const parsed = JSON.parse(stored)
-        // Migrate old 'characters' value to 'unicodeChars'
+        // Migrate old values to 'presentChars'
         if (parsed.initialVocab === 'characters') {
-          parsed.initialVocab = 'unicodeChars'
+          parsed.initialVocab = 'presentChars'
+        }
+        if (parsed.initialVocab === 'unicodeChars') {
+          parsed.initialVocab = 'presentChars'
         }
         // Merge with defaults to handle any missing keys
         return { ...DEFAULT_SETTINGS, ...parsed }
