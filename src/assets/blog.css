@@ -120,6 +120,11 @@
 .blog-article ul {
   padding-left: 1.5rem;
   list-style: disc;
+  margin: 0.8em 0;
+}
+
+ul li::marker {
+  color: var(--primary);
 }
 
 .blog-article ol {
@@ -270,4 +275,12 @@ span.note{
   line-height: 1.4em;
   margin-top: 10px;
   display: block;
+}
+
+ul li div.description{
+  font-size: 0.9em;
+  display: block;
+  color: var(--text-tertiary);
+  line-height: 1.5em;
+  margin-bottom: 8px;
 }

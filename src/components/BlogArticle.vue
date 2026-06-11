@@ -477,18 +477,19 @@ const bpeTrainingSteps: StepItem[] = [
 
         <ul>
           <li>
-            <strong>Vocabulary size</strong> — Larger vocabularies increase memory and output-layer
-            computation.
+            <strong>Vocabulary size</strong>
+            <div class="description">Larger vocabularies increase memory and output-layer
+            computation.</div>
           </li>
           <li>
-            <strong>Sequence length</strong> — Smaller tokens increase the number of forward passes
-            and
-            consume context window capacity.
+            <strong>Sequence length</strong>
+            <div class="description">Smaller tokens increase the number of forward passes
+              and consume context window capacity.</div>
           </li>
           <li>
-            <strong>Semantic coherence</strong> — Tokens should carry enough meaning to support
-            useful
-            internal representations.
+            <strong>Semantic coherence</strong>
+            <div class="description">Tokens should carry enough meaning to support
+              useful internal representations.</div>
           </li>
         </ul>
 

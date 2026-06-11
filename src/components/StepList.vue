@@ -111,7 +111,7 @@ defineProps<{
 
 .step-list__description {
   margin: 0;
-  font-size: 0.9rem;
+  font-size: 0.9em;
   color: var(--text-secondary);
   line-height: 1.6;
 }
