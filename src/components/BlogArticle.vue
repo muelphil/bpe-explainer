@@ -538,14 +538,10 @@ const bpeTrainingSteps: StepItem[] = [
         </p>
 
         <p>
-          Before diving into the algorithm, it helps to understand how tokens appear visually in the
-          application. The main panel displays the training corpus as a sequence of colored token
-          blocks. Initially, the corpus is broken into individual bytes — each character in the text
-          starts as its own token. As training progresses, adjacent tokens merge and grow,
-          reflecting
-          the decisions the algorithm has made so far. Each token is color-coded consistently: the
-          same token always receives the same color, making it easy to track how individual tokens
-          accumulate across the text.
+          Before diving into the algorithm, it helps to understand what the visualizer shows. The
+          main panel displays the training data in its current tokenized state, updating at each step
+          as the algorithm progresses. As training advances, adjacent tokens merge and grow,
+          reflecting the decisions the algorithm has made so far.
         </p>
 
         <Callout icon="info" title="Space representation">
@@ -554,8 +550,7 @@ const bpeTrainingSteps: StepItem[] = [
           href="https://www.compart.com/en/unicode/U+2581">Lower One Eighth Block</a> <code
           class="blog-article__code">▁</code>. For
           example, <code class="blog-article__code">▁man</code> encodes both the leading space and
-          the word itself as a single token. This convention is common in real tokenizers and
-          ensures that merge rules can be applied without ambiguity.
+          the word itself as a single token. Similar conventions are used across real tokenizers to keep merge rules unambiguous.
         </Callout>
       </section>
 
@@ -703,6 +698,22 @@ const bpeTrainingSteps: StepItem[] = [
           tokenization: the vocabulary naturally mirrors the statistics of the training corpus.
         </p>
       </section>
+
+      <Callout icon="task" title="Try it yourself">
+        Open the settings menu (upper-right corner of the visualizer), select the
+        <em>Byte-Level BPE</em> preset, and save your changes.<br>
+
+        Run the algorithm again —
+        <Play :size="18" style="display: inline;"/>
+        <strong>Play</strong> until the stop condition is reached.<br>
+
+        Compare the result with your earlier Compression BPE run: look at the base vocabulary at
+        the beginning of training and the tokens that have formed by the time training converges.
+        What differences do you notice in the vocabulary structure?<br>
+
+        As before, head over to the <strong>Validation</strong> view and try tokenizing a sentence, including one with characters or words that did not appear in the training data. How does
+        the behavior differ from the compression variant?
+      </Callout>
 
       <!-- Byte-Level BPE (GPT-2) -->
       <section>
