@@ -61,3 +61,10 @@ const comboRows = computed(() => {
     </div>
   </div>
 </template>
+
+<style scoped>
+.token-wrapper{
+  //line-height: initial;
+  font-size: 0;
+}
+</style>
