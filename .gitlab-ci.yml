@@ -1,0 +1,9 @@
+image: node:20
+
+pages:
+  stage: deploy
+  script:
+    - npm install
+    - npm run build
+  pages:
+    publish: docs
