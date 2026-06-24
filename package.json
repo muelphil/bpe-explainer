@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "run-p type-check \"build-only {@}\" --",
+    "build:website": "vite build --base=/bpe-explainer/",
     "preview": "vite preview",
     "test:unit": "vitest",
     "build-only": "vite build",
@@ -13,7 +14,7 @@
     "lint": "run-s lint:*",
     "lint:oxlint": "oxlint . --fix",
     "lint:eslint": "eslint . --fix --cache",
-    "format": "prettier --write --experimental-cli src/"
+    "format": "prettier --write --experimental-cli src/",
   },
   "dependencies": {
     "lucide-vue-next": "^0.460.0",
