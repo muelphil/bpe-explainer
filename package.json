@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "run-p type-check \"build-only {@}\" --",
+    "build": "vite build",
+    "build:website": "vite build --base=/bpe-explainer/",
     "preview": "vite preview",
     "test:unit": "vitest",
     "build-only": "vite build",
