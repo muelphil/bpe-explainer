@@ -26,7 +26,7 @@ const tokenizerSteps: StepItem[] = [
 const bpeTrainingSteps: StepItem[] = [
   {
     title: 'Initialize the vocabulary.',
-    description: 'The training data is split into base units, in case of Compression BPE the individual characters present in the trianing data, which form the starting vocabulary.'
+          description: 'The training data is split into base units, in case of Compression BPE the individual characters present in the training data, which form the starting vocabulary.'
   },
   {
     title: 'Select and merge the most frequent pair.',
@@ -55,9 +55,11 @@ const bpeTrainingSteps: StepItem[] = [
           Encoding
         </h1>
         <p class="blog-article__authors">
-          Philip Müller, Peter Steinbach
+          Philip Müller<sup>1</sup>, Peter Steinbach<sup>1</sup>
         </p>
-        <p class="blog-article__affiliation"></p>
+        <p class="blog-article__affiliation">
+          <sup>1</sup>Helmholtz-Zentrum Dresden-Rossendorf
+        </p>
         <p class="blog-article__subtitle">
           Before a large language model can generate a single word, it needs to convert raw text
           into tokens.
@@ -87,8 +89,8 @@ const bpeTrainingSteps: StepItem[] = [
         <p>
           In the sections that follow, we first explore the design space of
           tokenization vocabularies, from character-level extremes to word-level pitfalls. If you
-          are interested in the algorithm itself and in trying the interactive visualization right
-          away, you can
+          are interested in the algorithm itself — and in trying the interactive visualization right
+          away — you can
           <a href="#exploring-bpe" class="blog-article__link">skip directly to the BPE section</a>.
         </p>
       </section>
@@ -292,12 +294,12 @@ const bpeTrainingSteps: StepItem[] = [
           <strong>Poor semantic content.</strong> An even more fundamental issue is that single
           characters
           conflict with the core goal of tokenization: to produce units that carry semantic meaning,
-          rich enough that the model can build useful representations around them. Single characters largely fail this test. The letter
+          rich enough that the model can build useful representations around them. Single characters
+          largely fail this test. The letter
           <code class="blog-article__code">o</code> appears in <code class="blog-article__code">chocolate</code>
-          and in <code class="blog-article__code">work</code>, but the two words have less in common
-          than I
-          would like them to. Without the surrounding characters, there is almost nothing for the
-          model to
+          and in <code class="blog-article__code">work</code>, but the two words share little
+          beyond that single character. Without the surrounding characters, there is almost nothing
+          for the model to
           deduce meaningful representations from.
         </p>
       </section>
@@ -407,9 +409,9 @@ const bpeTrainingSteps: StepItem[] = [
           learn
           meaningful representations for them. Their embeddings remain undertrained and noisy,
           contributing
-          little to the model's capabilities, or even resulting in hallucinations, gibberish. For a
+          little to the model's capabilities, or even resulting in hallucinations. For a
           deep
-          dive on that, read upon the
+          dive on that phenomenon, see the
           <a
             href="https://www.lesswrong.com/posts/aPeJE8bSo6rAFoLqg/solidgoldmagikarp-plus-prompt-generation"
             target="_blank"
@@ -420,11 +422,9 @@ const bpeTrainingSteps: StepItem[] = [
 
         <p>
           <strong>Out-of-vocabulary words.</strong> Any word not seen during training has no token.
-          Be it a
-          simple typo or a woman descending from the sky trying to type
+          Whether a novel compound, a deliberate typo, or a long uncommon word like
           <code class="blog-article__code">supercalifragilisticexpialidocious</code> — tokenization
-          simply
-          breaks for inputs the model was never trained to handle.
+          simply breaks for inputs the model was never trained to handle.
         </p>
       </section>
 
@@ -507,9 +507,8 @@ const bpeTrainingSteps: StepItem[] = [
         </p>
 
         <p>
-          While we have now deduced the logic behind subword tokenization, vocabularies are not
-          handpicked
-          (that would be way too much work). Instead, good subwords emerge from an algorithmic
+          While the logic behind subword tokenization is clear, vocabularies are not
+          handpicked. Instead, good subwords emerge from an algorithmic
           process
           based on the frequencies in the training data. The following sections walk through that
           process
@@ -758,8 +757,9 @@ const bpeTrainingSteps: StepItem[] = [
         </h3>
 
         <p>
-          SentencePiece is a language-independent tokenization framework developed at Google in
-          2018.
+          SentencePiece is a language-independent tokenization framework
+          (<a href="#kudo2018sp" class="blog-article__link">Kudo &amp; Richardson, 2018</a>)
+          developed at Google.
           It implements both BPE and Unigram Language Model under a single, unified training
           pipeline.
           SentencePiece BPE is used in models like Meta's LLaMA, Mistral, and Alibaba's Qwen, and
@@ -827,7 +827,8 @@ const bpeTrainingSteps: StepItem[] = [
         </p>
 
         <p>
-          <strong>WordPiece</strong> (2016, Google) is also a merge-based subword tokenizer, but the
+          <strong>WordPiece</strong> is also a merge-based subword
+          tokenizer, but the
           criterion for choosing which pair to merge is different. Rather than always picking the
           most
           frequent pair, WordPiece selects merges that <strong>maximize the improvement to the
@@ -839,7 +840,7 @@ const bpeTrainingSteps: StepItem[] = [
         </p>
 
         <p>
-          <strong>Unigram Language Model</strong> (2018) takes the opposite approach entirely.
+          <strong>Unigram Language Model</strong> (<a href="#kudo2018" class="blog-article__link">Kudo, 2018</a>) takes the opposite approach entirely.
           Rather
           than starting small and merging up, it starts with a large candidate vocabulary and
           <strong>prunes it down</strong> by iteratively removing tokens whose removal least
@@ -879,6 +880,15 @@ const bpeTrainingSteps: StepItem[] = [
               rel="noopener"
               class="blog-article__link"
             >URL</a>
+          </div>
+          <div id="kudo2018sp" class="blog-article__ref">
+            <span class="blog-article__ref-authors">Kudo, T., Richardson, J.</span> <span class="blog-article__ref-year">(2018)</span> <span class="blog-article__ref-title">SentencePiece: A simple and language independent subword tokenizer and detokenizer for Neural Text Processing</span>.
+            <a
+              href="https://arxiv.org/abs/1808.06226"
+              target="_blank"
+              rel="noopener"
+              class="blog-article__link"
+            >arXiv:1808.06226</a>
           </div>
           <div id="sennrich2016" class="blog-article__ref">
             <span class="blog-article__ref-authors">Sennrich, R., Haddow, B., Birch, A.</span> <span class="blog-article__ref-year">(2016)</span> <span class="blog-article__ref-title">Neural Machine Translation of Rare Words with Subword Units</span>.
@@ -932,7 +942,7 @@ const bpeTrainingSteps: StepItem[] = [
         </h2>
 
         <p>
-          This work was enabled by the support of the Helmholtz-Zentrum Dresden-Rossendorf (HZDR), which provided the resources and time necessary for its development.
+          This work was conducted at the Helmholtz-Zentrum Dresden-Rossendorf (HZDR), whose support in the form of institutional resources and dedicated research time made it possible.
         </p>
       </section>
 
