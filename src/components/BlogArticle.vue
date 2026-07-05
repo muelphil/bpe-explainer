@@ -55,17 +55,15 @@ const bpeTrainingSteps: StepItem[] = [
           Encoding
         </h1>
         <p class="blog-article__authors">
-          Philip Müller<sup>1</sup>, TODO<sup>1</sup>
+          Philip Müller, Peter Steinbach
         </p>
-        <p class="blog-article__affiliation">
-          <sup>1</sup>Helmholtz-Zentrum Dresden-Rossendorf
-        </p>
+        <p class="blog-article__affiliation"></p>
         <p class="blog-article__subtitle">
           Before a large language model can generate a single word, it needs to convert raw text
           into tokens.
           This article works through the design space of tokenization vocabularies — from
           character-level
-          extremes to word-level pitfalls — before diving into Byte-Pair Encoding: the compression
+          extremes to word-level pitfalls. Then it dives into Byte-Pair Encoding, the compression
           algorithm
           repurposed to build the tokenizers that power modern LLMs. An interactive visualization
           embedded
@@ -77,10 +75,21 @@ const bpeTrainingSteps: StepItem[] = [
       <section>
         <p>
           Understanding how large language models work is crucial for both effective use and
-          research.
-          This article covers the very first step in the processing chain of an LLM: tokenization —
-          from the design space of vocabularies to the algorithm that builds them. The interactive
-          visualizer alongside this article lets you explore that algorithm hands-on as you read.
+          research. The sections below explore how language models process text into tokens and what
+          design choices shape the vocabulary. For a walkthrough of the broader transformer
+          architecture
+          — the layers that follow tokenization — see
+          <a
+            href="#cho2024"
+            class="blog-article__link"
+          >Transformer Explainer (Cho et al., 2024)</a>.
+        </p>
+        <p>
+          In the sections that follow, we first explore the design space of
+          tokenization vocabularies, from character-level extremes to word-level pitfalls. If you
+          are interested in the algorithm itself and in trying the interactive visualization right
+          away, you can
+          <a href="#exploring-bpe" class="blog-article__link">skip directly to the BPE section</a>.
         </p>
       </section>
 
@@ -97,7 +106,7 @@ const bpeTrainingSteps: StepItem[] = [
           originally
           designed to translate text in one language into another, they were quickly adapted to
           solve all
-          kinds of transformations: text to image, image to text, speech to text. What makes this
+          kinds of transformations: text to image, image to text, audio to text. What makes this
           architecture so general is how it splits up input data into processable chunks that can
           carry
           semantic meaning. Depending on the use case, these chunks might be pixel patches, segments
@@ -132,7 +141,7 @@ const bpeTrainingSteps: StepItem[] = [
         <p>
           The first step on this journey is tokenization: splitting raw text into the chunks that
           can be
-          fed to the LLM. This article builds intuition for the tradeoffs of different vocabulary
+          used as input to the LLM. This article builds intuition for the tradeoffs of different vocabulary
           structures
           and sizes from first principles, and then walks through the algorithm that most modern
           tokenizers
@@ -182,7 +191,7 @@ const bpeTrainingSteps: StepItem[] = [
         </p>
 
         <p>
-          <strong>Vocabulary</strong> is the complete set of tokens a model knows.
+          <strong>Vocabulary</strong> is the complete set of unique tokens a model can recognize and generate.
         </p>
 
         <p>
@@ -196,13 +205,10 @@ const bpeTrainingSteps: StepItem[] = [
         </p>
 
         <p>
-          The goal of tokenization is to produce discrete units that carry semantic meaning. Later,
-          these
-          meanings are captured by learned vectors of fixed size, called embeddings. After
-          tokenization and
-          embedding, most of the computation an LLM performs to predict the next token operates on
-          these
-          embeddings.
+          The goal of tokenization is to produce discrete units that carry semantic meaning.
+          These token IDs are then mapped to learned vectors of fixed size, called embeddings.
+          The tokenization output and its resulting embeddings form the core input an LLM
+          requires to generate predictions.
         </p>
 
         <p>
@@ -218,11 +224,9 @@ const bpeTrainingSteps: StepItem[] = [
         </p>
 
         <p>
-          As a software engineer, I like to evaluate edge cases to get a full picture of the
-          tradeoffs at
-          play. Working through the extremes is what really helped me understand why researchers
-          chose the
-          tokenization algorithms and vocabulary sizes most common in modern LLMs. So let's start
+          One way to get a full picture of the tradeoffs at play is to examine edge cases.
+          Working through the extremes clarifies why researchers chose the
+          tokenization algorithms and vocabulary sizes most common in modern LLMs. Let's start
           there.
         </p>
       </section>
@@ -264,7 +268,8 @@ const bpeTrainingSteps: StepItem[] = [
         </p>
 
         <p>
-          The problem is severe token inflation: one token per character. Because LLMs are
+          <strong>Token inflation.</strong> The problem with character tokenization is severe token
+          inflation: one token per character. Because LLMs are
           autoregressive,
           every token requires its own full forward pass through the model. The same amount of
           computation
@@ -272,11 +277,11 @@ const bpeTrainingSteps: StepItem[] = [
           entire
           word. Generating a six-character word would therefore require six forward passes instead
           of one,
-          making this approach prohibitively expensive at scale.
+          making this approach prohibitively expensive at LLM scale.
         </p>
 
         <p>
-          There is also the problem of context size. LLMs are limited in how many tokens they can
+          <strong>Exhausted context budget.</strong> LLMs are limited in how many tokens they can
           attend to
           at once. With character-level tokens, the same amount of text consumes far more of that
           context
@@ -284,10 +289,10 @@ const bpeTrainingSteps: StepItem[] = [
         </p>
 
         <p>
-          An even more fundamental issue is that this approach conflicts with the goal of
-          tokenization: to
-          produce units that carry semantic meaning, rich enough that the model can build useful
-          representations around them. Single characters largely fail this test. The letter
+          <strong>Poor semantic content.</strong> An even more fundamental issue is that single
+          characters
+          conflict with the core goal of tokenization: to produce units that carry semantic meaning,
+          rich enough that the model can build useful representations around them. Single characters largely fail this test. The letter
           <code class="blog-article__code">o</code> appears in <code class="blog-article__code">chocolate</code>
           and in <code class="blog-article__code">work</code>, but the two words have less in common
           than I
@@ -398,7 +403,7 @@ const bpeTrainingSteps: StepItem[] = [
         <p>
           <strong>Rare words.</strong> Including every word from a training corpus means including
           many
-          that appear only a handful of times. The model sees too few examples of these tokens to
+          that appear only a handful of times. The model encounters too few examples of these tokens to
           learn
           meaningful representations for them. Their embeddings remain undertrained and noisy,
           contributing
@@ -520,16 +525,17 @@ const bpeTrainingSteps: StepItem[] = [
 
       <!-- Exploring BPE Through Visualization -->
       <section>
-        <h2>
+        <h2 id="exploring-bpe">
           Exploring BPE Through Visualization
         </h2>
 
         <p>
           The algorithm most modern tokenizers use to learn their vocabulary is called
           <strong>Byte-Pair Encoding</strong> (BPE), a compression algorithm from 1994 that was
-          later repurposed for language model training. To the right of this article sits an
-          interactive
-          visualization of the BPE training process, built to let you explore each step of the
+          later repurposed for language model training. To the right of this article, you will find
+          an
+          interactive visualization of the BPE training process, built to let you explore each step
+          of the
           algorithm
           as you read — stepping through manually, playing automatically, or jumping to any point in
           training. Among the several tokenizer algorithms that exist, BPE-based tokenizers are the
@@ -561,7 +567,8 @@ const bpeTrainingSteps: StepItem[] = [
         </h2>
 
         <p>
-          BPE was first described in 1994 by Philip Gage, not as a tokenization strategy, but as a
+          BPE was first described in 1994 by Philip Gage
+          (<a href="#gage1994" class="blog-article__link">Gage, 1994</a>), not as a tokenization strategy, but as a
           method for <strong>compressing bytes</strong>. The goal was to optimize the byte-level
           storage
           size of text by replacing frequently recurring byte combinations with shorter
@@ -637,13 +644,14 @@ const bpeTrainingSteps: StepItem[] = [
         </h2>
 
         <p>
-          BPE was originally designed to minimize storage size. When Sennrich et al. (2016) proposed
+          BPE was originally designed to minimize storage size. When
+          <a href="#sennrich2016" class="blog-article__link">Sennrich et al. (2016)</a> proposed
           repurposing it for neural machine translation, the <strong>goal shifted</strong>: instead
           of
           compressing text as far as possible, the aim is to produce a fixed-size vocabulary that
-          efficiently represents the language. The model needs enough tokens to understand and
-          generate
-          text fluently, but not so many that memory and computation become unmanageable.
+          efficiently represents the language. The vocabulary should be large enough that common
+          words and phrases are covered as whole tokens, keeping sequences short, but small enough
+          that the model's memory and computation remain tractable.
         </p>
 
         <p>
@@ -722,7 +730,7 @@ const bpeTrainingSteps: StepItem[] = [
         </h3>
 
         <p>
-          The variant introduced by Radford et al. (2019) for <strong>GPT-2</strong> takes
+          The variant introduced by <a href="#radford2019" class="blog-article__link">Radford et al. (2019)</a> for <strong>GPT-2</strong> takes
           byte-level
           BPE further by starting from all 256 possible byte values as the base alphabet. Before any
           merges are applied, the input text is converted to its UTF-8 byte representation.
@@ -837,9 +845,11 @@ const bpeTrainingSteps: StepItem[] = [
           <strong>prunes it down</strong> by iteratively removing tokens whose removal least
           degrades
           the corpus likelihood. The result is a probabilistic tokenizer with a unique property: the
-          same word can legitimately be tokenized in multiple ways, each with a probability. This is
-          useful for training with regularization, since the model sees the same word represented
-          differently across training steps.
+           same word can legitimately be tokenized in multiple ways, each with a probability.
+          This segmentation ambiguity enables subword regularization (<a href="#kudo2018" class="blog-article__link">Kudo, 2018</a>): during
+          training, the model encounters randomly sampled segmentations of the same text, which
+          acts as a data augmentation technique that improves robustness, particularly for
+          low-resource and out-of-domain settings.
         </p>
 
         <p>
@@ -861,10 +871,17 @@ const bpeTrainingSteps: StepItem[] = [
         </h2>
 
         <div class="blog-article__refs">
-          <div class="blog-article__ref">
-            <span class="blog-article__ref-authors">Sennrich, R., Haddow, B., Birch, A.</span>
-            <span class="blog-article__ref-year">(2016)</span>
-            <span class="blog-article__ref-title">Neural Machine Translation of Rare Words with Subword Units</span>.
+          <div id="gage1994" class="blog-article__ref">
+            <span class="blog-article__ref-authors">Gage, P.</span> <span class="blog-article__ref-year">(1994)</span> <span class="blog-article__ref-title">A New Algorithm for Data Compression</span>.
+            <a
+              href="http://www.cmp.uea.ac.uk/~pbs/sandbox/newalg.txt"
+              target="_blank"
+              rel="noopener"
+              class="blog-article__link"
+            >URL</a>
+          </div>
+          <div id="sennrich2016" class="blog-article__ref">
+            <span class="blog-article__ref-authors">Sennrich, R., Haddow, B., Birch, A.</span> <span class="blog-article__ref-year">(2016)</span> <span class="blog-article__ref-title">Neural Machine Translation of Rare Words with Subword Units</span>.
             <a
               href="https://arxiv.org/abs/1508.07909"
               target="_blank"
@@ -872,10 +889,8 @@ const bpeTrainingSteps: StepItem[] = [
               class="blog-article__link"
             >arXiv:1508.07909</a>
           </div>
-          <div class="blog-article__ref">
-            <span class="blog-article__ref-authors">Radford, A., Wu, J., Child, R., Luan, D., Amodei, D., Sutskever, I.</span>
-            <span class="blog-article__ref-year">(2019)</span>
-            <span class="blog-article__ref-title">Language Models are Unsupervised Multitask Learners</span>.
+          <div id="radford2019" class="blog-article__ref">
+            <span class="blog-article__ref-authors">Radford, A., Wu, J., Child, R., Luan, D., Amodei, D., Sutskever, I.</span> <span class="blog-article__ref-year">(2019)</span> <span class="blog-article__ref-title">Language Models are Unsupervised Multitask Learners</span>.
             <a
               href="https://cdn.openai.com/better-language-models/language_models_are_unsupervised_multitask_learners.pdf"
               target="_blank"
@@ -883,7 +898,42 @@ const bpeTrainingSteps: StepItem[] = [
               class="blog-article__link"
             >PDF</a>
           </div>
+          <div id="kudo2018" class="blog-article__ref">
+            <span class="blog-article__ref-authors">Kudo, T.</span> <span class="blog-article__ref-year">(2018)</span> <span class="blog-article__ref-title">Subword Regularization: Improving Neural Network Translation Models with Multiple Subword Candidates</span>.
+            <a
+              href="https://arxiv.org/abs/1804.10959"
+              target="_blank"
+              rel="noopener"
+              class="blog-article__link"
+            >arXiv:1804.10959</a>
+          </div>
+          <div id="cho2024" class="blog-article__ref">
+            <span class="blog-article__ref-authors">Cho, A., Kim, G., Karpekov, A., Helbling, A., Wang, Z., Lee, S., Hoover, B., Chau, D.</span> <span class="blog-article__ref-year">(2024)</span> <span class="blog-article__ref-title">Transformer Explainer: Interactive Learning of Text-Generative Models</span>.
+            <a
+              href="https://arxiv.org/abs/2408.04619"
+              target="_blank"
+              rel="noopener"
+              class="blog-article__link"
+            >arXiv:2408.04619</a> ·
+            <a
+              href="https://poloclub.github.io/transformer-explainer/"
+              target="_blank"
+              rel="noopener"
+              class="blog-article__link"
+            >Interactive tool</a>
+          </div>
         </div>
+      </section>
+
+      <!-- Acknowledgements -->
+      <section>
+        <h2>
+          Acknowledgements
+        </h2>
+
+        <p>
+          This work was enabled by the support of the Helmholtz-Zentrum Dresden-Rossendorf (HZDR), which provided the resources and time necessary for its development.
+        </p>
       </section>
 
     </div>

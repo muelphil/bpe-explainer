@@ -116,6 +116,25 @@
   margin-top: 1em;
 }
 
+/* Skip link */
+.blog-article__skip {
+  font-size: 0.9rem;
+  text-align: right;
+  margin-top: 0.25rem;
+}
+
+/* Active anchor reference highlight */
+.blog-article__ref:target {
+  background-color: #56d2f91c;
+  border-radius: 4px;
+  padding: 2px 12px;
+}
+
+/* Smooth scroll for anchor navigation */
+.blog-article {
+  scroll-behavior: smooth;
+}
+
 /* ── Lists ─────────────────────────────────────────────────────────────────── */
 .blog-article ul {
   padding-left: 1.5rem;
