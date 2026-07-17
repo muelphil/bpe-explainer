@@ -876,6 +876,24 @@ const bpeTrainingSteps: StepItem[] = [
         </p>
       </section>
 
+      <!-- About This Project -->
+      <section>
+        <h2>
+          About This Project
+        </h2>
+
+        <p>
+          This project and its interactive demo are open source. The code is available on GitHub at
+          <a
+            href="https://github.com/muelphil/bpe-explainer"
+            target="_blank"
+            rel="noopener"
+            class="blog-article__link"
+          >github.com/muelphil/bpe-explainer</a>. If you find any bugs, have questions, or want to
+          share feedback, please open an issue there.
+        </p>
+      </section>
+
       <!-- References -->
       <section>
         <h2>
