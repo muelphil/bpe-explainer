@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import {ref, computed, onMounted} from 'vue'
+import {ref, computed} from 'vue'
 import {useBPE} from './composables/useBPE'
 import {useIsMobile} from './composables/useIsMobile'
+import {useBPELesson} from './composables/useBPELesson'
 import MainView from './components/MainView.vue'
 import SettingsModal from './components/SettingsModal.vue'
 import FrequencyPanel from './components/FrequencyPanel.vue'
@@ -10,11 +11,28 @@ import StepPanel from './components/StepPanel.vue'
 import ControlPanel from './components/ControlPanel.vue'
 import ArticleVisualizationLayout from './components/ArticleVisualizationLayout.vue'
 import BlogArticle from './components/BlogArticle.vue'
+import GuidedTour from './components/GuidedTour.vue'
 import {trainingPresets} from './data/trainingPresets'
 import type {BPESettings} from './services/types'
 
-const {initialize, updateSettings, goToStep, state, settings, currentStepData} = useBPE()
+const {initialize, updateSettings, goToStep, state, settings, currentStepData, frequencies} = useBPE()
 const {isMobile} = useIsMobile()
+const {
+  activeLesson,
+  activeTarget,
+  clearRequestedMode,
+  exitTour,
+  handleArticleLesson,
+  isSyncEnabled,
+  isTourOpen,
+  nextLesson,
+  previousLesson,
+  progress,
+  requestedMode,
+  startTour,
+  status,
+  toggleSync,
+} = useBPELesson()
 
 const isSettingsOpen = ref(false)
 const hoveredPair = ref<[string, string] | null>(null)
@@ -42,6 +60,10 @@ const effectiveHoveredPair = computed(() => {
   }
 
   // No user interaction - use step highlighting
+  if (activeLesson.value?.id === 'count-pairs' && frequencies.value[0]) {
+    return frequencies.value[0].pair
+  }
+
   if (currentStepData.value?.highlightPair) {
     return currentStepData.value.highlightPair
   }
@@ -89,6 +111,15 @@ const handleTokenHover = (content: string | null) => {
 
 const handleGoToStep = (stepNumber: number) => {
   goToStep(stepNumber)
+}
+
+const resetLesson = () => {
+  const textPreset = trainingPresets.find(preset => preset.id === 'text')
+  if (!textPreset) return
+  if (window.confirm('Return to the Text example? This replaces the current training data and restarts BPE.')) {
+    initialize(textPreset.data)
+    startTour()
+  }
 }
 
 const handleModeChange = (mode: {
@@ -149,16 +180,28 @@ showFrequencySteps.value = true
       :effectiveHoveredPair="effectiveHoveredPair"
       :effectiveHoveredTokenContent="effectiveHoveredTokenContent"
       :mobileContentHidden="isMobile && showSidebars && anyPanelExpanded"
+      :guideTarget="activeTarget"
+      :lessonRequestedMode="requestedMode"
+      :lessonStatus="status"
+      :isLessonSyncEnabled="isSyncEnabled"
       @openSettings="handleOpenSettings"
       @hoverPair="handlePairHover"
       @hoverToken="handleTokenHover"
       @goToStep="handleGoToStep"
       @modeChange="handleModeChange"
+      @lessonModeApplied="clearRequestedMode"
+      @startLessonTour="startTour"
+      @toggleLessonSync="toggleSync"
+      @resetLesson="resetLesson"
     >
       <!-- Blog article panel (left of visualization on desktop, overlay on mobile) -->
       <template #leftPanel>
         <ArticleVisualizationLayout>
-          <BlogArticle/>
+          <BlogArticle
+            :activeLessonId="activeLesson?.id ?? null"
+            :syncEnabled="isSyncEnabled"
+            @showLesson="handleArticleLesson"
+          />
         </ArticleVisualizationLayout>
       </template>
 
@@ -170,29 +213,37 @@ showFrequencySteps.value = true
           :class="[isMobile ? 'w-full border-t' : 'w-96 border-l', isMobile && anyPanelExpanded ? 'flex-1' : 'flex-shrink-0']"
         >
           <div class="flex-1 flex flex-col overflow-hidden">
-            <FrequencyPanel
-              v-if="showFrequencySteps"
-              :hoveredPair="effectiveHoveredPair"
-              :initialExpanded="!isMobile"
-              @hoverPair="handlePairHover"
-              @expandedChange="(v) => frequencyExpanded = v"
-            />
-            <VocabularyPanel
-              :hoveredTokenContent="effectiveHoveredTokenContent"
-              :initialExpanded="!isMobile"
-              @hoverToken="handleTokenHover"
-              @expandedChange="(v) => vocabularyExpanded = v"
-            />
-            <StepPanel
-              v-if="showFrequencySteps"
-              :initialExpanded="!isMobile"
-              @goToStep="handleGoToStep"
-              @change="(v) => stepsExpanded = v"
-            />
+            <div :class="{ 'lesson-focus': activeTarget === 'frequency' }" data-guide-target="frequency">
+              <FrequencyPanel
+                v-if="showFrequencySteps"
+                :hoveredPair="effectiveHoveredPair"
+                :initialExpanded="!isMobile"
+                @hoverPair="handlePairHover"
+                @expandedChange="(v) => frequencyExpanded = v"
+              />
+            </div>
+            <div :class="{ 'lesson-focus': activeTarget === 'vocabulary' }" data-guide-target="vocabulary">
+              <VocabularyPanel
+                :hoveredTokenContent="effectiveHoveredTokenContent"
+                :initialExpanded="!isMobile"
+                @hoverToken="handleTokenHover"
+                @expandedChange="(v) => vocabularyExpanded = v"
+              />
+            </div>
+            <div :class="{ 'lesson-focus': activeTarget === 'steps' }" data-guide-target="steps">
+              <StepPanel
+                v-if="showFrequencySteps"
+                :initialExpanded="!isMobile"
+                @goToStep="handleGoToStep"
+                @change="(v) => stepsExpanded = v"
+              />
+            </div>
           </div>
 
           <!-- Control panel at bottom (only in training mode) -->
-          <ControlPanel v-if="showControlPanel"/>
+          <div :class="{ 'lesson-focus': activeTarget === 'controls' }" data-guide-target="controls">
+            <ControlPanel v-if="showControlPanel"/>
+          </div>
         </div>
       </template>
     </MainView>
@@ -203,6 +254,15 @@ showFrequencySteps.value = true
       :settings="settings"
       @close="isSettingsOpen = false"
       @save="handleSaveSettings"
+    />
+    <GuidedTour
+      v-if="isTourOpen"
+      :lesson="activeLesson"
+      :current="progress"
+      :total="8"
+      @next="nextLesson"
+      @previous="previousLesson"
+      @exit="exitTour"
     />
   </div>
 </template>
@@ -222,5 +282,11 @@ body {
   width: 100vw;
   height: 100vh;
   overflow: hidden;
+}
+
+.lesson-focus {
+  position: relative;
+  z-index: 2;
+  box-shadow: inset 0 0 0 3px rgb(59 130 246 / 0.85);
 }
 </style>

@@ -3,6 +3,7 @@ import {computed} from 'vue'
 import CollapsiblePanel from './CollapsiblePanel.vue'
 import {useBPE} from '../composables/useBPE'
 import {displayTokenContent, getTokenColor} from '../utils/tokenColor'
+import AppTooltip from './AppTooltip.vue'
 
 const props = defineProps<{
   hoveredTokenContent: string | null
@@ -56,12 +57,29 @@ const handleTokenHover = (content: string | null) => {
 const isTokenHighlighted = (tokenContent: string, hoveredTokenContent: string | null): boolean => {
   return hoveredTokenContent !== null && tokenContent === hoveredTokenContent
 }
+
+const getTokenOrigin = (tokenContent: string): string | null => {
+  const mergeStep = steps.value.find(step =>
+    step.type === 'merge' &&
+    step.addedToken?.content === tokenContent &&
+    step.selectedPair
+  )
+  return mergeStep?.selectedPair
+    ? `${displayTokenContent(mergeStep.selectedPair[0])} + ${displayTokenContent(mergeStep.selectedPair[1])}`
+    : null
+}
 </script>
 
 <template>
   <CollapsiblePanel title="Vocabulary" :initialExpanded="props.initialExpanded" @change="(v) => emit('expandedChange', v)">
     <!-- Critical Info (always visible) -->
     <template #critical>
+      <div class="mb-1 flex items-center justify-between gap-2 text-xs text-slate-500 dark:text-slate-400">
+        <span>Learned symbols available to BPE</span>
+        <AppTooltip text="Hover a vocabulary token to highlight its current occurrences in the corpus.">
+          <span tabindex="0" class="cursor-help underline decoration-dotted">How it works</span>
+        </AppTooltip>
+      </div>
       <div v-if="vocabulary.length === 0" class="text-sm text-slate-500 dark:text-slate-400">
         Empty vocabulary
       </div>
@@ -93,22 +111,21 @@ const isTokenHighlighted = (tokenContent: string, hoveredTokenContent: string | 
           @mouseenter="handleTokenHover(token.content)"
           @mouseleave="handleTokenHover(null)"
         >
-          <span
-            class="token relative group cursor-pointer hover:scale-110 hover:z-10 hover:shadow-lg"
-            style="transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;"
-            :style="token.color ? { backgroundColor: token.color } : {}"
+          <AppTooltip
+            :text="getTokenOrigin(token.content)
+              ? `Token #${token.id}, learned at step ${token.addedAtStep} from ${getTokenOrigin(token.content)}.`
+              : `Token #${token.id}, part of the base vocabulary.`"
           >
-            <span class="token-content">{{ displayTokenContent(token.content) }}</span>
-            <span class="token-id">{{ token.id }}</span>
-
-            <!-- Tooltip on hover (disabled: clips with overflow-hidden parent, needs rewrite)
             <span
-              class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-900 dark:bg-slate-700 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-20">
-              Token #{{ token.id }}
-              <span v-if="token.addedAtStep > 0"> (Step {{ token.addedAtStep }})</span>
+              tabindex="0"
+              class="token relative cursor-pointer hover:scale-110 hover:z-10 hover:shadow-lg"
+              style="transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;"
+              :style="token.color ? { backgroundColor: token.color } : {}"
+            >
+              <span class="token-content">{{ displayTokenContent(token.content) }}</span>
+              <span class="token-id">{{ token.id }}</span>
             </span>
-            -->
-          </span>
+          </AppTooltip>
         </span>
       </div>
 

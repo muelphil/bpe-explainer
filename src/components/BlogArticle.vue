@@ -6,7 +6,46 @@ import SubwordExample from './tokenization/SubwordExample.vue'
 import Callout from './Callout.vue'
 import StepList from './StepList.vue'
 import type { StepItem } from './StepList.vue'
-import {Play, SkipForward} from "lucide-vue-next";
+import {Play, SkipForward, Sparkles} from "lucide-vue-next";
+import {onBeforeUnmount, onMounted, ref} from 'vue'
+import type {LessonId} from '../data/bpeLesson'
+
+const props = defineProps<{
+  activeLessonId: LessonId | null
+  syncEnabled: boolean
+}>()
+
+const emit = defineEmits<{
+  showLesson: [id: LessonId]
+}>()
+
+const articleRef = ref<HTMLElement | null>(null)
+let observer: IntersectionObserver | null = null
+
+const showLesson = (lessonId: LessonId) => {
+  emit('showLesson', lessonId)
+}
+
+onMounted(() => {
+  if (!articleRef.value || !('IntersectionObserver' in window)) return
+
+  observer = new IntersectionObserver(entries => {
+    if (!props.syncEnabled) return
+    const visible = entries
+      .filter(entry => entry.isIntersecting)
+      .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0]
+    const lessonId = visible?.target.getAttribute('data-lesson') as LessonId | null
+    if (lessonId) emit('showLesson', lessonId)
+  }, {
+    root: articleRef.value,
+    rootMargin: '-20% 0px -55% 0px',
+    threshold: [0.25, 0.5, 0.75],
+  })
+
+  articleRef.value.querySelectorAll<HTMLElement>('[data-lesson]').forEach(element => observer?.observe(element))
+})
+
+onBeforeUnmount(() => observer?.disconnect())
 
 const tokenizerSteps: StepItem[] = [
   {
@@ -41,7 +80,7 @@ const bpeTrainingSteps: StepItem[] = [
 
 <template>
   <!-- Main blog article container -->
-  <article class="blog-article h-full overflow-y-auto">
+  <article ref="articleRef" class="blog-article h-full overflow-y-auto">
     <div class="blog-article__inner px-6 py-6">
 
       <!-- ============================================= -->
@@ -523,8 +562,12 @@ const bpeTrainingSteps: StepItem[] = [
       <!-- ============================================= -->
 
       <!-- Exploring BPE Through Visualization -->
-      <section>
-        <h2 id="exploring-bpe">
+      <section
+        id="exploring-bpe"
+        data-lesson="base-units"
+        :class="{ 'blog-article__live-section': activeLessonId === 'base-units' }"
+      >
+        <h2>
           Exploring BPE Through Visualization
         </h2>
 
@@ -541,6 +584,11 @@ const bpeTrainingSteps: StepItem[] = [
           most
           common in modern LLMs today.
         </p>
+
+        <button class="blog-article__live-action" @click="showLesson('base-units')">
+          <Sparkles :size="15" />
+          See base tokens in the visualization
+        </button>
 
         <p>
           Before diving into the algorithm, it helps to understand what the visualizer shows. The
@@ -575,7 +623,23 @@ const bpeTrainingSteps: StepItem[] = [
           building a translation table in the process.
         </p>
 
-        <StepList :steps="bpeTrainingSteps" />
+        <div
+          id="lesson-count-pairs"
+          data-lesson="count-pairs"
+          :class="{ 'blog-article__live-section': activeLessonId === 'count-pairs' || activeLessonId === 'select-pair' }"
+        >
+          <StepList :steps="bpeTrainingSteps" />
+          <div class="blog-article__live-actions">
+            <button class="blog-article__live-action" @click="showLesson('count-pairs')">
+              <Sparkles :size="15" />
+              Highlight the most frequent pair
+            </button>
+            <button class="blog-article__live-action" @click="showLesson('merge-pair')">
+              <Sparkles :size="15" />
+              Show its merge
+            </button>
+          </div>
+        </div>
 
         <Callout icon="task" title="Try it yourself">
 
@@ -608,7 +672,22 @@ const bpeTrainingSteps: StepItem[] = [
           </span>
         </Callout>
 
-        <p>
+        <div
+          id="lesson-vocabulary"
+          data-lesson="vocabulary"
+          :class="{ 'blog-article__live-section': activeLessonId === 'vocabulary' }"
+        >
+          <button class="blog-article__live-action" @click="showLesson('vocabulary')">
+            <Sparkles :size="15" />
+            Inspect the new vocabulary token
+          </button>
+        </div>
+
+        <p
+          id="lesson-history"
+          data-lesson="history"
+          :class="{ 'blog-article__live-section': activeLessonId === 'history' }"
+        >
           The algorithm continues until no pair of tokens appears more than once in the text (the
           natural break condition of the compression use case), or until a target compression rate
           is
@@ -618,6 +697,10 @@ const bpeTrainingSteps: StepItem[] = [
           text,
           the receiver needs the tokenizer's merge table once, then the token IDs.
         </p>
+        <button class="blog-article__live-action" @click="showLesson('history')">
+          <Sparkles :size="15" />
+          Replay the learning history
+        </button>
 
         <Callout icon="task" title="Try it yourself">
           Once training has converged, navigate to the
@@ -629,6 +712,17 @@ const bpeTrainingSteps: StepItem[] = [
           fail for those parts of the input. This is a fundamental limitation of the original
           compression use case and the motivation for the adaptations described below.
         </Callout>
+
+        <div
+          id="lesson-validation"
+          data-lesson="validation"
+          :class="{ 'blog-article__live-section': activeLessonId === 'validation' }"
+        >
+          <button class="blog-article__live-action" @click="showLesson('validation')">
+            <Sparkles :size="15" />
+            Try learned rules in validation
+          </button>
+        </div>
 
         <p>
           It is a simple and elegant algorithm, and that simplicity turns out to be one of the main
@@ -973,3 +1067,53 @@ const bpeTrainingSteps: StepItem[] = [
     </div>
   </article>
 </template>
+
+<style scoped>
+.blog-article__live-section {
+  border-left: 3px solid rgb(59 130 246);
+  background: rgb(239 246 255 / 0.75);
+  border-radius: 0.25rem;
+  margin-left: -0.75rem;
+  padding: 0.5rem 0.75rem;
+}
+
+.blog-article__live-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.blog-article__live-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin-top: 0.75rem;
+  border: 1px solid rgb(191 219 254);
+  border-radius: 0.375rem;
+  background: rgb(239 246 255);
+  color: rgb(29 78 216);
+  cursor: pointer;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  padding: 0.45rem 0.65rem;
+}
+
+.blog-article__live-actions .blog-article__live-action {
+  margin-top: 0;
+}
+
+.blog-article__live-action:hover {
+  background: rgb(219 234 254);
+}
+
+:global(.dark) .blog-article__live-section {
+  background: rgb(30 58 138 / 0.25);
+}
+
+:global(.dark) .blog-article__live-action {
+  border-color: rgb(30 64 175);
+  background: rgb(30 58 138 / 0.3);
+  color: rgb(191 219 254);
+}
+</style>

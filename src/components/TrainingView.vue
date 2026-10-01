@@ -3,10 +3,14 @@ import {computed} from 'vue'
 import {useBPE} from '../composables/useBPE'
 import {displayTokenContent} from '../utils/tokenColor'
 import { DynamicScroller, DynamicScrollerItem } from 'vue-virtual-scroller'
+import NarrativeSummary from './NarrativeSummary.vue'
+import AppTooltip from './AppTooltip.vue'
+import type { GuideTarget } from '../data/bpeLesson'
 
 defineProps<{
   hoveredPair: [string, string] | null
   hoveredTokenContent: string | null
+  guideTarget?: GuideTarget | null
 }>()
 
 const {tokens} = useBPE()
@@ -71,7 +75,18 @@ const isPairRight = (globalIndex: number, hoveredPair: [string, string] | null):
 </script>
 
 <template>
-  <div class="flex-1 flex flex-col bg-white dark:bg-slate-800 overflow-hidden">
+  <div
+    class="flex-1 flex flex-col bg-white dark:bg-slate-800 overflow-hidden"
+    :class="{ 'lesson-focus': guideTarget === 'corpus' }"
+    data-guide-target="corpus"
+  >
+    <NarrativeSummary />
+    <div class="mx-6 mt-2 flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
+      <AppTooltip text="Each colored chip is one current token. The small number identifies it in the vocabulary.">
+        <span tabindex="0" class="cursor-help underline decoration-dotted">Token color and ID</span>
+      </AppTooltip>
+      <span>Highlighted outlines show the pair or vocabulary token currently being explained.</span>
+    </div>
     <!-- Token Display Area with Virtual Scrolling -->
     <DynamicScroller
       :items="tokenLineRanges"

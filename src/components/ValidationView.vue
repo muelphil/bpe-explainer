@@ -5,8 +5,10 @@ import { bpeService } from '../services/BPEService'
 import { displayTokenContent } from '../utils/tokenColor'
 import TokenMergeTree from './TokenMergeTree.vue'
 import type { MergeNode } from './TokenMergeTree.vue'
+import type { GuideTarget } from '../data/bpeLesson'
 
 const { state } = useBPE()
+defineProps<{ guideTarget?: GuideTarget | null }>()
 
 const inputText = ref('')
 const editableDiv = ref<HTMLDivElement | null>(null)
@@ -90,16 +92,31 @@ const compressionPercentage = computed(() => {
   const ratio = tokenizationResult.value.compressionRatio
   return ((1 - 1 / ratio) * 100).toFixed(1)
 })
+
+const examples = ['internationalization', 'visualization', 'optimization']
+
+const applyExample = (example: string) => {
+  inputText.value = example
+}
 </script>
 
 <template>
-  <div class="flex flex-col h-full">
+  <div class="flex flex-col h-full" :class="{ 'lesson-focus': guideTarget === 'validation' }" data-guide-target="validation">
     <!-- Input Section (33%) -->
     <div class="flex flex-col overflow-hidden" style="flex: 0 0 33%">
       <div class="px-2 sm:px-6 py-2 sm:py-4">
         <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">
           Input
         </h2>
+        <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">The tokenizer applies the learned merge rules greedily, in training order.</p>
+        <div class="mt-2 flex flex-wrap gap-1.5">
+          <button
+            v-for="example in examples"
+            :key="example"
+            class="rounded-full border border-primary-200 bg-primary-50 px-2 py-1 text-xs font-medium text-primary-700 hover:bg-primary-100 dark:border-primary-800 dark:bg-primary-950/30 dark:text-primary-300"
+            @click="applyExample(example)"
+          >Try “{{ example }}”</button>
+        </div>
       </div>
       <div class="flex-1 px-2 sm:px-6 pb-2 sm:pb-4 overflow-y-auto">
         <div
@@ -121,6 +138,7 @@ const compressionPercentage = computed(() => {
             (Compression Rate: {{ compressionPercentage }}%)
           </span>
         </h2>
+        <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Nested borders reveal which earlier merges formed a multi-level subword.</p>
       </div>
       <div class="flex-1 px-2 sm:px-6 pb-2 sm:pb-4 overflow-y-auto">
         <div class="token-container">

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {ref, computed, onMounted, onUnmounted} from 'vue'
+import {ref, computed, onMounted, onUnmounted, watch} from 'vue'
 import {Settings, ChevronDown} from 'lucide-vue-next'
 import {useBPE} from '../composables/useBPE'
 import {useIsMobile} from '../composables/useIsMobile'
@@ -11,13 +11,19 @@ import FrequencyPanel from './FrequencyPanel.vue'
 import VocabularyPanel from './VocabularyPanel.vue'
 import StepPanel from './StepPanel.vue'
 import ControlPanel from './ControlPanel.vue'
+import LearningControls from './LearningControls.vue'
+import type { GuideTarget } from '../data/bpeLesson'
 
-defineProps<{
+const props = defineProps<{
   hoveredPair: [string, string] | null
   hoveredTokenContent: string | null
   effectiveHoveredPair: [string, string] | null
   effectiveHoveredTokenContent: string | null
   mobileContentHidden?: boolean
+  guideTarget?: GuideTarget | null
+  lessonRequestedMode?: 'training' | 'validation' | null
+  lessonStatus: string
+  isLessonSyncEnabled: boolean
 }>()
 
 const emit = defineEmits<{
@@ -26,6 +32,10 @@ const emit = defineEmits<{
   hoverToken: [content: string | null]
   goToStep: [stepNumber: number]
   modeChange: [mode: { showSidebars: boolean, showControlPanel: boolean, showFrequencySteps: boolean }]
+  lessonModeApplied: []
+  startLessonTour: []
+  toggleLessonSync: []
+  resetLesson: []
 }>()
 
 type ViewMode = 'training-data' | 'training' | 'validation'
@@ -116,6 +126,13 @@ const showControlPanel = computed(() => {
 
 const { isOpen: articleOpen } = articleOpenState
 
+watch(() => props.lessonRequestedMode, mode => {
+  if (mode) {
+    switchToMode(mode)
+    emit('lessonModeApplied')
+  }
+})
+
 </script>
 
 <template>
@@ -143,6 +160,14 @@ const { isOpen: articleOpen } = articleOpenState
           >
             {{ modeLabels[mode] }}
           </button>
+          <LearningControls
+            v-if="!isMobile"
+            :isSyncEnabled="isLessonSyncEnabled"
+            :status="lessonStatus"
+            @startTour="emit('startLessonTour')"
+            @toggleSync="emit('toggleLessonSync')"
+            @resetLesson="emit('resetLesson')"
+          />
         </div>
 
         <!-- Mobile: dropdown -->
@@ -203,10 +228,12 @@ const { isOpen: articleOpen } = articleOpenState
           v-else-if="currentMode === 'training'"
           :hoveredPair="effectiveHoveredPair"
           :hoveredTokenContent="effectiveHoveredTokenContent"
+          :guideTarget="guideTarget"
           class="flex-1 overflow-hidden"
         />
         <ValidationView
           v-else-if="currentMode === 'validation'"
+          :guideTarget="guideTarget"
           class="flex-1 overflow-hidden"
         />
       </div>
@@ -338,4 +365,3 @@ const { isOpen: articleOpen } = articleOpenState
   opacity: 0.6;
 }
 </style>
-

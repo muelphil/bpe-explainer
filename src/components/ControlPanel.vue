@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { SkipBack, Play, Pause, SkipForward, ChevronsLeft, ChevronsRight } from 'lucide-vue-next'
 import { useBPE } from '../composables/useBPE'
+import AppTooltip from './AppTooltip.vue'
 
 const { canGoPrevious, canGoNext, isPlaying, previousStep, nextStep, play, pause, goToStep, steps, currentStep } = useBPE()
 
@@ -35,6 +36,12 @@ const handleProgressClick = (event: MouseEvent) => {
 <template>
   <div class="border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900">
     <div class="p-4">
+      <div class="mb-2 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+        <span>Replay the BPE learning history</span>
+        <AppTooltip text="Move one state at a time, play the complete sequence, or click the progress bar to jump to a particular state.">
+          <span tabindex="0" class="cursor-help underline decoration-dotted">How controls work</span>
+        </AppTooltip>
+      </div>
       <div class="flex gap-2 justify-between mb-3">
         <button
           @click="goToStart"

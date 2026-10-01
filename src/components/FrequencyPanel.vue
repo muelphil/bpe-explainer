@@ -3,6 +3,7 @@ import {computed} from 'vue'
 import CollapsiblePanel from './CollapsiblePanel.vue'
 import {useBPE} from '../composables/useBPE'
 import {displayTokenContent, getTokenColor} from '../utils/tokenColor'
+import AppTooltip from './AppTooltip.vue'
 
 const props = defineProps<{
   hoveredPair: [string, string] | null
@@ -32,6 +33,12 @@ const isPairHighlighted = (pair: [string, string], hoveredPair: [string, string]
   <CollapsiblePanel title="Frequency of Pairs" :initialExpanded="props.initialExpanded" @change="(v) => emit('expandedChange', v)">
     <!-- Critical Info (always visible) - First item of list -->
     <template #critical>
+      <div class="mb-1 flex items-center justify-between gap-2 text-xs text-slate-500 dark:text-slate-400">
+        <span>Adjacent pair occurrences</span>
+        <AppTooltip text="Hover a pair to reveal every occurrence in the corpus. The leading pair is BPE’s next candidate.">
+          <span tabindex="0" class="cursor-help underline decoration-dotted">How it works</span>
+        </AppTooltip>
+      </div>
       <div v-if="!topFrequency" class="text-sm text-slate-500 dark:text-slate-400 p-2">
         No pairs available
       </div>
