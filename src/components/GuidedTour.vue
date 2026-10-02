@@ -15,7 +15,8 @@ interface Rect {
 }
 
 const TWEEN_MS = 450 // Cutout morph duration between steps
-const CUTOUT_PAD = 4
+const RING_PAD = 0 // Gap between the explained element and its border (the cutouts have none)
+const RING_PAD_MODE_BUTTONS = 2 // Same, for the Training Data / Validation header buttons
 const RING_WIDTH = 3 // Must match the box-shadow spread of .tour-ring
 const CARD_WIDTH = 340
 const CARD_GAP = 16
@@ -36,6 +37,10 @@ const cardRef = ref<HTMLDivElement | null>(null)
 const cutouts = ref<Rect[]>([])
 /** Rect of the explained element as displayed (follows the animated cutout when the spotlight is on) */
 const highlightRect = ref<Rect | null>(null)
+/** Border is faded out (while it jumps between distant areas instead of sliding) */
+const ringHidden = ref(false)
+/** Border padding for the element the border currently surrounds */
+const highlightPad = ref(RING_PAD)
 const cardPos = ref<{ left: number, top: number } | null>(null)
 const mobileCardAtTop = ref(false)
 
@@ -84,8 +89,10 @@ const prefersReducedMotion = () =>
 
 // --- Animation loop: re-measure every frame so cutouts follow layout changes ---
 // The dimming stays in place for the whole tour; between steps the cutouts morph from
-// their previous position to the new one (a new cutout grows from its centre, a removed
-// one shrinks into its centre), so previously obscured areas stay obscured.
+// their previous position to the new one, so previously obscured areas stay obscured.
+// A new cutout grows from the part of it that was already unobscured (or from its centre),
+// a removed one shrinks into the part that stays unobscured (or into its centre), so
+// areas that stay unobscured across a step change never flash dark.
 
 let rafId: number | null = null
 let animStart = -Infinity
@@ -95,11 +102,37 @@ let fromExtra: Rect | null = null
 let displayedMain: Rect | null = null
 let displayedTarget: Rect | null = null
 let displayedExtra: Rect | null = null
+/** All cutouts as displayed when the current step transition started */
+let fromCutouts: Rect[] = []
+/** Target of the previous step, and whether the border fades (instead of slides) to the new one */
+let lastTarget: TourTarget | null = null
+let fadeRing = false
+/** Fading border: stays hidden until this time, then reappears at the new element */
+let ringHiddenUntil = 0
 
-/** Morph a cutout: grow from its centre if new, slide/resize if moved, shrink away if removed */
-const morph = (from: Rect | null, live: Rect | null, e: number, p: number): Rect | null => {
-  if (live) return lerpRect(from ?? collapse(live), live, e)
-  return from && p < 1 ? lerpRect(from, collapse(from), e) : null
+const intersect = (a: Rect, b: Rect): Rect | null => {
+  const x = Math.max(a.x, b.x)
+  const y = Math.max(a.y, b.y)
+  const w = Math.min(a.x + a.w, b.x + b.w) - x
+  const h = Math.min(a.y + a.h, b.y + b.h) - y
+  return w > 0 && h > 0 ? {x, y, w, h} : null
+}
+
+/** Largest overlap of r with any of the given rects */
+const largestOverlap = (r: Rect, others: Rect[]): Rect | null => {
+  let best: Rect | null = null
+  for (const o of others) {
+    const i = intersect(r, o)
+    if (i && (!best || i.w * i.h > best.w * best.h)) best = i
+  }
+  return best
+}
+
+/** Morph a cutout: grow in if new, slide/resize if moved, shrink away if removed */
+const morph = (from: Rect | null, live: Rect | null, liveAll: Rect[], e: number, p: number): Rect | null => {
+  if (live) return lerpRect(from ?? largestOverlap(live, fromCutouts) ?? collapse(live), live, e)
+  if (!from || p >= 1) return null
+  return lerpRect(from, largestOverlap(from, liveAll) ?? collapse(from), e)
 }
 
 const tick = () => {
@@ -109,17 +142,18 @@ const tick = () => {
 
   const rawTarget = measure(step.target)
   const rawMain = measure('main')
-  const liveMain = rawMain && pad(rawMain, CUTOUT_PAD)
-  const liveTarget = step.target === 'main' ? null : rawTarget && pad(rawTarget, CUTOUT_PAD)
-  const rawExtra = step.unobscured?.[0] ? measure(step.unobscured[0]) : null
-  const liveExtra = rawExtra && pad(rawExtra, CUTOUT_PAD)
+  // Cutouts hug the elements exactly; only the border gets padding (see ringStyle)
+  const liveMain = rawMain
+  const liveTarget = step.target === 'main' ? null : rawTarget
+  const liveExtra = step.unobscured?.[0] ? measure(step.unobscured[0]) : null
 
   const p = prefersReducedMotion() ? 1 : Math.min(1, (performance.now() - animStart) / TWEEN_MS)
   const e = easeInOutCubic(p)
 
-  displayedMain = liveMain && lerpRect(fromMain ?? liveMain, liveMain, e)
-  displayedTarget = morph(fromTarget, liveTarget, e, p)
-  displayedExtra = morph(fromExtra, liveExtra, e, p)
+  const liveAll = [liveMain, liveTarget, liveExtra].filter((r): r is Rect => r !== null)
+  displayedMain = morph(fromMain, liveMain, liveAll, e, p)
+  displayedTarget = morph(fromTarget, liveTarget, liveAll, e, p)
+  displayedExtra = morph(fromExtra, liveExtra, liveAll, e, p)
 
   const next = [displayedMain, displayedTarget, displayedExtra].filter((r): r is Rect => r !== null)
   if (!sameRects(next, cutouts.value)) cutouts.value = next
@@ -128,7 +162,14 @@ const tick = () => {
   const shownHighlight = step.target === 'main'
     ? displayedMain
     : spotlightEnabled.value ? liveTarget && displayedTarget : liveTarget
-  if (!sameRect(shownHighlight, highlightRect.value)) highlightRect.value = shownHighlight
+  if (fadeRing && performance.now() < ringHiddenUntil) {
+    // Fade out in place; reappears at the new element once the transition is done
+    ringHidden.value = true
+  } else {
+    ringHidden.value = false
+    if (!sameRect(shownHighlight, highlightRect.value)) highlightRect.value = shownHighlight
+    highlightPad.value = step.target.startsWith('mode-') ? RING_PAD_MODE_BUTTONS : RING_PAD
+  }
 
   updateCardPosition(step.target, rawTarget)
 }
@@ -138,7 +179,15 @@ const beginStepTransition = () => {
   fromMain = displayedMain && {...displayedMain}
   fromTarget = displayedTarget && {...displayedTarget}
   fromExtra = displayedExtra && {...displayedExtra}
-  animStart = performance.now()
+  fromCutouts = cutouts.value.map(r => ({...r}))
+  // Between a sidebar/main-view element and a header tab button (steps 6 <-> 7) the border
+  // vanishes and reappears instead of travelling across the screen, and the dimming switches
+  // instantly to the new layout (the view mode changes there) instead of morphing
+  const target = currentStep.value?.target ?? null
+  fadeRing = !!lastTarget && !!target && lastTarget.startsWith('mode-') !== target.startsWith('mode-')
+  lastTarget = target
+  animStart = fadeRing ? -Infinity : performance.now()
+  ringHiddenUntil = performance.now() + TWEEN_MS
 }
 
 const updateCardPosition = (targetId: TourTarget, target: Rect | null) => {
@@ -193,22 +242,35 @@ const scrollWithin = (container: HTMLElement, el: HTMLElement) => {
   const c = container.getBoundingClientRect()
   const r = el.getBoundingClientRect()
   const top = container.scrollTop + (r.top - c.top) - (c.height - r.height) / 2
-  container.scrollTo({top: Math.max(0, top), behavior: prefersReducedMotion() ? 'auto' : 'smooth'})
+  container.scrollTo({top: Math.max(0, top), behavior: 'instant'})
 }
 
-/** Vocabulary step: bring the highlighted (step-locked) token into view */
-const scrollToHighlightedVocabToken = () => {
-  if (currentStep.value?.target !== 'vocabulary') return
-  // Let the panel expand first
+/**
+ * Bring the highlighted (step-locked) vocabulary token into view. Runs when the tour starts,
+ * so the panel is already in place on the Vocabulary step; on that step it only scrolls as a
+ * fallback, if the token isn't visible (e.g. the panel was collapsed at the start).
+ */
+const scrollToHighlightedVocabToken = (onlyIfHidden: boolean) => {
+  // Let the panel expand / the jumped-to training step render first
   setTimeout(() => {
     const container = document.querySelector<HTMLElement>('.panel-details[data-tour="vocabulary"]')
     const token = container?.querySelector<HTMLElement>('.highlight-single')
-    if (container && token) scrollWithin(container, token)
+    if (!container || !token) return
+    if (onlyIfHidden) {
+      const c = container.getBoundingClientRect()
+      const r = token.getBoundingClientRect()
+      if (r.top >= c.top && r.bottom <= c.bottom) return
+    }
+    scrollWithin(container, token)
   }, 60)
 }
 
 const resetAnimation = () => {
   fromMain = fromTarget = fromExtra = displayedMain = displayedTarget = displayedExtra = null
+  fromCutouts = []
+  lastTarget = currentStep.value?.target ?? null
+  fadeRing = false
+  ringHidden.value = false
   animStart = -Infinity
   cutouts.value = []
   highlightRect.value = null
@@ -279,13 +341,14 @@ watch(stepIndex, async () => {
   await nextTick()
   beginStepTransition()
   scrollTargetIntoView()
-  scrollToHighlightedVocabToken()
+  if (currentStep.value?.target === 'vocabulary') scrollToHighlightedVocabToken(true)
 })
 
 watch(isActive, async (active) => {
   if (!active) return
   await nextTick()
   scrollTargetIntoView()
+  scrollToHighlightedVocabToken(false)
 })
 
 watch([isActive, currentStep, pulseEnabled], () => {
@@ -311,8 +374,8 @@ const cardStyle = computed(() => {
 })
 
 const ringStyle = computed(() => {
-  const r = highlightRect.value
-  if (!r) return {}
+  if (!highlightRect.value) return {}
+  const r = pad(highlightRect.value, highlightPad.value)
   // Keep the (outset) border fully inside the viewport, dropping the padding at the edges if needed
   const left = Math.max(RING_WIDTH, r.x)
   const top = Math.max(RING_WIDTH, r.y)
@@ -351,7 +414,7 @@ const ringStyle = computed(() => {
     <div
       v-if="isActive && !isMobile && highlightRect && highlightRect.w > 0"
       class="tour-ring fixed pointer-events-none"
-      :class="{ 'tour-ring--pulse': pulseEnabled }"
+      :class="{ 'tour-ring--pulse': pulseEnabled, 'tour-ring--hidden': ringHidden }"
       :style="ringStyle"
       aria-hidden="true"
     />
@@ -433,13 +496,18 @@ const ringStyle = computed(() => {
   fill: rgba(15, 23, 42, 0.68);
 }
 
-:global(.dark) .tour-spotlight-dim {
+.dark .tour-spotlight-dim {
   fill: rgba(0, 0, 0, 0.74);
 }
 
 .tour-ring {
   z-index: 110; /* above the mobile mode dropdown (z-index 100) */
   box-shadow: 0 0 0 3px var(--primary);
+  transition: opacity 0.15s ease;
+}
+
+.tour-ring--hidden {
+  opacity: 0;
 }
 
 .tour-ring--pulse {

@@ -218,6 +218,13 @@
   color: white !important;
 }
 
+/* Highlighted tokens (single or pair): near-white token IDs, readable on the blue highlight */
+.highlight-single .token-id,
+.highlight-left .token-id,
+.highlight-right .token-id {
+  color: rgba(255, 255, 255, 0.9);
+}
+
 /* Error token styling */
 .token-error .token {
   background-color: #fee2e2 !important;
