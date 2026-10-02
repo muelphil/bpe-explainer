@@ -58,28 +58,13 @@ export class SettingsService {
    * Apply settings (e.g., dark mode to document)
    */
   static apply(settings: BPESettings): void {
-    // Apply dark mode
+    // Apply dark mode. The color-scheme CSS property (main.css) follows
+    // this class, so browser UI (toolbars) adapts automatically.
     if (settings.darkMode) {
       document.documentElement.classList.add('dark')
     } else {
       document.documentElement.classList.remove('dark')
     }
-    // Sync theme-color meta tag with the active background color
-    SettingsService.applyThemeColor(settings.darkMode)
-  }
-
-  /**
-   * Update the theme-color meta tag to match the active theme background
-   */
-  private static applyThemeColor(darkMode: boolean): void {
-    const themeColor = darkMode ? '#1e293b' : '#f8fafc'
-    let meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')
-    if (!meta) {
-      meta = document.createElement('meta')
-      meta.name = 'theme-color'
-      document.head.appendChild(meta)
-    }
-    meta.content = themeColor
   }
 
   /**
