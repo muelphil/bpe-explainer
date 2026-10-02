@@ -52,6 +52,8 @@ export interface BPESettings {
   playSpeed: number // milliseconds
   darkMode: boolean
   mergingRestriction: 'none' | 'llm' // 'llm' = spaces can only be joined to the right
+  tourSpotlight: boolean // Guided tour: dim everything except token view + target (desktop only)
+  tourPulse: boolean // Guided tour: pulse the target panel header / outline
 }
 
 export interface BPEState {

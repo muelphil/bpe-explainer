@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import {ref, computed, onMounted} from 'vue'
+import {ref, computed} from 'vue'
 import {useBPE} from './composables/useBPE'
 import {useIsMobile} from './composables/useIsMobile'
+import {useTour} from './composables/useTour'
 import MainView from './components/MainView.vue'
 import SettingsModal from './components/SettingsModal.vue'
 import FrequencyPanel from './components/FrequencyPanel.vue'
@@ -10,6 +11,7 @@ import StepPanel from './components/StepPanel.vue'
 import ControlPanel from './components/ControlPanel.vue'
 import ArticleVisualizationLayout from './components/ArticleVisualizationLayout.vue'
 import BlogArticle from './components/BlogArticle.vue'
+import GuidedTour from './components/GuidedTour.vue'
 import {trainingPresets} from './data/trainingPresets'
 import type {BPESettings} from './services/types'
 
@@ -23,10 +25,12 @@ const showSidebars = ref(false)
 const showControlPanel = ref(false)
 const showFrequencySteps = ref(false)
 
-// Per-panel expansion state (start collapsed on mobile)
-const frequencyExpanded = ref(!isMobile.value)
-const vocabularyExpanded = ref(!isMobile.value)
-const stepsExpanded = ref(!isMobile.value)
+// Per-panel expansion state, shared with the guided tour (start collapsed on mobile)
+const {panelExpanded} = useTour()
+const {frequency: frequencyExpanded, vocabulary: vocabularyExpanded, steps: stepsExpanded} = panelExpanded
+frequencyExpanded.value = !isMobile.value
+vocabularyExpanded.value = !isMobile.value
+stepsExpanded.value = !isMobile.value
 
 const anyPanelExpanded = computed(() =>
   (showFrequencySteps.value && frequencyExpanded.value) ||
@@ -67,12 +71,18 @@ const handleOpenSettings = () => {
   isSettingsOpen.value = true
 }
 
+// Settings that don't affect the BPE algorithm and so don't need a re-initialization
+const UI_ONLY_SETTINGS: ReadonlyArray<keyof BPESettings> = ['tourSpotlight', 'tourPulse']
+
 const handleSaveSettings = (newSettings: BPESettings) => {
+  const needsReinit = (Object.keys(newSettings) as Array<keyof BPESettings>)
+    .some(key => !UI_ONLY_SETTINGS.includes(key) && newSettings[key] !== settings.value[key])
+
   // Update settings first
   updateSettings(newSettings)
 
   // Re-initialize if we have training data
-  if (state.trainingData) {
+  if (needsReinit && state.trainingData) {
     initialize(state.trainingData, newSettings)
   }
 }
@@ -173,26 +183,23 @@ showFrequencySteps.value = true
             <FrequencyPanel
               v-if="showFrequencySteps"
               :hoveredPair="effectiveHoveredPair"
-              :initialExpanded="!isMobile"
+              v-model:expanded="frequencyExpanded"
               @hoverPair="handlePairHover"
-              @expandedChange="(v) => frequencyExpanded = v"
             />
             <VocabularyPanel
               :hoveredTokenContent="effectiveHoveredTokenContent"
-              :initialExpanded="!isMobile"
+              v-model:expanded="vocabularyExpanded"
               @hoverToken="handleTokenHover"
-              @expandedChange="(v) => vocabularyExpanded = v"
             />
             <StepPanel
               v-if="showFrequencySteps"
-              :initialExpanded="!isMobile"
+              v-model:expanded="stepsExpanded"
               @goToStep="handleGoToStep"
-              @change="(v) => stepsExpanded = v"
             />
           </div>
 
           <!-- Control panel at bottom (only in training mode) -->
-          <ControlPanel v-if="showControlPanel"/>
+          <ControlPanel v-if="showControlPanel" data-tour="controls"/>
         </div>
       </template>
     </MainView>
@@ -204,6 +211,9 @@ showFrequencySteps.value = true
       @close="isSettingsOpen = false"
       @save="handleSaveSettings"
     />
+
+    <!-- Guided tour overlay + card -->
+    <GuidedTour/>
   </div>
 </template>
 

@@ -4,15 +4,15 @@ import CollapsiblePanel from './CollapsiblePanel.vue'
 import {useBPE} from '../composables/useBPE'
 import {displayTokenContent, getTokenColor} from '../utils/tokenColor'
 
-const props = defineProps<{
+defineProps<{
   hoveredPair: [string, string] | null
-  initialExpanded?: boolean
 }>()
 
 const emit = defineEmits<{
   hoverPair: [pair: [string, string] | null]
-  expandedChange: [expanded: boolean]
 }>()
+
+const expanded = defineModel<boolean>('expanded', { default: true })
 
 const {frequencies} = useBPE()
 
@@ -29,7 +29,7 @@ const isPairHighlighted = (pair: [string, string], hoveredPair: [string, string]
 </script>
 
 <template>
-  <CollapsiblePanel title="Frequency of Pairs" :initialExpanded="props.initialExpanded" @change="(v) => emit('expandedChange', v)">
+  <CollapsiblePanel title="Frequency of Pairs" v-model:expanded="expanded" tourId="frequency">
     <!-- Critical Info (always visible) - First item of list -->
     <template #critical>
       <div v-if="!topFrequency" class="text-sm text-slate-500 dark:text-slate-400 p-2">

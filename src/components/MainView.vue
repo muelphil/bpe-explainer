@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import {ref, computed, onMounted, onUnmounted} from 'vue'
-import {Settings, ChevronDown} from 'lucide-vue-next'
+import {ref, computed, watch, onMounted, onUnmounted} from 'vue'
+import {Settings, ChevronDown, Compass} from 'lucide-vue-next'
 import {useBPE} from '../composables/useBPE'
 import {useIsMobile} from '../composables/useIsMobile'
 import {articleOpenState} from '../composables/useArticleOpen'
+import {useTour} from '../composables/useTour'
 import TrainingDataView from './TrainingDataView.vue'
 import TrainingView from './TrainingView.vue'
 import ValidationView from './ValidationView.vue'
@@ -36,10 +37,13 @@ const modeLabels: Record<ViewMode, string> = {
   'validation': 'Validation',
 }
 
-const {initialize, state} = useBPE()
+const {initialize} = useBPE()
 const { isMobile } = useIsMobile()
 
-const currentMode = ref<ViewMode>('training')
+const tour = useTour()
+// Shared with the guided tour so it can snapshot/restore the mode
+const currentMode = tour.viewMode
+currentMode.value = 'training'
 const isTrainingDataDefined = ref(true)
 const trainingDataViewRef = ref<InstanceType<typeof TrainingDataView> | null>(null)
 const isDropdownOpen = ref(false)
@@ -68,6 +72,19 @@ const switchToMode = (mode: ViewMode) => {
     emit('modeChange', {showSidebars: true, showControlPanel: false, showFrequencySteps: false})
   }
 }
+
+// Guided tour asks for mode switches (steps 7/8 and restoring on exit)
+watch(tour.requestedMode, (mode) => {
+  if (!mode) return
+  switchToMode(mode)
+  tour.requestedMode.value = null
+})
+
+// On mobile the tour opens the mode dropdown to point at the Training Data / Validation entries
+const tourOpensDropdown = computed(() =>
+  isMobile.value && !!tour.currentStep.value?.target.startsWith('mode-')
+)
+const dropdownVisible = computed(() => isDropdownOpen.value || tourOpensDropdown.value)
 
 const handleMobileModeSelect = (mode: ViewMode) => {
   switchToMode(mode)
@@ -138,7 +155,8 @@ const { isOpen: articleOpen } = articleOpenState
             v-for="(mode, idx) in modes"
             :key="mode"
             class="mode-step relative"
-            :class="[getModeClass(mode, 'button'), isButtonEnabled(mode) ? '' : 'mode-step--disabled']"
+            :data-tour="`mode-${mode}`"
+            :class="[getModeClass(mode, 'button'), isButtonEnabled(mode) ? '' : 'mode-step--disabled', { 'tour-pulse-mode': tour.pulseTarget.value === `mode-${mode}` }]"
             @click="isButtonEnabled(mode) && switchToMode(mode)"
           >
             {{ modeLabels[mode] }}
@@ -157,7 +175,7 @@ const { isOpen: articleOpen } = articleOpenState
 
           <!-- Dropdown menu -->
           <div
-            v-if="isDropdownOpen"
+            v-if="dropdownVisible"
             style="z-index: 100;"
             class="absolute right-0 top-full mt-1 z-50 flex flex-col rounded-md overflow-hidden shadow-lg border border-slate-200 dark:border-slate-600"
           >
@@ -166,13 +184,27 @@ const { isOpen: articleOpen } = articleOpenState
               :key="mode"
               @click.stop="handleMobileModeSelect(mode)"
               :disabled="!isButtonEnabled(mode)"
+              :data-tour="`mode-${mode}`"
               class="px-4 py-2 text-sm font-medium text-left transition-colors whitespace-nowrap"
-              :class="getModeClass(mode, 'dropdown')"
+              :class="[getModeClass(mode, 'dropdown'), { 'tour-pulse-mode': tour.pulseTarget.value === `mode-${mode}` }]"
             >
               {{ modeLabels[mode] }}
             </button>
           </div>
         </div>
+
+        <button
+          @click="tour.isActive.value ? tour.exit() : tour.start()"
+          class="px-3 py-1.5 rounded-md text-sm font-medium transition-all flex items-center gap-2"
+          :class="tour.isActive.value
+            ? 'bg-primary-500 text-white hover:bg-primary-600'
+            : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600'"
+          style="height: stretch;"
+          :title="tour.isActive.value ? 'End guided tour' : 'Guided tour'"
+        >
+          <Compass :size="16"/>
+          <span v-if="!isMobile">Guided tour</span>
+        </button>
 
         <button
           @click="emit('openSettings')"
@@ -192,7 +224,7 @@ const { isOpen: articleOpen } = articleOpenState
       <slot name="leftPanel" />
 
       <!-- Training / Validation content -->
-      <div v-show="!mobileContentHidden" class="flex-1 overflow-hidden flex flex-col min-h-0">
+      <div v-show="!mobileContentHidden" data-tour="main" class="flex-1 overflow-hidden flex flex-col min-h-0">
         <TrainingDataView
           v-if="currentMode === 'training-data'"
           ref="trainingDataViewRef"

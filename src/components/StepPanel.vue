@@ -11,21 +11,16 @@ const USE_VIRTUAL_SCROLL = true
 
 const emit = defineEmits<{
   goToStep: [stepNumber: number]
-  change: [expanded: boolean]
 }>()
 
-const props = defineProps<{
-  initialExpanded?: boolean // Default true
-}>()
+const isExpanded = defineModel<boolean>('expanded', { default: true })
 
 const { steps, currentStep, currentStepData } = useBPE()
 
 const stepsContainerRef = ref<HTMLDivElement | null>(null)
-const isExpanded = ref(props.initialExpanded !== false)
 
 const toggle = () => {
   isExpanded.value = !isExpanded.value
-  emit('change', isExpanded.value)
 }
 
 const handleStepClick = (stepNumber: number) => {
@@ -70,6 +65,7 @@ watch([currentStep, isExpanded], async () => {
   <!-- Header (always visible, clickable) - static height -->
   <button
     @click="toggle"
+    data-tour="steps"
     class="panel-header w-full px-4 py-3 flex items-center justify-between bg-primary-600 dark:bg-primary-700 hover:bg-primary-500 dark:hover:bg-primary-600 transition-colors border-b border-slate-200 dark:border-slate-700"
     style="flex: 0 0 auto;"
   >
@@ -87,6 +83,7 @@ watch([currentStep, isExpanded], async () => {
     <RecycleScroller
       v-if="isExpanded"
       ref="recycleScrollerRef"
+      data-tour="steps"
       :items="steps"
       :item-size="78"
       key-field="stepNumber"
@@ -194,6 +191,7 @@ watch([currentStep, isExpanded], async () => {
     <!-- Collapsed: show only current step as a single row -->
     <div
       v-else
+      data-tour="steps"
       class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700"
       style="flex: 0 0 auto; height: 78px; overflow: hidden;"
     >
@@ -239,6 +237,7 @@ watch([currentStep, isExpanded], async () => {
   <template v-else>
     <div
       ref="stepsContainerRef"
+      data-tour="steps"
       class="steps-container bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700"
       :style="{
         flex: isExpanded ? '1 1 0' : '0 0 auto',

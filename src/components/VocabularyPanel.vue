@@ -4,15 +4,15 @@ import CollapsiblePanel from './CollapsiblePanel.vue'
 import {useBPE} from '../composables/useBPE'
 import {displayTokenContent, getTokenColor} from '../utils/tokenColor'
 
-const props = defineProps<{
+defineProps<{
   hoveredTokenContent: string | null
-  initialExpanded?: boolean
 }>()
 
 const emit = defineEmits<{
   hoverToken: [content: string | null]
-  expandedChange: [expanded: boolean]
 }>()
+
+const expanded = defineModel<boolean>('expanded', { default: true })
 
 const {vocabulary, currentStep, steps, tokens} = useBPE()
 
@@ -59,7 +59,7 @@ const isTokenHighlighted = (tokenContent: string, hoveredTokenContent: string | 
 </script>
 
 <template>
-  <CollapsiblePanel title="Vocabulary" :initialExpanded="props.initialExpanded" @change="(v) => emit('expandedChange', v)">
+  <CollapsiblePanel title="Vocabulary" v-model:expanded="expanded" tourId="vocabulary">
     <!-- Critical Info (always visible) -->
     <template #critical>
       <div v-if="vocabulary.length === 0" class="text-sm text-slate-500 dark:text-slate-400">

@@ -9,7 +9,9 @@ const DEFAULT_SETTINGS: BPESettings = {
   targetCompressionRate: 50,
   playSpeed: 500,
   darkMode: true,
-  mergingRestriction: 'llm'
+  mergingRestriction: 'llm',
+  tourSpotlight: true,
+  tourPulse: true
 }
 
 export class SettingsService {
@@ -27,6 +29,10 @@ export class SettingsService {
         }
         if (parsed.initialVocab === 'unicodeChars') {
           parsed.initialVocab = 'presentChars'
+        }
+        // Migrate the former spotlight variants ('off' | 'persistent' | 'flash') to a boolean
+        if (typeof parsed.tourSpotlight === 'string') {
+          parsed.tourSpotlight = parsed.tourSpotlight !== 'off'
         }
         // Merge with defaults to handle any missing keys
         return { ...DEFAULT_SETTINGS, ...parsed }
@@ -58,6 +64,22 @@ export class SettingsService {
     } else {
       document.documentElement.classList.remove('dark')
     }
+    // Sync theme-color meta tag with the active background color
+    SettingsService.applyThemeColor(settings.darkMode)
+  }
+
+  /**
+   * Update the theme-color meta tag to match the active theme background
+   */
+  private static applyThemeColor(darkMode: boolean): void {
+    const themeColor = darkMode ? '#1e293b' : '#f8fafc'
+    let meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')
+    if (!meta) {
+      meta = document.createElement('meta')
+      meta.name = 'theme-color'
+      document.head.appendChild(meta)
+    }
+    meta.content = themeColor
   }
 
   /**
