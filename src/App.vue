@@ -15,7 +15,7 @@ import GuidedTour from './components/GuidedTour.vue'
 import {trainingPresets} from './data/trainingPresets'
 import type {BPESettings} from './services/types'
 
-const {initialize, updateSettings, goToStep, state, settings, currentStepData} = useBPE()
+const {initialize, updateSettings, goToStep, state, settings, currentStepData, frequencies} = useBPE()
 const {isMobile} = useIsMobile()
 
 const isSettingsOpen = ref(false)
@@ -26,7 +26,7 @@ const showControlPanel = ref(false)
 const showFrequencySteps = ref(false)
 
 // Per-panel expansion state, shared with the guided tour (start collapsed on mobile)
-const {panelExpanded} = useTour()
+const {panelExpanded, currentStep: tourStep} = useTour()
 const {frequency: frequencyExpanded, vocabulary: vocabularyExpanded, steps: stepsExpanded} = panelExpanded
 frequencyExpanded.value = !isMobile.value
 vocabularyExpanded.value = !isMobile.value
@@ -38,11 +38,18 @@ const anyPanelExpanded = computed(() =>
   (showFrequencySteps.value && stepsExpanded.value)
 )
 
+// Guided tour's Pair Frequencies step highlights the most frequent pair instead of the step highlight
+const tourHighlightsTopPair = computed(() => tourStep.value?.target === 'frequency')
+
 // Computed properties for highlighting - user hover takes priority, then step highlighting
 const effectiveHoveredPair = computed(() => {
   // If user is hovering anything (pair OR token), pause step-based highlighting
   if (hoveredPair.value || hoveredTokenContent.value) {
     return hoveredPair.value // Return pair if hovering pair, null if hovering token
+  }
+
+  if (tourHighlightsTopPair.value) {
+    return frequencies.value[0]?.pair ?? null
   }
 
   // No user interaction - use step highlighting
@@ -57,6 +64,10 @@ const effectiveHoveredTokenContent = computed(() => {
   // If user is hovering anything (pair OR token), pause step-based highlighting
   if (hoveredPair.value || hoveredTokenContent.value) {
     return hoveredTokenContent.value // Return token if hovering token, null if hovering pair
+  }
+
+  if (tourHighlightsTopPair.value) {
+    return null
   }
 
   // No user interaction - use step highlighting
@@ -151,7 +162,7 @@ showFrequencySteps.value = true
 </script>
 
 <template>
-  <div class="h-screen w-screen bg-slate-50 dark:bg-slate-900 overflow-hidden flex flex-col">
+  <div class="h-full w-full bg-slate-50 dark:bg-slate-900 overflow-hidden flex flex-col">
     <MainView
       class="flex-1 overflow-hidden min-h-0"
       :hoveredPair="hoveredPair"
@@ -221,16 +232,19 @@ showFrequencySteps.value = true
 /* Global styles */
 html {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  height: 100%;
 }
 
 body {
   margin: 0;
   padding: 0;
+  height: 100%;
 }
 
 #app {
-  width: 100vw;
+  width: 100%;
   height: 100vh;
+  height: 100dvh;
   overflow: hidden;
 }
 </style>
