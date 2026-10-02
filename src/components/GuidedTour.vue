@@ -16,6 +16,7 @@ interface Rect {
 
 const TWEEN_MS = 450 // Cutout morph duration between steps
 const CUTOUT_PAD = 4
+const RING_WIDTH = 3 // Must match the box-shadow spread of .tour-ring
 const CARD_WIDTH = 340
 const CARD_GAP = 16
 const VIEWPORT_MARGIN = 12
@@ -187,6 +188,25 @@ const scrollTargetIntoView = () => {
   }, 60)
 }
 
+/** Scroll `el` to the vertical centre of its scroll container `container` (without scrolling the page) */
+const scrollWithin = (container: HTMLElement, el: HTMLElement) => {
+  const c = container.getBoundingClientRect()
+  const r = el.getBoundingClientRect()
+  const top = container.scrollTop + (r.top - c.top) - (c.height - r.height) / 2
+  container.scrollTo({top: Math.max(0, top), behavior: prefersReducedMotion() ? 'auto' : 'smooth'})
+}
+
+/** Vocabulary step: bring the highlighted (step-locked) token into view */
+const scrollToHighlightedVocabToken = () => {
+  if (currentStep.value?.target !== 'vocabulary') return
+  // Let the panel expand first
+  setTimeout(() => {
+    const container = document.querySelector<HTMLElement>('.panel-details[data-tour="vocabulary"]')
+    const token = container?.querySelector<HTMLElement>('.highlight-single')
+    if (container && token) scrollWithin(container, token)
+  }, 60)
+}
+
 const resetAnimation = () => {
   fromMain = fromTarget = fromExtra = displayedMain = displayedTarget = displayedExtra = null
   animStart = -Infinity
@@ -259,6 +279,7 @@ watch(stepIndex, async () => {
   await nextTick()
   beginStepTransition()
   scrollTargetIntoView()
+  scrollToHighlightedVocabToken()
 })
 
 watch(isActive, async (active) => {
@@ -292,7 +313,12 @@ const cardStyle = computed(() => {
 const ringStyle = computed(() => {
   const r = highlightRect.value
   if (!r) return {}
-  return {left: `${r.x}px`, top: `${r.y}px`, width: `${r.w}px`, height: `${r.h}px`}
+  // Keep the (outset) border fully inside the viewport, dropping the padding at the edges if needed
+  const left = Math.max(RING_WIDTH, r.x)
+  const top = Math.max(RING_WIDTH, r.y)
+  const right = Math.min(window.innerWidth - RING_WIDTH, r.x + r.w)
+  const bottom = Math.min(window.innerHeight - RING_WIDTH, r.y + r.h)
+  return {left: `${left}px`, top: `${top}px`, width: `${right - left}px`, height: `${bottom - top}px`}
 })
 </script>
 

@@ -138,7 +138,7 @@ const { isOpen: articleOpen } = articleOpenState
 <template>
   <div class="h-full w-full flex flex-col">
     <!-- Header with title and mode buttons -->
-    <div class="px-6 py-4 flex items-center justify-between gap-4">
+    <div class="px-3 py-2 sm:px-6 sm:py-4 flex flex-wrap items-center justify-between gap-2 sm:gap-4">
       <div class="header-gradient">
         <h1 class="header-title">
             <span v-if="isMobile">BPE Explainer</span>

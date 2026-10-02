@@ -51,7 +51,9 @@ const recycleScrollerRef = ref<InstanceType<typeof RecycleScroller> | null>(null
 watch([currentStep, isExpanded], async () => {
   await nextTick()
   if (USE_VIRTUAL_SCROLL) {
-    recycleScrollerRef.value?.scrollToItem(currentStep.value)
+    // When the panel was just expanded, the scroller is freshly mounted and has no size
+    // yet on this tick; wait a frame so the scroll position isn't clamped back to 0.
+    requestAnimationFrame(() => recycleScrollerRef.value?.scrollToItem(currentStep.value))
   } else if (stepsContainerRef.value) {
     const currentStepElement = stepsContainerRef.value.querySelector(`[data-step="${currentStep.value}"]`)
     if (currentStepElement) {
